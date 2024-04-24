@@ -1,0 +1,11 @@
+.o
+.so*
+.la
+.a
+a.out
+*.patch
+*.diff
+*~*
+*.old
+*.orig
+*.rej
