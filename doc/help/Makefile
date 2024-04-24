@@ -40,10 +40,10 @@ pkgincludedir = $(includedir)/axyftp
 
 top_builddir = ../..
 
-ACLOCAL = /home/edmond/software/axyftp-0.5.1/missing aclocal-1.4
-AUTOCONF = /home/edmond/software/axyftp-0.5.1/missing autoconf
-AUTOMAKE = /home/edmond/software/axyftp-0.5.1/missing automake-1.4
-AUTOHEADER = /home/edmond/software/axyftp-0.5.1/missing autoheader
+ACLOCAL = /home/matt/axyftp/missing aclocal-1.4
+AUTOCONF = autoconf
+AUTOMAKE = /home/matt/axyftp/missing automake-1.4
+AUTOHEADER = autoheader
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -57,24 +57,24 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-AXYFTP_DEPS =  $(top_builddir)/xmaxy/XmAxy/libXmAxy.a
+AXYFTP_DEPS = 
 AXYFTP_GUI = BUILD_MOTIF
 AXYFTP_INCLUDES = $(XMAXY_CFLAGS) $(DT_CFLAGS) $(MOTIF_CFLAGS)                     $(XPM_CFLAGS)
 AXYFTP_LIBS = $(XMAXY_LIBS) $(DT_LIBS) $(MOTIF_LIBS)                 -lXt  -lSM -lICE -lX11  $(XPM_LIBS)
 CC = gcc
 CPP = gcc -E
-DT_CFLAGS = -I/usr/dt/include
-DT_LIBS = -L/usr/dt/lib -lDtWidget -lDtSvc -ltt
+DT_CFLAGS = 
+DT_LIBS = -lDtWidget
 GTK_CFLAGS = 
 GTK_CONFIG = 
 GTK_LIBS = 
-MAKEINFO = /home/edmond/software/axyftp-0.5.1/missing makeinfo
+MAKEINFO = makeinfo
 MOTIF_CFLAGS = 
 MOTIF_LIBS = -lXm
 PACKAGE = axyftp
 VERSION = 0.5.1
-XMAXY_CFLAGS = -I$(top_srcdir)/xmaxy
-XMAXY_LIBS = $(top_builddir)/xmaxy/XmAxy/libXmAxy.a
+XMAXY_CFLAGS = 
+XMAXY_LIBS = -lXmAxy
 XPM_CFLAGS = 
 XPM_LIBS = -lXpm
 
