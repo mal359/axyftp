@@ -107,7 +107,7 @@ express or implied warranty.
 
 #include <Xm/XmP.h>		/* for fast subclassing in XmIsComboBox */
 #include <Xm/XmosP.h>		/* for INT_MAX */
-#include <Dt/DtMsgsP.h>
+#include "DtMsgsP.h"
 #include "ComboBoxP.h"
 #include <Xm/DrawP.h>
 #include <Xm/DisplayP.h>
@@ -115,7 +115,7 @@ express or implied warranty.
 #include <Xm/ComboBox.h>	/* for redirecting utility functions */
 #include "DtWidgetI.h"		/* for _Dt thread-safety macros */
 /* some unpublished Motif interfaces */
-#include <Xm/XmPrivate.h>
+#include "XmPrivate.h"
 
 /* From MenuUtilP.h */
 extern int _XmGrabKeyboard(Widget widget, int owner_events, int pointer_mode,
