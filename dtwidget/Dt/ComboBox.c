@@ -1,7 +1,43 @@
 /*
- * ComboBox.c, Interleaf, 16aug93 2:37pm Version 1.1.
+ * CDE - Common Desktop Environment
+ *
+ * Copyright (c) 1993-2012, The Open Group. All rights reserved.
+ *
+ * These libraries and programs are free software; you can
+ * redistribute them and/or modify them under the terms of the GNU
+ * Lesser General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * These libraries and programs are distributed in the hope that
+ * they will be useful, but WITHOUT ANY WARRANTY; without even the
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with these libraries and programs; if not, write
+ * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301 USA
  */
-
+/*
+ * DtWidget/ComboBox.c
+ */
+/*
+ * (c) Copyright 1996 Digital Equipment Corporation.
+ * (c) Copyright 1993, 1994, 1996 Hewlett-Packard Company
+ * (c) Copyright 1993, 1994, 1996 International Business Machines Corp.
+ * (c) Copyright 1993, 1994, 1996 Sun Microsystems, Inc.
+ * (c) Copyright 1993, 1994, 1996 Novell, Inc.
+ * (c) Copyright 1996 FUJITSU LIMITED.
+ * (c) Copyright 1996 Hitachi.
+ */
+#ifdef REV_INFO
+#ifndef lint
+static char rcsid[] = 
+  "$XConsortium: ComboBox.c /main/15 1996/10/29 12:48:08 cde-hp $"
+#endif
+#endif
 /***********************************************************
 Copyright 1993 Interleaf, Inc.
 
@@ -57,102 +93,249 @@ express or implied warranty.
  *	    combo_box has focus will probably result in display glitches.
  *
  */
+/*
+ * The DtComboBox widget is rigged with the Motif widget binary compatibilit 
+ * mechanism. All Motif-specific changes for this mechanism are preceded  
+ * by a comment including the string "MotifBc".
+ *
+ * For a description of the Motif widget binary compatibility mechanism 
+ * see the reference manual entry on XmResolveAllPartOffsets().
+ *
+ */
+
+/* _NO_PROTO support no longer required: */
+
+#include <Xm/XmP.h>		/* for fast subclassing in XmIsComboBox */
+#include <Xm/XmosP.h>		/* for INT_MAX */
+#include <Dt/DtMsgsP.h>
 #include "ComboBoxP.h"
 #include <Xm/DrawP.h>
-#include <Xm/MenuUtilP.h>
-#include <Xm/VirtKeys.h>
+#include <Xm/DisplayP.h>
+#include <Xm/List.h>
+#include <Xm/ComboBox.h>	/* for redirecting utility functions */
+#include "DtWidgetI.h"		/* for _Dt thread-safety macros */
+/* some unpublished Motif interfaces */
+#include <Xm/XmPrivate.h>
 
-static void	ClassInitialize AA(());
-static void	Initialize AA((DtComboBoxWidget request, 
+/* From MenuUtilP.h */
+extern int _XmGrabKeyboard(Widget widget, int owner_events, int pointer_mode,
+                        int keyboard_mode, Time time) ;
+/*
+ * MotifBc
+ */
+#define DtComboBoxIndex (XmManagerIndex + 1)
+static XmOffsetPtr ipot; /* Instance part offset table */
+static XmOffsetPtr cpot; /* Constraint part offset table */
+
+#define ScrollBarVisible( wid)      (wid && XtIsManaged( wid))
+
+static void	ClassInitialize (void);
+static void	Initialize (DtComboBoxWidget request, 
 			       DtComboBoxWidget new, ArgList given_args, 
-			       Cardinal *num_args));
-static XmNavigability WidgetNavigable AA((DtComboBoxWidget combo));
-static void	_ComboBoxFocusIn AA((DtComboBoxWidget combo, XEvent *event, 
-				     char **params, Cardinal *num_params));
-static void	_ComboBoxFocusOut AA((DtComboBoxWidget combo, XEvent *event,
-				      char **params, Cardinal *num_params));
-static void	DrawHighlight AA((DtComboBoxWidget combo, Boolean clear));
-static void	_ComboBoxActivate AA((Widget w, XEvent *event, char **params,
-				      Cardinal *num_params));
-static void	_ComboBoxKbdCancel AA((Widget w, XEvent *event, char **params,
-				       Cardinal *num_params));
-static void	CheckResources AA((DtComboBoxWidget combo));
-static void	Destroy AA((DtComboBoxWidget combo));
-static void	Resize AA((DtComboBoxWidget combo));
-static void	Redisplay AA((DtComboBoxWidget w, XEvent *event, 
-			      Region region));
-static XtGeometryResult GeometryManager AA((Widget w, 
+			       Cardinal *num_args);
+static XmNavigability WidgetNavigable (DtComboBoxWidget combo);
+static void	_ComboBoxFocusIn (DtComboBoxWidget combo, XEvent *event, 
+				     char **params, Cardinal *num_params);
+static void	_ComboBoxFocusOut (DtComboBoxWidget combo, XEvent *event,
+				      char **params, Cardinal *num_params);
+static void	DrawHighlight (DtComboBoxWidget combo, Boolean clear);
+static void	_ComboBoxActivate (Widget w, XEvent *event, char **params,
+				      Cardinal *num_params);
+static void	_ComboBoxKbdCancel (Widget w, XEvent *event, char **params,
+				       Cardinal *num_params);
+static void	_ComboBoxPrevTabGroup (Widget w, XEvent *event, 
+				char **params, Cardinal *num_params);
+static void	_ComboBoxNextTabGroup (Widget w, XEvent *event, 
+				char **params, Cardinal *num_params);
+static void	CheckResources (DtComboBoxWidget combo);
+static void	Destroy (DtComboBoxWidget combo);
+static void	Resize (DtComboBoxWidget combo);
+static void	Redisplay (DtComboBoxWidget w, XEvent *event, 
+			      Region region);
+static XtGeometryResult GeometryManager (Widget w, 
 					    XtWidgetGeometry *request, 
-					    XtWidgetGeometry *reply));
-static void	SetComboBoxSize AA((DtComboBoxWidget combo));
-static void	ForceChildSizes AA((DtComboBoxWidget combo));
-static void	LayoutChildren AA((DtComboBoxWidget combo));
-static Boolean	SetValues AA((DtComboBoxWidget current, 
-			      DtComboBoxWidget request, DtComboBoxWidget new));
-static void	ClearShadow AA((DtComboBoxWidget w, Boolean all));
-static void	DrawShadow AA((DtComboBoxWidget w));
-static char*	GetTextString AA((XmString xm_string));
-static void	SetTextFieldData AA((DtComboBoxPart *combo_p, XmString item));
-static void	SetMaximumLabelSize AA((DtComboBoxPart *combo_p));
-static void	SetLabelData AA((DtComboBoxPart *combo_p, XmString item,
-				 Boolean force_label_string));
-static void	select_cb AA((Widget w, XtPointer client_data, 
-			      XtPointer call_data));
-static void	shell_event_handler AA((Widget widget, XtPointer client_data,
-					XEvent* event, Boolean *dispatch));
-static void	list_event_handler AA((Widget widget, XtPointer client_data,
-				       XEvent* event, Boolean *dispatch));
-static void	TextFieldActivate AA((DtComboBoxPart *combo_p,XEvent *event));
-static void	activate_cb AA((Widget w, XtPointer client_data,
-				XtPointer call_data));
-static void	arrow_expose_cb AA((Widget w, XtPointer client_data,
-				    XtPointer call_data));
-static void	text_losing_focus_cb AA((Widget w, XtPointer client_data,
-					 XtPointer call_data));
-static void	text_activate_cb AA((Widget w, XtPointer client_data,
-				     XtPointer call_data));
-static void	text_focus_cb AA((Widget w, XtPointer client_data,
-				  XtPointer call_data));
-static void	SyncWithList AA((DtComboBoxPart *combo_p));
-static XmImportOperator _XmSetSyntheticResForChild AA((Widget widget,
+					    XtWidgetGeometry *reply);
+static void	SetComboBoxSize (DtComboBoxWidget combo);
+static void	ForceChildSizes (DtComboBoxWidget combo);
+static void	LayoutChildren (DtComboBoxWidget combo);
+static Boolean	SetValues (DtComboBoxWidget current, 
+			      DtComboBoxWidget request, DtComboBoxWidget new);
+static void	ClearShadow (DtComboBoxWidget w, Boolean all);
+static void	DrawShadow (DtComboBoxWidget w);
+static char*	GetTextString (XmString xm_string);
+static void	SetTextFieldData (DtComboBoxPart *combo_p, XmString item);
+static void	SetMaximumLabelSize (DtComboBoxPart *combo_p);
+static void	SetLabelData (DtComboBoxPart *combo_p, XmString item,
+				 Boolean force_label_string);
+static void	select_cb (Widget w, XtPointer client_data, 
+			      XtPointer call_data);
+static void	shell_event_handler (Widget widget, XtPointer client_data,
+					XEvent* event, Boolean *dispatch);
+static void	list_event_handler (Widget widget, XtPointer client_data,
+				       XEvent* event, Boolean *dispatch);
+static void	TextFieldActivate (DtComboBoxPart *combo_p, XtPointer call_data);
+static void	activate_cb (Widget w, XtPointer client_data,
+				XtPointer call_data);
+static void	arrow_expose_cb (Widget w, XtPointer client_data,
+				    XtPointer call_data);
+static void	text_losing_focus_cb (Widget w, XtPointer client_data,
+					 XtPointer call_data);
+static void	text_activate_cb (Widget w, XtPointer client_data,
+				     XtPointer call_data);
+static void	text_focus_cb (Widget w, XtPointer client_data,
+				  XtPointer call_data);
+static void	SyncWithList (DtComboBoxPart *combo_p);
+static XmImportOperator _XmSetSyntheticResForChild (Widget widget,
 						       int offset, 
-						       XtArgVal * value));
-static void	cancelPopup AA((DtComboBoxWidget w));
+						       XtArgVal * value);
+/* Converter */
+static  Boolean _CvtStringToType (Display *dpy, XrmValuePtr args, 
+	Cardinal *num_args, XrmValuePtr from, XrmValuePtr to, XtPointer *data);
+
+/* Grab and Ungrab processing */
+static void	input_ungrab ( DtComboBoxWidget combo, int ungrab_mask);
+
+/* Resolution Independent Processing */
+void _DtComboBoxGetArrowSize(	Widget w,
+					int resource_offset,
+					XtArgVal *value);
+void _DtComboBoxGetListMarginHeight(	Widget w,
+						int resource_offset,
+						XtArgVal *value);
+void _DtComboBoxGetListMarginWidth(  	Widget w,
+						int resource_offset,
+						XtArgVal *value);
+void _DtComboBoxGetListSpacing(  Widget w,
+					int resource_offset,
+					XtArgVal *value);
+
 
 static XmString InitLabel = NULL;
 
 /*
+ * MotifBc
+ */
+
+#define Arrow(w) XmField(w,ipot,DtComboBox,arrow,Widget)
+#define Shell(w) XmField(w,ipot,DtComboBox,shell,Widget)
+#define Frame(w) XmField(w,ipot,DtComboBox,frame,Widget)
+#define Label(w) XmField(w,ipot,DtComboBox,label,Widget)
+#define Sep(w) XmField(w,ipot,DtComboBox,sep,Widget)
+#define OldWidth(w) XmField(w,ipot,DtComboBox,old_width,Dimension)
+#define OldHeight(w) XmField(w,ipot,DtComboBox,old_height,Dimension)
+#define LabelMaxLength(w) XmField(w,ipot,DtComboBox,label_max_length,Dimension)
+#define LabelMaxHeight(w) XmField(w,ipot,DtComboBox,label_max_height,Dimension)
+
+#define MaxShellWidth(w) XmField(w,ipot,DtComboBox,max_shell_width,Dimension)
+#define MaxShellHeight(w) XmField(w,ipot,DtComboBox,max_shell_height,Dimension)
+
+#define MarginHeight(w) XmField(w,ipot,DtComboBox,margin_height,Dimension)
+#define MarginWidth(w) XmField(w,ipot,DtComboBox,margin_width,Dimension)
+#define SelectedItem(w) XmField(w,ipot,DtComboBox,selected_item,XmString)
+#define SelectedPosition(w) XmField(w,ipot,DtComboBox,selected_position,int)
+#define SelectionCallback(w) \
+		XmField(w,ipot,DtComboBox,selection_callback,XtCallbackList)
+#define Type(w) XmField(w,ipot,DtComboBox,type,unsigned char)
+#define ArrowSpacing(w) XmField(w,ipot,DtComboBox,arrow_spacing,Dimension)
+
+#define ArrowSize(w) XmField(w,ipot,DtComboBox,arrow_size,Dimension)
+#define ActivateCallback(w) \
+		XmField(w,ipot,DtComboBox,activate_callback,XtCallbackList)
+#define Alignment(w) XmField(w,ipot,DtComboBox,alignment,unsigned char)
+#define ArrowType(w) XmField(w,ipot,DtComboBox,arrow_type,unsigned char)
+#define TextColumns(w) XmField(w,ipot,DtComboBox,text_columns,short)
+#define FocusCallback(w) XmField(w,ipot,DtComboBox,focus_callback,XtCallbackList)
+#define HorizontalSpacing(w) XmField(w,ipot,DtComboBox,horizontal_spacing,Dimension)
+#define ItemCount(w) XmField(w,ipot,DtComboBox,item_count,int)
+#define Items(w) XmField(w,ipot,DtComboBox,items,XmStringTable)
+#define ListItems(w) XmField(w,ipot,DtComboBox,list_items,XmStringTable)
+#define LabelString(w) XmField(w,ipot,DtComboBox,label_string,XmString)
+#define List(w) XmField(w,ipot,DtComboBox,list,Widget)
+#define ListFontList(w) XmField(w,ipot,DtComboBox,list_font_list,XmFontList)
+#define ListMarginHeight(w) XmField(w,ipot,DtComboBox,list_margin_height,Dimension)
+#define ListMarginWidth(w) XmField(w,ipot,DtComboBox,list_margin_width,Dimension)
+#define ListSpacing(w) XmField(w,ipot,DtComboBox,list_spacing,Dimension)
+#define LosingFocusCallback(w) XmField(w,ipot,DtComboBox,losing_focus_callback,XtCallbackList)
+#define TextMaxLength(w) XmField(w,ipot,DtComboBox,text_max_length,unsigned int)
+#define MenuPostCallback(w) XmField(w,ipot,DtComboBox,menu_post_callback,XtCallbackList)
+#define Orientation(w) XmField(w,ipot,DtComboBox,orientation,unsigned char)
+#define PoppedUp(w) XmField(w,ipot,DtComboBox,popped_up,Boolean)
+#define RecomputeSize(w) XmField(w,ipot,DtComboBox,recompute_size,Boolean)
+#define Text(w) XmField(w,ipot,DtComboBox,text,Widget)
+#define TopItemPosition(w) XmField(w,ipot,DtComboBox,top_item_position,int)
+#define UpdateLabel(w) XmField(w,ipot,DtComboBox,update_label,Boolean)
+#define VerticalSpacing(w) XmField(w,ipot,DtComboBox,vertical_spacing,Dimension)
+#define VisibleItemCount(w) XmField(w,ipot,DtComboBox,visible_item_count,int)
+
+/*
  * DtComboBoxWidget specific defines.
  */
+#define PUnitType(w)	    w->primitive.unit_type
+#define ShellPoppedUp(w)    w->shell.popped_up
+#define MUnitType(w)	    w->manager.unit_type
 #define COMBO_SHADOW(w)	    w->manager.shadow_thickness
-#define COMBO_MARGIN_W(w)   w->combo_box.margin_width
-#define COMBO_MARGIN_H(w)   w->combo_box.margin_height
-#define COMBO_H_SPACING(w)  w->combo_box.horizontal_spacing
-#define COMBO_V_SPACING(w)  w->combo_box.vertical_spacing
-#define LIST_EVENTS	    (ButtonPressMask | ButtonReleaseMask | \
-			     FocusChangeMask | EnterWindowMask | \
-			     LeaveWindowMask)
-#define SHELL_EVENTS	    ButtonPressMask
+#define LayoutDirection(w)  w->manager.string_direction
+#define NavigationType(w)   w->manager.navigation_type
+#define TraversalOn(w)	    w->manager.traversal_on
+#define BackgroundGC(w)	    w->manager.background_GC
+#define HighlightGC(w)	    w->manager.highlight_GC
+#define TopShadowGC(w)	    w->manager.top_shadow_GC
+#define BottomShadowGC(w)   w->manager.bottom_shadow_GC
+#define BackgroundPixel(w)  w->core.background_pixel
+#define X(w)		    w->core.x
+#define Y(w)		    w->core.y
+#define Width(w)  	    w->core.width
+#define Height(w)  	    w->core.height
+#define BorderWidth(w)	    w->core.border_width
+#define Sensitive(w)	    w->core.sensitive
+#define AncestorSensitive(w)	w->core.ancestor_sensitive
+#define Parent(w)	    w->core.parent
+#define COMBO_MARGIN_W(w)   MarginWidth(w)
+#define COMBO_MARGIN_H(w)   MarginHeight(w)
+#define COMBO_H_SPACING(w)  HorizontalSpacing(w)
+#define COMBO_V_SPACING(w)  VerticalSpacing(w)
+
+#define GRAB_POINTER        1 << 0
+#define GRAB_KEYBOARD       1 << 1
+
+#define DtNonePopup	    0
+#define DtPopup		    1 << 0
+#define DtButtonPressPopup  1 << 1
+#define DtKeyPressPopup     1 << 2
+
+#define LIST_EVENTS	    (ButtonReleaseMask | FocusChangeMask | EnterWindowMask)
+#define SHELL_EVENTS	    (ButtonPressMask | ButtonReleaseMask)
 #define INVALID_DIMENSION   (0xFFFF)
-#define MAXINT 2147483647  /* Taken from TextF.c */
 
 
 static char ComboBoxTranslationTable[] = "\
 	<FocusIn>:	     ComboBoxFocusIn() \n\
 	<FocusOut>:	     ComboBoxFocusOut() \n\
         <Key>osfDown:        ComboBoxActivate() \n\
-        <Key>osfUp:          ComboBoxActivate() \n\
-        <Btn1Down>,<Btn1Up>: ComboBoxActivate() \n\
+        <Btn1Down>:	     ComboBoxActivate() \n\
         <Key>osfSelect:      ComboBoxActivate() \n\
         ~s ~m ~a <Key>space: ComboBoxActivate() \n\
 ";
 
 static char ComboBoxLabelTranslationTable[] = "\
         <Key>osfDown:        ComboBoxActivate(label) \n\
-        <Key>osfUp:          ComboBoxActivate(label) \n\
-        <Btn1Down>,<Btn1Up>: ComboBoxActivate(label) \n\
+        <Btn1Down>: 	     ComboBoxActivate(label) \n\
         <Key>osfSelect:      ComboBoxActivate(label) \n\
         ~s ~m ~a <Key>space: ComboBoxActivate(label) \n\
+";
+
+/* Keyboard Only Traversing During Editable-Mode */
+static char ComboBoxTextTranslationTable[] = "\
+        <Key>osfUp:          ComboBoxActivate(label) \n\
+        <Key>osfDown:        ComboBoxActivate(label) \n\
+";
+
+static char ComboBoxButtonTranslationTable[] = "\
+        <Key>osfDown:        ComboBoxActivate(label) \n\
+        <Btn1Down>:	     ComboBoxActivate(label) \n\
+	~s ~m ~a <Key>space: ComboBoxActivate(label) \n\
+	s ~m ~a <Key>Tab:    ComboBoxPrevTabGroup()\n\
+	~m ~a <Key>Tab:      ComboBoxNextTabGroup()\n\
 ";
 
 static char ComboBoxListTranslationTable[] = "\
@@ -164,6 +347,8 @@ static XtActionsRec ComboBoxActionTable[] = {
        {"ComboBoxFocusOut",  (XtActionProc)_ComboBoxFocusOut},
        {"ComboBoxActivate",  (XtActionProc)_ComboBoxActivate},
        {"ComboBoxKbdCancel", (XtActionProc)_ComboBoxKbdCancel},
+       {"ComboBoxPrevTabGroup", (XtActionProc)_ComboBoxPrevTabGroup},
+       {"ComboBoxNextTabGroup", (XtActionProc)_ComboBoxNextTabGroup},
 };
 
 
@@ -171,7 +356,8 @@ static XtActionsRec ComboBoxActionTable[] = {
  * DtComboBoxWidget resources 
  */
 #define offset(field) XtOffset(DtComboBoxWidget, field)
-static XtResource resources[] = {
+#define DtOffset(field) XmPartOffset(DtComboBox,field)
+static XmPartResource resources[] = {
     {XmNshadowThickness, XmCShadowThickness, XmRHorizontalDimension, 
 	 sizeof(Dimension), offset(manager.shadow_thickness),
 	 XmRImmediate, (XtPointer)TEXT_FIELD_SHADOW},
@@ -180,83 +366,82 @@ static XtResource resources[] = {
      * ComboBox specific resources
      */
     {DtNactivateCallback, DtCCallback, XmRCallback, sizeof(XtCallbackList),
-	 offset(combo_box.activate_callback), XmRCallback, 
+	 DtOffset(activate_callback), XmRCallback, 
 	 (XtPointer)NULL},
     {DtNalignment, DtCAlignment, XmRAlignment, sizeof(unsigned char),
-	 offset(combo_box.alignment), XmRImmediate, 
-	 (XtPointer)XmALIGNMENT_BEGINNING},
+	 DtOffset(alignment), XmRImmediate, 
+	 (XtPointer)DtALIGNMENT_END},
     {DtNarrowSpacing, DtCArrowSpacing, XmRHorizontalDimension,
-	 sizeof(Dimension), offset(combo_box.arrow_spacing),
+	 sizeof(Dimension), DtOffset(arrow_spacing),
 	 XmRImmediate, (XtPointer)0},
     {DtNarrowType, DtCArrowType, DtRArrowType, sizeof(unsigned char),
-	 offset(combo_box.arrow_type), XmRImmediate, (XtPointer)DtMOTIF},
+	 DtOffset(arrow_type), XmRImmediate, (XtPointer)DtMOTIF},
     {DtNcolumns, DtCColumns, XmRShort, sizeof(short),
-	 offset(combo_box.text_columns), XmRImmediate, (XtPointer)20},
+	 DtOffset(text_columns), XmRImmediate, (XtPointer)20},
     {DtNfocusCallback, DtCCallback, XmRCallback, sizeof(XtCallbackList),
-	 offset(combo_box.focus_callback), XmRCallback, 
+	 DtOffset(focus_callback), XmRCallback, 
 	 (XtPointer)NULL},
     {DtNhorizontalSpacing, DtCHorizontalSpacing, XmRHorizontalDimension,
-	 sizeof(Dimension), offset(combo_box.horizontal_spacing),
+	 sizeof(Dimension), DtOffset(horizontal_spacing),
 	 XmRImmediate, (XtPointer)INVALID_DIMENSION},
     {DtNitemCount, DtCItemCount, XmRInt, sizeof(int), 
-	 offset(combo_box.item_count), XmRImmediate, (XtPointer)0},
+	 DtOffset(item_count), XmRImmediate, (XtPointer)0},
     /*
      * items is used only for seeing if the user changed the list.  It
      * is only a pointer that reflects the current list's items.
      */
     {DtNitems, DtCItems, XmRXmStringTable, sizeof(XmStringTable),
-	 offset(combo_box.items), XmRImmediate, (XtPointer)NULL},
-    {DtNlabelString, XmCXmString, XmRXmString, sizeof(XmString),
-	 offset(combo_box.label_string), XmRImmediate, (XtPointer)NULL},
+	 DtOffset(items), XmRImmediate, (XtPointer)NULL},
+    {DtNlabelString, DtCXmString, XmRXmString, sizeof(XmString),
+	 DtOffset(label_string), XmRImmediate, (XtPointer)NULL},
     {DtNlist, DtCList, XmRWidget, sizeof(Widget),
-	 offset(combo_box.list), XmRImmediate, (XtPointer)NULL},
+	 DtOffset(list), XmRImmediate, (XtPointer)NULL},
     {DtNlistFontList, DtCListFontList, XmRFontList, sizeof(XmFontList), 
-	 offset(combo_box.list_font_list), XmRImmediate, (XtPointer)NULL},
+	 DtOffset(list_font_list), XmRImmediate, (XtPointer)NULL},
     {DtNlistMarginHeight, DtCListMarginHeight, XmRVerticalDimension, 
-	 sizeof(Dimension), offset(combo_box.list_margin_height),
+	 sizeof(Dimension), DtOffset(list_margin_height),
 	 XmRImmediate, (XtPointer)MARGIN},
     {DtNlistMarginWidth, DtCListMarginWidth, XmRHorizontalDimension,
-	 sizeof(Dimension), offset(combo_box.list_margin_width),
+	 sizeof(Dimension), DtOffset(list_margin_width),
 	 XmRImmediate, (XtPointer)MARGIN},
-    {DtNlistSpacing, DtCListSpacing, XmRDimension,sizeof(Dimension), 
-	 offset(combo_box.list_spacing), XmRImmediate, (XtPointer)0},
+    {DtNlistSpacing, DtCListSpacing, XmRVerticalDimension,sizeof(Dimension), 
+	 DtOffset(list_spacing), XmRImmediate, (XtPointer)0},
     {DtNlosingFocusCallback, DtCCallback, XmRCallback, sizeof(XtCallbackList),
-	 offset(combo_box.losing_focus_callback), XmRCallback, 
+	 DtOffset(losing_focus_callback), XmRCallback, 
 	 (XtPointer)NULL},
     {DtNmarginHeight, DtCMarginHeight, XmRVerticalDimension,
-	 sizeof(Dimension), offset(combo_box.margin_height),
+	 sizeof(Dimension), DtOffset(margin_height),
 	 XmRImmediate, (XtPointer)MARGIN},
     {DtNmarginWidth, DtCMarginWidth, XmRHorizontalDimension, sizeof(Dimension),
-	 offset(combo_box.margin_width), XmRImmediate, (XtPointer)MARGIN},
+	 DtOffset(margin_width), XmRImmediate, (XtPointer)MARGIN},
     {DtNmaxLength, DtCMaxLength, XmRInt, sizeof(unsigned int),
-	 offset(combo_box.text_max_length), XmRImmediate, (XtPointer)MAXINT},
+	 DtOffset(text_max_length), XmRImmediate, (XtPointer)INT_MAX},
     {DtNmenuPostCallback, DtCCallback, XmRCallback, sizeof(XtCallbackList),
-	 offset(combo_box.menu_post_callback), XmRCallback, (XtPointer)NULL},
+	 DtOffset(menu_post_callback), XmRCallback, (XtPointer)NULL},
     {DtNorientation, DtCOrientation, XmROrientation, sizeof(unsigned char),
-	 offset(combo_box.orientation), XmRImmediate, (XtPointer)DtRIGHT},
+	 DtOffset(orientation), XmRImmediate, (XtPointer)DtRIGHT},
     {DtNpoppedUp, DtCPoppedUp, XmRBoolean, sizeof(Boolean),
-	 offset(combo_box.popped_up), XmRImmediate, (XtPointer)FALSE},
+	 DtOffset(popped_up), XmRImmediate, (XtPointer)FALSE},
     {DtNrecomputeSize, DtCRecomputeSize, XmRBoolean, sizeof(Boolean),
-	 offset(combo_box.recompute_size), XmRImmediate, (XtPointer)TRUE},
-    {DtNselectedItem, XmCXmString, XmRXmString, sizeof(XmString),
-	 offset(combo_box.selected_item), XmRImmediate, (XtPointer)NULL},
-    {DtNselectedPosition, DtCSelectedPosition, XmRInt, sizeof(unsigned int),
-	 offset(combo_box.selected_position), XmRImmediate, (XtPointer)0},
+	 DtOffset(recompute_size), XmRImmediate, (XtPointer)TRUE},
+    {DtNselectedItem, DtCXmString, XmRXmString, sizeof(XmString),
+	 DtOffset(selected_item), XmRImmediate, (XtPointer)NULL},
+    {DtNselectedPosition, DtCSelectedPosition, XmRInt, sizeof(int),
+	 DtOffset(selected_position), XmRImmediate, (XtPointer)0},
     {DtNselectionCallback, DtCCallback, XmRCallback, sizeof(XtCallbackList),
-	 offset(combo_box.selection_callback), XmRCallback, (XtPointer)NULL},
+	 DtOffset(selection_callback), XmRCallback, (XtPointer)NULL},
     {DtNtextField, DtCTextField, XmRWidget, sizeof(Widget),
-	 offset(combo_box.text), XmRImmediate, (XtPointer)NULL},
+	 DtOffset(text), XmRImmediate, (XtPointer)NULL},
     {DtNtopItemPosition, DtCTopItemPosition, XmRInt, sizeof(int), 
-	 offset(combo_box.top_item_position), XmRImmediate, (XtPointer)1},
+	 DtOffset(top_item_position), XmRImmediate, (XtPointer)1},
     {DtNcomboBoxType, DtCComboBoxType, DtRComboBoxType, sizeof(unsigned char),
-	 offset(combo_box.type), XmRImmediate,
-	 (XtPointer)DtDROP_DOWN_LIST},
+	 DtOffset(type), XmRImmediate,(XtPointer)DtDROP_DOWN_LIST},
     {DtNupdateLabel, DtCUpdateLabel, XmRBoolean, sizeof(Boolean),
-	 offset(combo_box.update_label), XmRImmediate, (XtPointer)TRUE},
+	 DtOffset(update_label), XmRImmediate, (XtPointer)TRUE},
     {DtNvisibleItemCount, DtCVisibleItemCount, XmRInt, sizeof(int),
-	 offset(combo_box.visible_item_count), XmRImmediate, (XtPointer)10},
+	 DtOffset(visible_item_count), XmRImmediate, (XtPointer)10},
     {DtNverticalSpacing, DtCVerticalSpacing, XmRVerticalDimension,
-	 sizeof(Dimension), offset(combo_box.vertical_spacing),
+	 sizeof(Dimension), DtOffset(vertical_spacing),
 	 XmRImmediate, (XtPointer)INVALID_DIMENSION},
 };
 
@@ -264,28 +449,39 @@ static XtResource resources[] = {
  * List resources (used for GetValues).
  */
 static XmSyntheticResource syn_resources[] = {
-    {DtNarrowSize, sizeof(Dimension), offset(combo_box.arrow_size), 
-	 _DtComboBoxGetArrowSize, _XmSetSyntheticResForChild},
-    {DtNlabelString, sizeof(XmString), offset(combo_box.label_string), 
-	 _DtComboBoxGetLabelString, _XmSetSyntheticResForChild},
-    {DtNitemCount, sizeof(int), offset(combo_box.item_count), 
-	 _DtComboBoxGetListItemCount, _XmSetSyntheticResForChild},
-    {DtNitems, sizeof(XmStringTable), offset(combo_box.items), 
-	 _DtComboBoxGetListItems, _XmSetSyntheticResForChild},
-    {DtNlistFontList, sizeof(XmFontList), offset(combo_box.list_font_list), 
-	 _DtComboBoxGetListFontList, _XmSetSyntheticResForChild},
+    {DtNarrowSpacing, sizeof(Dimension), DtOffset(arrow_spacing), 
+         XmeFromHorizontalPixels, XmeToHorizontalPixels},
+    {DtNhorizontalSpacing, sizeof(Dimension), DtOffset(horizontal_spacing), 
+         XmeFromHorizontalPixels, XmeToHorizontalPixels},
+    {DtNverticalSpacing, sizeof(Dimension), DtOffset(vertical_spacing), 
+         XmeFromVerticalPixels, XmeToVerticalPixels},
+    {DtNmarginWidth, sizeof(Dimension), DtOffset(margin_width), 
+         XmeFromHorizontalPixels, XmeToHorizontalPixels},
+    {DtNmarginHeight, sizeof(Dimension), DtOffset(margin_height), 
+         XmeFromVerticalPixels, XmeToVerticalPixels},
+    {DtNarrowSize, sizeof(Dimension), DtOffset(arrow_size), 
+         _DtComboBoxGetArrowSize, XmeToHorizontalPixels},
+    {DtNlabelString, sizeof(XmString), DtOffset(label_string), 
+         _DtComboBoxGetLabelString, _XmSetSyntheticResForChild},
+    {DtNitemCount, sizeof(int), DtOffset(item_count), 
+         _DtComboBoxGetListItemCount, _XmSetSyntheticResForChild},
+    {DtNitems, sizeof(XmStringTable), DtOffset(items), 
+         _DtComboBoxGetListItems, _XmSetSyntheticResForChild},
+    {DtNlistFontList, sizeof(XmFontList), DtOffset(list_font_list), 
+         _DtComboBoxGetListFontList, _XmSetSyntheticResForChild},
     {DtNlistMarginHeight, sizeof(Dimension), 
-	 offset(combo_box.list_margin_height),
-	 _DtComboBoxGetListMarginHeight, _XmSetSyntheticResForChild},
-    {DtNlistMarginWidth, sizeof(Dimension),offset(combo_box.list_margin_width),
-	 _DtComboBoxGetListMarginWidth, _XmSetSyntheticResForChild},
-    {DtNlistSpacing, sizeof(Dimension), offset(combo_box.list_spacing),
-	 _DtComboBoxGetListSpacing, _XmSetSyntheticResForChild},
-    {DtNtopItemPosition, sizeof(int), offset(combo_box.top_item_position),
-	 _DtComboBoxGetListTopItemPosition, _XmSetSyntheticResForChild},
-    {DtNvisibleItemCount, sizeof(int), offset(combo_box.visible_item_count),
-	 _DtComboBoxGetListVisibleItemCount, _XmSetSyntheticResForChild},
+         DtOffset(list_margin_height),
+         _DtComboBoxGetListMarginHeight, XmeToVerticalPixels},
+    {DtNlistMarginWidth, sizeof(Dimension),DtOffset(list_margin_width),
+         _DtComboBoxGetListMarginWidth, XmeToHorizontalPixels},
+    {DtNlistSpacing, sizeof(Dimension), DtOffset(list_spacing),
+         _DtComboBoxGetListSpacing, XmeToVerticalPixels},
+    {DtNtopItemPosition, sizeof(int), DtOffset(top_item_position),
+         _DtComboBoxGetListTopItemPosition, _XmSetSyntheticResForChild},
+    {DtNvisibleItemCount, sizeof(int), DtOffset(visible_item_count),
+         _DtComboBoxGetListVisibleItemCount, _XmSetSyntheticResForChild},
 };
+#undef DtOffset
 #undef offset
 
 /* Need Class Extension for widget navigation */
@@ -310,7 +506,8 @@ static XmBaseClassExtRec baseClassExtRec = {
     NULL,                               /* compiled_ext_resources*/
     0,                                  /* num_ext_resources    */
     FALSE,                              /* use_sub_resources    */
-    (XmWidgetNavigableProc)WidgetNavigable,/* widgetNavigable   */
+    (XmWidgetNavigableProc)WidgetNavigable,
+					/* widgetNavigable      */
     (XmFocusChangeProc)NULL,            /* focusChange          */
     (XmWrapperData)NULL			/* wrapperData 		*/
 };
@@ -318,12 +515,12 @@ static XmBaseClassExtRec baseClassExtRec = {
 /*
  * Define Class Record.
  */
-DtComboBoxClassRec dtComboBoxClassRec =
+externaldef(dtcomboBoxclassrec) DtComboBoxClassRec dtComboBoxClassRec =
 {
     {		/* core_class fields      */
     (WidgetClass)&(xmManagerClassRec),		/* superclass         */    
     (String)"DtComboBox",			/* class_name         */    
-    (Cardinal)sizeof(DtComboBoxRec),		/* widget_size        */    
+    (Cardinal)sizeof(DtComboBoxPart),		/* widget_size        */    
     (XtProc)ClassInitialize,			/* class_initialize   */    
     (XtWidgetClassProc)NULL,			/* class_part_init    */    
     (XtEnum)FALSE,				/* class_inited       */    
@@ -347,7 +544,7 @@ DtComboBoxClassRec dtComboBoxClassRec =
     (XtAlmostProc)XtInheritSetValuesAlmost,	/* set values almost  */    
     (XtArgsProc)NULL,				/* get values hook    */    
     (XtAcceptFocusProc)NULL,			/* accept_focus       */    
-    (XtVersionType)XtVersion,			/* Version            */    
+    (XtVersionType)XtVersionDontCheck,		/* Version            */    
     (XtPointer)NULL,				/* PRIVATE cb list    */
     (String)XtInheritTranslations,		/* tm_table           */
     (XtGeometryHandler)XtInheritQueryGeometry,	/* query_geom         */
@@ -384,15 +581,41 @@ DtComboBoxClassRec dtComboBoxClassRec =
     }
 };
 
-WidgetClass dtComboBoxWidgetClass = (WidgetClass)&dtComboBoxClassRec;
+externaldef(dtcomboBoxwidgetclass) WidgetClass dtComboBoxWidgetClass =
+					(WidgetClass)&dtComboBoxClassRec;
+/* Parse the translation tables only once for the whole class
+ */
+static XtTranslations trans;
+static XtTranslations list_trans; 
+static XtTranslations label_trans; 
+static XtTranslations text_trans; 
+static XtTranslations button_trans; 
 
 /* 
  * Must set up the record type for the class extensions to work.
  */
 static void
-ClassInitialize()
+ClassInitialize(void)
 {
     baseClassExtRec.record_type = XmQmotif;
+/*
+ * MotifBc
+ */
+    XmResolveAllPartOffsets(dtComboBoxWidgetClass, &ipot, &cpot);
+/* Parse the translation tables here
+ */
+    trans = 	  XtParseTranslationTable(ComboBoxTranslationTable);
+    list_trans =  XtParseTranslationTable(ComboBoxListTranslationTable);
+    label_trans = XtParseTranslationTable(ComboBoxLabelTranslationTable);
+    text_trans =  XtParseTranslationTable(ComboBoxTextTranslationTable);
+    button_trans =XtParseTranslationTable(ComboBoxButtonTranslationTable);
+
+/* Add a type converter for String to DtRComboBoxType
+ */
+    XtSetTypeConverter("String","ComboBoxType", _CvtStringToType, NULL, 0, 
+	XtCacheAll, NULL);
+
+    InitLabel = XmStringCreateLocalized(CB_LABEL);
 }
 
 /*
@@ -404,25 +627,25 @@ ClassInitialize()
  * both widgets if the user never changes the type resource.
  */
 static void
-Initialize(request, new, given_args, num_args)
-DtComboBoxWidget request;
-DtComboBoxWidget new;
-ArgList given_args;
-Cardinal *num_args;
+Initialize(	DtComboBoxWidget request,
+		DtComboBoxWidget new,
+		ArgList given_args,
+		Cardinal *num_args)
 {
-    XtTranslations trans = XtParseTranslationTable(ComboBoxTranslationTable);
-    XtTranslations list_trans = 
-	XtParseTranslationTable(ComboBoxListTranslationTable);
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(new->combo_box);
+   /* use the address of the first element of DtComboBoxPart structure 
+    * as of DtComboBoxPart 
+    */    
+    DtComboBoxPart *combo_p = (DtComboBoxPart*)
+	&(XmField(new,ipot,DtComboBox,arrow,Widget)); 
     Boolean force_label_string = FALSE;
     Arg args[15];
     int n;
+    /* Resolution Independent */
+    unsigned char unit_type = MUnitType(new);
 
     /* Overwrite the manager's focusIn and focusOut translations */
     XtOverrideTranslations((Widget)new, trans);
 
-    if (InitLabel == NULL)
-	InitLabel = XmStringCreateSimple("ComboBox");
 
     /* 
      * force_label_string usage if it is specified and items is not.
@@ -430,17 +653,20 @@ Cardinal *num_args;
      * is false, else it is only used until the user picks something
      * new off the list.
      */
-    if (combo_p->label_string == NULL)
-	combo_p->label_string = InitLabel;
-    else if (!combo_p->items)
+    if (LabelString(new) == NULL)
+	LabelString(new) = InitLabel;
+    else if (!Items(new))
 	force_label_string = TRUE;
 
+    /* Copy given label-string. */
+    if (LabelString(new))
+	LabelString(new) = XmStringCopy(LabelString(new));
 
-    combo_p->text = (Widget)NULL;
-    combo_p->label = (Widget)NULL;
-    combo_p->sep = (Widget)NULL;
-    combo_p->old_width = 0;
-    combo_p->old_height = 0;
+    Text(new) = (Widget)NULL;
+    Label(new) = (Widget)NULL;
+    Sep(new) = (Widget)NULL;
+    OldWidth(new) = 0;
+    OldHeight(new) = 0;
 
     CheckResources(new);
 
@@ -449,78 +675,91 @@ Cardinal *num_args;
      * When part of X-Designer, we create both at initialization to
      * avoid later crashes.
      */
-#ifndef XDESIGNER
-    if (combo_p->type == DtDROP_DOWN_COMBO_BOX)
-#endif
+    if (Type(new) == DtDROP_DOWN_COMBO_BOX)
     {
 	n = 0;
-	XtSetArg(args[n], XmNcolumns, combo_p->text_columns); n++;
-	XtSetArg(args[n], XmNmaxLength, combo_p->text_max_length); n++;
-	XtSetArg(args[n], XmNmarginWidth, 2); n++;
+	XtSetArg(args[n], XmNcolumns, TextColumns(new)); n++;
+	XtSetArg(args[n], XmNmaxLength, TextMaxLength(new)); n++;
+	XtSetArg(args[n], XmNmarginWidth, TEXT_CONTEXT_MARGIN); n++;
 	XtSetArg(args[n], XmNmarginHeight, 2); n++;
-	XtSetArg(args[n], XmNnavigationType, XmNONE); n++;
-	combo_p->text = XtCreateManagedWidget("Text", 
+	/* Resolution Independent */
+	if (unit_type != XmPIXELS) {
+		XtSetArg(args[n], XmNunitType, XmPIXELS); n++;
+	}
+	Text(new) = XtCreateManagedWidget("Text", 
 					      xmTextFieldWidgetClass,
 					      (Widget)new, args, n);
-	XtAddCallback(combo_p->text, XmNlosingFocusCallback, 
+	XtAddCallback(Text(new), XmNlosingFocusCallback, 
 		      text_losing_focus_cb, (XtPointer)new);
-	XtAddCallback(combo_p->text, XmNactivateCallback, 
+	XtAddCallback(Text(new), XmNactivateCallback, 
 		      text_activate_cb, (XtPointer)new);
-	XtAddCallback(combo_p->text, XmNfocusCallback, 
+	XtAddCallback(Text(new), XmNfocusCallback, 
 		      text_focus_cb, (XtPointer)new);
-	if (combo_p->horizontal_spacing == INVALID_DIMENSION)
-	    combo_p->horizontal_spacing = 0;
-	if (combo_p->vertical_spacing == INVALID_DIMENSION)
-	    combo_p->vertical_spacing = 0;
+
+        XtOverrideTranslations(Text(new), text_trans);
+
+	if (HorizontalSpacing(new) == INVALID_DIMENSION)
+	    HorizontalSpacing(new) = 0;
+	if (VerticalSpacing(new) == INVALID_DIMENSION)
+	    VerticalSpacing(new) = 0;
+        if (unit_type != XmPIXELS) {
+                XtSetArg(args[0], XmNunitType, unit_type);
+		XtSetValues(Text(new), args, 1);
+        }                
     }
-#ifndef XDESIGNER
     else
-#endif
     {
-	XtTranslations label_trans = 
-	    XtParseTranslationTable(ComboBoxLabelTranslationTable);
+        XmStringDirection new_direction = 
+	  XmDirectionToStringDirection(LayoutDirection(new));
 
 	COMBO_SHADOW(new) = LABEL_SHADOW;
 	n = 0;
-	XtSetArg(args[n], XmNalignment, combo_p->alignment); n++;
-	XtSetArg(args[n], XmNrecomputeSize, TRUE); n++;
+	XtSetArg(args[n], XmNalignment, Alignment(new)); n++;
+	XtSetArg(args[n], XmNrecomputeSize, FALSE); n++;
 	XtSetArg(args[n], XmNlabelString, InitLabel); n++;
 	XtSetArg(args[n], XmNmarginLeft, LABEL_PADDING); n++;
 	XtSetArg(args[n], XmNmarginRight, LABEL_PADDING); n++;
-	XtSetArg(args[n], XmNmarginWidth, 0); n++;
+	XtSetArg(args[n], XmNmarginWidth, TEXT_CONTEXT_MARGIN); n++;
 	XtSetArg(args[n], XmNmarginHeight, 0); n++;
-	XtSetArg(args[n], XmNstringDirection,
-		 new->manager.string_direction); n++;
-	combo_p->label = XtCreateManagedWidget("ComboBoxLabel", 
+	XtSetArg(args[n], XmNstringDirection, new_direction); n++;
+        /* Resolution Independent */
+        if (unit_type != XmPIXELS) {
+                XtSetArg(args[n], XmNunitType, XmPIXELS); n++;
+        }
+	Label(new) = XtCreateManagedWidget("Label", 
 					       xmLabelWidgetClass,
 					       (Widget)new, args, n);
-	XtOverrideTranslations((Widget)combo_p->label, label_trans);
-	if (combo_p->horizontal_spacing == INVALID_DIMENSION)
-	    combo_p->horizontal_spacing = 1;
-	if (combo_p->vertical_spacing == INVALID_DIMENSION)
-	    combo_p->vertical_spacing = 2;
+	XtOverrideTranslations(Label(new), label_trans);
+	if (HorizontalSpacing(new) == INVALID_DIMENSION)
+	    HorizontalSpacing(new) = 1;
+	if (VerticalSpacing(new) == INVALID_DIMENSION)
+	    VerticalSpacing(new) = 2;
+        if (unit_type != XmPIXELS) {
+                XtSetArg(args[0], XmNunitType, unit_type);
+                XtSetValues(Label(new), args, 1);
+        }                
     }
-
-#ifdef XDESIGNER
-    /* Unmanage the one we don't use */
-    if (combo_p->type == DtDROP_DOWN_COMBO_BOX)
-	XtUnmanageChild(combo_p->label);
-    else
-	XtUnmanageChild(combo_p->text);
-#endif
 
     /*
      * Create the separator used if non-editable combo-box.
      */
-#ifndef XDESIGNER
-    if (combo_p->type == DtDROP_DOWN_LIST) 
-#endif
+    if (Type(new) == DtDROP_DOWN_LIST) 
     {
 	n = 0;
 	XtSetArg(args[n], XmNorientation, XmVERTICAL); n++;
-	combo_p->sep = XtCreateManagedWidget("ComboBoxSeparator", 
+        /* Resolution Independent */
+        if (unit_type != XmPIXELS) {
+                XtSetArg(args[n], XmNunitType, XmPIXELS); n++;
+        }
+	Sep(new) = XtCreateManagedWidget("ComboBoxSeparator", 
 					     xmSeparatorWidgetClass,
 					     (Widget)new, args, n);
+
+	XtOverrideTranslations((Widget)Sep(new), button_trans);
+        if (unit_type != XmPIXELS) {
+                XtSetArg(args[0], XmNunitType, unit_type);
+                XtSetValues(Sep(new), args, 1);
+        }                
     }
 
     /*
@@ -530,22 +769,24 @@ Cardinal *num_args;
     XtSetArg(args[n], XmNtraversalOn, FALSE); n++;
     XtSetArg(args[n], XmNhighlightThickness, 0); n++;
     XtSetArg(args[n], XmNshadowThickness, 0); n++;
-    if (combo_p->arrow_type == DtMOTIF) {
+    if (ArrowType(new) == DtMOTIF) {
 	XtSetArg(args[n], XmNarrowDirection, XmARROW_DOWN); n++;
-	XtSetArg(args[n], XmNforeground, new->core.background_pixel); n++;
-	combo_p->arrow = XtCreateManagedWidget("ComboBoxArrow", 
+	XtSetArg(args[n], XmNforeground, BackgroundPixel(new)); n++;
+	Arrow(new) = XtCreateManagedWidget("ComboBoxArrow", 
 					       xmArrowButtonWidgetClass,
 					       (Widget)new, args, n);
     }
     else {
-	combo_p->arrow = XtCreateManagedWidget("ComboBoxArrow", 
+	Arrow(new) = XtCreateManagedWidget("ComboBoxArrow", 
 					       xmDrawnButtonWidgetClass,
 					       (Widget)new, args, n);
-	XtAddCallback(combo_p->arrow, XmNexposeCallback, arrow_expose_cb, 
+	XtAddCallback(Arrow(new), XmNexposeCallback, arrow_expose_cb, 
 		      (XtPointer)new);
     }
-    XtAddCallback(combo_p->arrow, XmNactivateCallback, activate_cb, 
+    XtAddCallback(Arrow(new), XmNactivateCallback, activate_cb, 
 		  (XtPointer)new);
+
+    XtOverrideTranslations((Widget)Arrow(new), button_trans); 
 
     /*
      *  Create the shell and associated list widgets.
@@ -554,68 +795,89 @@ Cardinal *num_args;
     XtSetArg(args[n], XtNoverrideRedirect, TRUE); n++;
     XtSetArg(args[n], XtNallowShellResize, TRUE); n++;
     XtSetArg(args[n], XtNsaveUnder, TRUE); n++;
-    combo_p->shell = XtCreatePopupShell("ComboBoxMenuShell", 
-					topLevelShellWidgetClass,
+    Shell(new) = XtCreatePopupShell("ComboBoxMenuShell", 
+					topLevelShellWidgetClass, 
 					(Widget)new, args, n);
     
     n = 0;
-    combo_p->frame = XtCreateManagedWidget("ComboBoxRowColumn",
+    Frame(new) = XtCreateManagedWidget("ComboBoxRowColumn",
 					   xmFrameWidgetClass,
-					   combo_p->shell, args, n);
+					   Shell(new), args, n);
 
     n = 0;
     /* Store combo widget in list for later use */
     XtSetArg(args[n], XmNuserData, (XtPointer)new); n++;
-    if (combo_p->list_font_list) {
-	XtSetArg(args[n], XmNfontList, combo_p->list_font_list); n++;
+    if (ListFontList(new)) {
+	XtSetArg(args[n], XmNfontList, ListFontList(new)); n++;
     }
-    XtSetArg(args[n], XmNitemCount, combo_p->item_count); n++;
-    XtSetArg(args[n], XmNitems, combo_p->items); n++;
-    XtSetArg(args[n], XmNlistMarginHeight, combo_p->list_margin_height); n++;
-    XtSetArg(args[n], XmNlistMarginWidth, combo_p->list_margin_width); n++;
-    XtSetArg(args[n], XmNlistSpacing, combo_p->list_spacing); n++;
-    XtSetArg(args[n], XmNstringDirection, new->manager.string_direction); n++;
-    XtSetArg(args[n], XmNtopItemPosition, combo_p->top_item_position); n++;
-    XtSetArg(args[n], XmNvisibleItemCount, combo_p->visible_item_count); n++;
+    /* to disable double click */
+    XtSetArg(args[n], XmNdoubleClickInterval, 0); n++;
+    XtSetArg(args[n], XmNitemCount, ItemCount(new)); n++;
+    XtSetArg(args[n], XmNitems, Items(new)); n++;
+    XtSetArg(args[n], XmNlistMarginHeight, ListMarginHeight(new)); n++;
+    XtSetArg(args[n], XmNlistMarginWidth, ListMarginWidth(new)); n++;
+    XtSetArg(args[n], XmNlistSpacing, ListSpacing(new)); n++;
+    {
+      XmStringDirection new_direction =
+	XmDirectionToStringDirection(LayoutDirection(new));
+      XtSetArg(args[n], XmNstringDirection, new_direction); n++;
+    }
+    XtSetArg(args[n], XmNtopItemPosition, TopItemPosition(new)); n++;
+    XtSetArg(args[n], XmNvisibleItemCount, VisibleItemCount(new)); n++;
     XtSetArg(args[n], XmNlistSizePolicy, XmRESIZE_IF_POSSIBLE); n++;
     XtSetArg(args[n], XmNselectionPolicy, XmBROWSE_SELECT); n++;
-    combo_p->list = XmCreateScrolledList(combo_p->frame, "List",
-					 args, n);
-    XtOverrideTranslations((Widget)combo_p->list, list_trans);
+    /* Resolution Independent */
+    if (unit_type != XmPIXELS) {
+        XtSetArg(args[n], XmNunitType, XmPIXELS); n++;
+    }
+    List(new) = XmCreateScrolledList(Frame(new), "List", args, n);
+    XtOverrideTranslations((Widget)List(new), list_trans);
+
+    n = 0;
+    XtSetArg(args[n], XmNshadowThickness, (XtArgVal) 0); n++;
+    XtSetValues(XtParent(List(new)), args, n);
 
     /* selected_item resource used before selected_position */
-    if (combo_p->selected_item)
-	DtComboBoxSelectItem((Widget)new, combo_p->selected_item);
-    else
-	XmListSelectPos(combo_p->list, combo_p->selected_position + 1, FALSE);
+    if (SelectedItem(new) && XmeStringIsValid(SelectedItem(new)) ) {
+	SelectedItem(new) =XmStringCopy(SelectedItem(new));
+	DtComboBoxSelectItem((Widget)new, SelectedItem(new));
+    }
+    else {
+	SelectedItem(new) = (XmString) NULL;
+	if (SelectedPosition(new)<0 || SelectedPosition(new)>=ItemCount(new))
+	    SelectedPosition(new) = 0;
+	if ( ItemCount(new))
+	    XmListSelectPos(List(new), SelectedPosition(new) + 1, FALSE);
+    }
+    if (unit_type != XmPIXELS) {
+            XtSetArg(args[0], XmNunitType, unit_type);
+            XtSetValues(List(new), args, 1);
+    }                
 
     SyncWithList(combo_p);
-    XtManageChild(combo_p->list);
-    XtRealizeWidget(combo_p->shell);
+    XtManageChild(List(new));
+    XtRealizeWidget(Shell(new));
 
-    combo_p->max_shell_width = combo_p->shell->core.width;
-    combo_p->max_shell_height = combo_p->shell->core.height;
+    MaxShellWidth(new) = Width(((Widget) Shell(new)));
+    MaxShellHeight(new) = Height(((Widget) Shell(new)));
 
-    XtAddCallback(combo_p->list, XmNdefaultActionCallback, select_cb, new);
-    XtAddCallback(combo_p->list, XmNbrowseSelectionCallback, select_cb, new);
+    XtAddCallback(List(new), XmNdefaultActionCallback, select_cb, new);
+    XtAddCallback(List(new), XmNbrowseSelectionCallback, select_cb, new);
 
     /*
      * Set up event handlers needed for handling grab states.
      */
-    XtInsertEventHandler(combo_p->list, LIST_EVENTS, TRUE,
+    XtInsertEventHandler(List(new), LIST_EVENTS, TRUE,
 			 (XtEventHandler)list_event_handler, 
 			 (XtPointer)new, XtListHead);
-    XtInsertEventHandler(combo_p->shell, SHELL_EVENTS, TRUE,
+    XtInsertEventHandler(Shell(new), SHELL_EVENTS, TRUE,
 			 (XtEventHandler)shell_event_handler, 
 			 (XtPointer)new, XtListHead);
 
     /*
      * Set initial value in text or label if items was specified
-     * Copy given label-string.
      */
-    if (combo_p->label_string)
-	combo_p->label_string = XmStringCopy(combo_p->label_string);
-    if (combo_p->type == DtDROP_DOWN_LIST) {
+    if (Type(new) == DtDROP_DOWN_LIST) {
 	SetMaximumLabelSize(combo_p);
 	SetLabelData(combo_p, NULL, force_label_string);
     }
@@ -632,18 +894,17 @@ Cardinal *num_args;
  * text-field), then let the toolkit give focus to the text-field.
  */
 static XmNavigability
-WidgetNavigable(combo)
-DtComboBoxWidget combo;
+WidgetNavigable(DtComboBoxWidget combo)
 {   
-    XmNavigationType nav_type = ((XmManagerWidget)combo)->manager.navigation_type;
+    XmNavigationType nav_type = NavigationType(((XmManagerWidget)combo));
 
-    if (combo->core.sensitive &&  combo->core.ancestor_sensitive &&
-	((XmManagerWidget)combo)->manager.traversal_on) {
+    if (Sensitive(combo) &&  AncestorSensitive(combo) &&
+	TraversalOn(((XmManagerWidget)combo))) {
 	if ((nav_type == XmSTICKY_TAB_GROUP) ||
 	    (nav_type == XmEXCLUSIVE_TAB_GROUP) ||
-	    ((nav_type == XmTAB_GROUP) /*&& 
-	     !_XmShellIsExclusive((Widget)combo)*/)) {
-	    if (combo->combo_box.type == DtDROP_DOWN_COMBO_BOX)
+	    ((nav_type == XmTAB_GROUP) && 
+	     !_XmShellIsExclusive((Widget)combo))) {
+	    if (Type(combo) == DtDROP_DOWN_COMBO_BOX)
 		return(XmDESCENDANTS_TAB_NAVIGABLE);
 	    else
 		return(XmTAB_NAVIGABLE);
@@ -657,11 +918,10 @@ DtComboBoxWidget combo;
  * The combo_box gets focus.
  */
 static void 
-_ComboBoxFocusIn(combo, event, params, num_params)
-DtComboBoxWidget combo;
-XEvent *event;
-char **params;
-Cardinal *num_params;
+_ComboBoxFocusIn(	DtComboBoxWidget combo,
+			XEvent *event,
+			char **params,
+			Cardinal *num_params)
 {
     DrawHighlight(combo, FALSE);
 }
@@ -670,11 +930,10 @@ Cardinal *num_params;
  * The combo_box loses focus. Only happens if not editable.
  */
 static void 
-_ComboBoxFocusOut(combo, event, params, num_params)
-DtComboBoxWidget combo;
-XEvent *event;
-char **params;
-Cardinal *num_params;
+_ComboBoxFocusOut(	DtComboBoxWidget combo,
+			XEvent *event,
+			char **params,
+			Cardinal *num_params)
 {
     DrawHighlight(combo, TRUE);
 }
@@ -685,25 +944,24 @@ Cardinal *num_params;
  * and focus_out events.
  */
 static void
-DrawHighlight(combo, clear)
-DtComboBoxWidget combo;
-Boolean clear;
+DrawHighlight(  DtComboBoxWidget combo,
+		Boolean clear)
 {
     XRectangle rect[4] ;
 
     if (XtIsRealized((Widget)combo)) {
 	if (clear) {
 	    rect[0].x = rect[1].x = rect[2].x = 0;
-	    rect[3].x = combo->combo_box.old_width - COMBO_MARGIN_W(combo);
+	    rect[3].x = OldWidth(combo) - COMBO_MARGIN_W(combo);
 	    rect[0].y = rect[2].y = rect[3].y = 0 ;
-	    rect[1].y = combo->combo_box.old_height - COMBO_MARGIN_H(combo);
-	    rect[0].width = rect[1].width = combo->combo_box.old_width;
+	    rect[1].y = OldHeight(combo) - COMBO_MARGIN_H(combo);
+	    rect[0].width = rect[1].width = OldWidth(combo);
 	    rect[2].width = rect[3].width = COMBO_MARGIN_W(combo);
 	    rect[0].height = rect[1].height = COMBO_MARGIN_H(combo);
-	    rect[2].height = rect[3].height = combo->combo_box.old_height;
+	    rect[2].height = rect[3].height = OldHeight(combo);
 	    XFillRectangles(XtDisplayOfObject((Widget)combo),
 			    XtWindowOfObject((Widget)combo), 
-			    combo->manager.background_GC, rect, 4);
+			    BackgroundGC(combo), rect, 4);
 	}
 	else if (XmGetFocusWidget((Widget)combo) == (Widget)combo) {
 	    rect[0].x = rect[1].x = rect[2].x = 0;
@@ -716,167 +974,136 @@ Boolean clear;
 	    rect[2].height = rect[3].height = XtHeight(combo);
 	    XFillRectangles(XtDisplayOfObject((Widget)combo),
 			    XtWindowOfObject((Widget)combo), 
-			    combo->manager.highlight_GC, rect, 4);
-	} 
+			    HighlightGC(combo), rect, 4);
+	}
     }
 }
+
+/* Add a global variable to avoid the handler to process the
+ * the ButtonPress which popup the shell
+ */
+static int popup_shell_init=DtNonePopup;
 
 /*
  * osfSelect virtual key hit.  Simulate hitting the arrow.
  */
 static void 
-_ComboBoxActivate(w, event, params, num_params)
-Widget w; /* could be combo box or label */
-XEvent *event;
-char **params;
-Cardinal *num_params;
+_ComboBoxActivate(	Widget w,
+			XEvent *event,
+			char **params,
+			Cardinal *num_params)
 {
     DtComboBoxWidget combo;
+    XmAnyCallbackStruct cb;
 
     if (*num_params == 0) /* no params means combo */
 	combo = (DtComboBoxWidget)w;
     else /* params means label */
+    {
 	combo = (DtComboBoxWidget)XtParent(w);
+    }
 
-    activate_cb((Widget)combo->combo_box.arrow, (XtPointer)combo, NULL);
+    _DtProcessLock();
+    if (event->type == KeyPress)
+        popup_shell_init = DtKeyPressPopup;
+    else if (event->type == ButtonPress)
+        popup_shell_init = DtButtonPressPopup;
+    else
+        popup_shell_init = DtPopup;
+    _DtProcessUnlock();
+
+    cb.reason = XmCR_ACTIVATE;
+    cb.event  = event;
+    activate_cb((Widget)Arrow(combo), (XtPointer)combo, (XtPointer)&cb);
 }
 
 /*
  * osfCancel virtual key hit.
  */
 static void 
-_ComboBoxKbdCancel(w, event, params, num_params)
-Widget w; /* ListWidget */
-XEvent *event;
-char **params;
-Cardinal *num_params;
+_ComboBoxKbdCancel(	Widget w,
+			XEvent *event,
+			char **params,
+			Cardinal *num_params)
 {
     DtComboBoxWidget combo;
+    XtPointer data;
     Arg args[1];
 
     /* Get combo-box off list data */
-    XtSetArg(args[0], XmNuserData, (XtPointer)&combo);
+    XtSetArg(args[0], XmNuserData, &data);
     XtGetValues(w, args, 1);
+    
+    combo = (DtComboBoxWidget)data;
 
-    cancelPopup(combo);
+    input_ungrab( combo, GRAB_POINTER | GRAB_KEYBOARD );
 }
 
-static void
-cancelPopup(combo)
-DtComboBoxWidget combo;
+/* #7
+ * Tab Group Action for Buttons
+ */
+static void 
+_ComboBoxPrevTabGroup(	Widget w,
+			XEvent *event,
+			char **params,
+			Cardinal *num_params)
 {
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-
-    if(!combo_p->popped_up) return;
-
-    combo_p->popped_up = FALSE;
-    XtPopdown(combo_p->shell);
-    XtUngrabPointer(combo_p->shell, CurrentTime);
-    XtUngrabKeyboard(combo_p->list, CurrentTime);
-    /*_XmRemoveGrab(combo_p->shell);*/
-    if (combo_p->type == DtDROP_DOWN_COMBO_BOX)
-	XmProcessTraversal(combo_p->text, XmTRAVERSE_CURRENT);
+   XmProcessTraversal ((Widget)XtParent(w), XmTRAVERSE_PREV_TAB_GROUP);
 }
+static void 
+_ComboBoxNextTabGroup(	Widget w,
+			XEvent *event,
+			char **params,
+			Cardinal *num_params)
+{
+   XmProcessTraversal ((Widget)XtParent(w), XmTRAVERSE_NEXT_TAB_GROUP);
+}
+
 
 /*
  * This function goes through most of the resources and makes sure 
  * they have legal values.
  */
 static void
-CheckResources(combo)
-DtComboBoxWidget combo;
+CheckResources(	DtComboBoxWidget combo)
 {
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-
-    if ((combo_p->alignment != XmALIGNMENT_CENTER) && 
-	(combo_p->alignment != XmALIGNMENT_BEGINNING) &&
-	(combo_p->alignment != XmALIGNMENT_END)) {
-	XtWarning(COMBO_ALIGNMENT);
-	combo_p->alignment = XmALIGNMENT_CENTER;
+    if ((Alignment(combo) != DtALIGNMENT_CENTER) && 
+	(Alignment(combo) != DtALIGNMENT_BEGINNING) &&
+	(Alignment(combo) != DtALIGNMENT_END)) {
+	XtWarning(CB_ALIGNMENT);
+	Alignment(combo) = DtALIGNMENT_CENTER;
     }
-#if 0
-    if (combo_p->margin_height < 0) {
-	XtWarning(COMBO_MARGIN_HEIGHT);
-	combo_p->margin_height = 2;
+    if ((Orientation(combo) != DtLEFT) &&
+	(Orientation(combo) != DtRIGHT)) {
+	XtWarning(CB_ORIENTATION);
+	Orientation(combo) = DtRIGHT;
     }
-    if (combo_p->margin_width < 0) {
-	XtWarning(COMBO_MARGIN_WIDTH);
-	combo_p->margin_width = 2;
+    if (ItemCount(combo) < 0) {
+	XtWarning(CB_ITEM_COUNT);
+	ItemCount(combo) = 0;
     }
-    if (combo_p->horizontal_spacing < 0) {
-	XtWarning(COMBO_HORIZONTAL_SPACING);
-	combo_p->horizontal_spacing = 0;
+    if ((SelectedPosition(combo) < 0) ||
+	((SelectedPosition(combo) >= ItemCount(combo)) && 
+	 (ItemCount(combo) > 0))) {
+	XtWarning(CB_VISIBLE_ITEM);
+	SelectedPosition(combo) = 0;
     }
-    if (combo_p->vertical_spacing < 0) {
-	XtWarning(COMBO_VERTICAL_SPACING);
-	combo_p->vertical_spacing = 0;
-    }
-#endif
-    if ((combo_p->orientation != DtLEFT) &&
-	(combo_p->orientation != DtRIGHT)) {
-	XtWarning(COMBO_ORIENTATION);
-	combo_p->orientation = DtRIGHT;
-    }
-    if (combo_p->item_count < 0) {
-	XtWarning(COMBO_ITEM_COUNT);
-	combo_p->item_count = 0;
-    }
-    if ((combo_p->selected_position < 0) ||
-	((combo_p->selected_position >= combo_p->item_count) && 
-	 (combo_p->item_count > 0))) {
-	XtWarning(COMBO_VISIBLE_ITEM);
-	combo_p->selected_position = 0;
-    }
+    /* NEW: to adjust the size of the list to its content *
+    if (ItemCount(combo) < VisibleItemCount(combo)) 
+	VisibleItemCount(combo) = ItemCount(combo); */
 }
 
 /*
- * Destroy procedure called by the toolkit.  Remove all callbacks and
- * event-handlers. 
+ * Destroy procedure called by the toolkit.  Free local resources
  */
 static void 
-Destroy(combo)
-DtComboBoxWidget combo;
+Destroy(DtComboBoxWidget combo)
 {
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-
-    if (combo_p->label_string)
-	XmStringFree(combo_p->label_string);
-
-#if 0
-    if (combo_p->text) {
-	XtRemoveCallback(combo_p->text, XmNlosingFocusCallback, 
-			 text_losing_focus_cb, (XtPointer)combo);
-	XtRemoveCallback(combo_p->text, XmNactivateCallback, 
-			 text_activate_cb, (XtPointer)combo);
-	XtRemoveCallback(combo_p->text, XmNfocusCallback, 
-			 text_focus_cb, (XtPointer)combo);
-    }
-
-    if (((ShellWidget)(combo_p->shell))->shell.popped_up) {
-	combo_p->popped_up = FALSE;
-	XtPopdown(combo_p->shell);
-	XtUngrabPointer(combo_p->shell, CurrentTime);
-	XtUngrabKeyboard(combo_p->list, CurrentTime);
-	_XmRemoveGrab(combo_p->shell);
-    }
-    XtRemoveCallback(combo_p->arrow, XmNactivateCallback, activate_cb, 
-		     (XtPointer)combo);
-    if (combo_p->arrow_type == DtWINDOWS)
-	XtRemoveCallback(combo_p->arrow, XmNexposeCallback,
-			 arrow_expose_cb, (XtPointer)combo);
-    XtRemoveCallback(combo_p->list, XmNdefaultActionCallback, 
-		     select_cb, combo);
-    XtRemoveCallback(combo_p->list, XmNbrowseSelectionCallback, 
-		     select_cb, combo);
-    XtRemoveEventHandler(combo_p->list, LIST_EVENTS, TRUE,
-			 (XtEventHandler)list_event_handler, 
-			 (XtPointer)combo);
-    XtRemoveEventHandler(combo_p->shell, SHELL_EVENTS, TRUE,
-			 (XtEventHandler)shell_event_handler, 
-			 (XtPointer)combo);
-#endif
+    if (LabelString(combo))
+	XmStringFree(LabelString(combo));
+    if (SelectedItem(combo))
+	XmStringFree( SelectedItem(combo) );
 }
-
 
 /*
  * Resize function called by toolkit.  The size of our combo-box
@@ -884,16 +1111,13 @@ DtComboBoxWidget combo;
  * old_width and old_height.
  */
 static void
-Resize(combo)
-DtComboBoxWidget combo;
+Resize(DtComboBoxWidget combo)
 {
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-
     ClearShadow(combo, TRUE);
     LayoutChildren(combo);
     DrawShadow(combo);
-    combo_p->old_width = combo->core.width;
-    combo_p->old_height = combo->core.height;
+    OldWidth(combo) = Width(combo);
+    OldHeight(combo) = Height(combo);
 }
 
 
@@ -902,10 +1126,9 @@ DtComboBoxWidget combo;
  * so just redisplay the shadow.
  */
 static void
-Redisplay(w, event, region)
-DtComboBoxWidget w;
-XEvent *event;
-Region region;
+Redisplay(	DtComboBoxWidget w,
+		XEvent *event,
+		Region region)
 {
     DrawShadow(w);
 }
@@ -926,15 +1149,14 @@ Region region;
  * we return GeometryYes.
  */
 static XtGeometryResult
-GeometryManager(w, request, reply)
-Widget w; /* child */
-XtWidgetGeometry *request;
-XtWidgetGeometry *reply;
+GeometryManager(Widget w,
+		XtWidgetGeometry *request,
+		XtWidgetGeometry *reply)
 {
-    DtComboBoxWidget combo = (DtComboBoxWidget)(w->core.parent);
+    DtComboBoxWidget combo = (DtComboBoxWidget) Parent(w);
 
     /* Ignore everything but text-field */
-    if (w != combo->combo_box.text)
+    if (w != Text(combo))
 	return(XtGeometryNo);
 
     /* Only allow width/height changes */
@@ -943,13 +1165,13 @@ XtWidgetGeometry *reply;
     
     /* Set the text-field to the requested size */
     if (request->request_mode & CWWidth)
-	w->core.width = request->width;
+	Width(w) = request->width;
     if (request->request_mode & CWHeight)
-	w->core.height = request->height;
-    XtResizeWidget(w, w->core.width, w->core.height, w->core.border_width);
+	Height(w) = request->height;
+    XtResizeWidget(w, Width(w), Height(w), BorderWidth(w));
     
     ClearShadow(combo, TRUE);
-    if (combo->combo_box.recompute_size)
+    if (RecomputeSize(combo))
 	SetComboBoxSize(combo);
     LayoutChildren(combo);
     DrawShadow(combo);
@@ -962,37 +1184,65 @@ XtWidgetGeometry *reply;
  * children will be squeezed in later.
  */
 static void
-SetComboBoxSize(combo)
-DtComboBoxWidget combo;
+SetComboBoxSize(DtComboBoxWidget combo)
 {
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-    Widget text_holder = ((combo_p->type == DtDROP_DOWN_COMBO_BOX) ? 
-			  combo_p->text : combo_p->label);
+    Widget text_holder = ((Type(combo) == DtDROP_DOWN_COMBO_BOX) ? 
+			  Text(combo) : Label(combo));
     Dimension shadow = COMBO_SHADOW(combo) * 2;
     Dimension h_spacing = COMBO_H_SPACING(combo) * 2;
     Dimension v_spacing = COMBO_V_SPACING(combo) * 2;
-    short arrow_width;
-    short sep_width = 0;
+    Dimension arrow_width, text_width, text_height;
+    Dimension sep_width = 0;
+	XtGeometryResult ResizeResult;
+    Arg args[3];
+    unsigned char unit_type = XmPIXELS;
+
+    /* Resolution Independent */
+    if (MUnitType(combo) != XmPIXELS) {
+	unit_type = MUnitType(combo);
+	XtSetArg(args[0], XmNunitType, XmPIXELS);
+	XtSetValues(text_holder, args, 1);
+	if (Type(combo) == DtDROP_DOWN_LIST)
+		XtSetValues((Widget)Sep(combo), args, 1);	
+    }
 
     /* 
      * Find out how big the arrow can be (needed to get 
      * available_width for text_holder).
      */
-    arrow_width = (Dimension)(text_holder->core.height * ARROW_MULT);
+    /* MotifBc */
+    XtSetArg(args[0], XmNwidth, &text_width);
+    XtSetArg(args[1], XmNheight, &text_height);
+    XtGetValues(text_holder, args, 2);
+
+    arrow_width = (Dimension)((float)text_height * ARROW_MULT);
     arrow_width = (arrow_width < ARROW_MIN) ? ARROW_MIN : arrow_width;
 
-    if (combo_p->type == DtDROP_DOWN_LIST)
-	sep_width = combo_p->sep->core.width;
+    if (Type(combo) == DtDROP_DOWN_LIST) {
+	XtSetArg(args[0], XmNwidth, &sep_width);
+	XtGetValues((Widget)Sep(combo), args, 1);
+    }
 
-    (void)XtMakeResizeRequest((Widget)combo, arrow_width + sep_width +
-			      combo_p->arrow_spacing +
-			      text_holder->core.width + shadow + h_spacing +
+    ResizeResult=XtMakeResizeRequest((Widget)combo, arrow_width + sep_width +
+			      ArrowSpacing(combo) +
+			      text_width + shadow + h_spacing +
 			      (COMBO_MARGIN_W(combo) * 2), 
-			      text_holder->core.height + shadow + v_spacing +
+			      text_height + shadow + v_spacing +
 			      (COMBO_MARGIN_H(combo) * 2), 
 			      NULL, NULL);
-    combo_p->old_width = combo->core.width;
-    combo_p->old_height = combo->core.height;
+    if (ResizeResult==XtGeometryNo || ResizeResult==XtGeometryAlmost) {
+	XtWarning(CB_RESIZE);
+    }
+    OldWidth(combo) = Width(combo);
+    OldHeight(combo) = Height(combo);
+
+    /* Resolution Independent */
+    if (unit_type != XmPIXELS) {
+	XtSetArg(args[0], XmNunitType, unit_type);
+	XtSetValues(text_holder, args, 1);
+	if (Type(combo) == DtDROP_DOWN_LIST)
+		XtSetValues((Widget)Sep(combo), args, 1);	
+    }
 }
 
 /*
@@ -1004,76 +1254,116 @@ DtComboBoxWidget combo;
  * text-field will always keep its' core height.
  */
 static void
-ForceChildSizes(combo)
-DtComboBoxWidget combo;
+ForceChildSizes(DtComboBoxWidget combo)
 {
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
     Dimension full_available_height, available_height, available_width;
     Dimension arrow_width;
     Dimension sep_width = 0;
+    Dimension tmp_width, tmp_height, tmp_borderwidth;
+    Arg args[3];
+    unsigned char unit_type = XmPIXELS;
 
+    /* Resolution Independent */
+    if (MUnitType(combo) != XmPIXELS) {
+	unit_type = MUnitType(combo);
+	XtSetArg(args[0], XmNunitType, XmPIXELS);
+        if (Type(combo) == DtDROP_DOWN_LIST) {
+		XtSetValues(Sep(combo), args, 1);
+		XtSetValues(Label(combo), args, 1);
+	}
+	else
+		XtSetValues(Text(combo), args, 1);
+	XtSetValues(Arrow(combo), args, 1);
+    }
     /* Calculate available height for children */
-    if ((available_height = combo->core.height - (COMBO_SHADOW(combo) * 2) - 
+    if ((available_height = Height(combo) - (COMBO_SHADOW(combo) * 2) - 
 	 (COMBO_MARGIN_H(combo) * 2) - (COMBO_V_SPACING(combo) * 2)) <= 0) {
 	full_available_height = available_height = 1;
     }
     else {
-	/* Seperator need available_height plus the vertical_spacing */
+	/* Separator need available_height plus the vertical_spacing */
 	full_available_height = (available_height + 
 				 (COMBO_V_SPACING(combo) * 2));
     }
 
     /* Get initial available width for children */
-    available_width = (combo->core.width - (COMBO_SHADOW(combo) * 2) - 
+    available_width = (Width(combo) - (COMBO_SHADOW(combo) * 2) - 
 		       (COMBO_MARGIN_W(combo) * 2) - 
 		       (COMBO_H_SPACING(combo) * 2));
     
     /* label only grows to maximum width needed */
-    if ((combo_p->type == DtDROP_DOWN_LIST) && 
-	((int)available_height > (int)combo_p->label_max_height))
-	available_height = combo_p->label_max_height;
-    else if (combo_p->type == DtDROP_DOWN_COMBO_BOX) 
-	available_height = combo_p->text->core.height;
+    if ((Type(combo) == DtDROP_DOWN_LIST) && 
+	((int)available_height > (int)LabelMaxHeight(combo)))
+	available_height = LabelMaxHeight(combo);
+    else if (Type(combo) == DtDROP_DOWN_COMBO_BOX) {
+	XtSetArg(args[0], XmNheight, &available_height);
+	XtGetValues((Widget)Text(combo), args, 1);
+    }
     
     /* 
      * Find out how big the arrow can be (needed to get 
      * available_width for text_holder).
      */
-    arrow_width = (Dimension)(available_height * ARROW_MULT);
+    arrow_width = (Dimension)((float)available_height * ARROW_MULT);
     arrow_width = (arrow_width < ARROW_MIN) ? ARROW_MIN : arrow_width;
 	
-    if (combo_p->type == DtDROP_DOWN_LIST)
-	sep_width = combo_p->sep->core.width;
+    if (Type(combo) == DtDROP_DOWN_LIST) {
+        XtSetArg(args[0], XmNwidth, &sep_width);
+        XtGetValues((Widget)Sep(combo), args, 1);
+    }
 
     /* Make sure width isn't too small or too big */
-    if ((int)(available_width -= 
-	      (arrow_width + sep_width + combo_p->arrow_spacing)) <= 0)
+    if ((available_width -= 
+	 (arrow_width + sep_width + ArrowSpacing(combo) )) <= (Dimension)0)
 	available_width = 1;
 
-    if (combo_p->type == DtDROP_DOWN_LIST) {  /** label **/
-	if ((int)available_width > (int)combo_p->label_max_length)
-	    available_width = combo_p->label_max_length;
+    /* Motif BC */
+    XtSetArg(args[0], XmNwidth, &tmp_width);
+    XtSetArg(args[1], XmNheight, &tmp_height);
+    XtSetArg(args[2], XmNborderWidth, &tmp_borderwidth);
+    if (Type(combo) == DtDROP_DOWN_LIST) {  /** label **/
+	if ((int)available_width > (int)LabelMaxLength(combo))
+	    available_width = LabelMaxLength(combo);
 
-	if ((available_width != combo_p->label->core.width) ||
-	    (available_height != combo_p->label->core.height))
-	    XtResizeWidget(combo_p->label, available_width, available_height,
-			   combo_p->label->core.border_width);
-
-	if (full_available_height != combo_p->sep->core.height)
-	    XtResizeWidget(combo_p->sep, combo_p->sep->core.width,
-			   full_available_height,
-			   combo_p->sep->core.border_width);
+	/* Motif BC */
+	XtGetValues((Widget)Label(combo), args, 3);
+	if ((available_width != tmp_width) ||
+	    (available_height != tmp_height))
+	 	XtResizeWidget(Label(combo), available_width, available_height,
+				tmp_borderwidth);
+        /* Motif BC */ 
+        XtGetValues((Widget)Sep(combo), args, 3); 
+        if (full_available_height != tmp_height)
+            XtResizeWidget(Sep(combo), tmp_width, full_available_height,
+                           tmp_borderwidth);
     }
-    else if (combo_p->text->core.width != available_width)  /** TextField **/
-	XtResizeWidget(combo_p->text, available_width,
-		       combo_p->text->core.height,
-		       combo_p->text->core.border_width);
-    if ((arrow_width != combo_p->arrow->core.width) ||
-	(combo_p->arrow->core.height != available_height)) {
+    else {
+        /* Motif BC */
+        XtGetValues((Widget)Text(combo), args, 3);
+	if ( Width(((Widget)Text(combo))) != available_width) /** TextField **/
+	XtResizeWidget(Text(combo), available_width,
+		       tmp_height, tmp_borderwidth);
+    }
+
+    /* Motif BC */
+    XtGetValues((Widget)Arrow(combo), args, 3);
+    if ((arrow_width != tmp_width) || (tmp_height != available_height)) {
 	available_height = (available_height < ARROW_MIN) ? ARROW_MIN : 
                             available_height;
-	XtResizeWidget(combo_p->arrow, arrow_width, available_height,
-		       combo_p->arrow->core.border_width);
+	XtResizeWidget(Arrow(combo), arrow_width, available_height,
+		       tmp_borderwidth);
+    }
+
+    /* Resolution Independent */
+    if (unit_type != XmPIXELS) {
+	XtSetArg(args[0], XmNunitType, unit_type);
+        if (Type(combo) == DtDROP_DOWN_LIST) {
+		XtSetValues(Sep(combo), args, 1);
+		XtSetValues(Label(combo), args, 1);
+	}
+	else
+		XtSetValues(Text(combo), args, 1);
+	XtSetValues(Arrow(combo), args, 1);
     }
 }
 
@@ -1083,38 +1373,59 @@ DtComboBoxWidget combo;
  * combo_box widget, but it will not try to resize the combo_box widget.
  */
 static void
-LayoutChildren(combo)
-DtComboBoxWidget combo;
+LayoutChildren(DtComboBoxWidget combo)
 {
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-    Widget text_holder = ((combo_p->type == DtDROP_DOWN_COMBO_BOX)
-			  ? combo_p->text : combo_p->label);
+    Widget text_holder = ((Type(combo) == DtDROP_DOWN_COMBO_BOX)
+			  ? Text(combo) : Label(combo));
     Position start_x = (COMBO_SHADOW(combo) + COMBO_MARGIN_W(combo) +
 			COMBO_H_SPACING(combo));
     Position start_y = (COMBO_SHADOW(combo) + COMBO_MARGIN_H(combo) +
 			COMBO_V_SPACING(combo));
-    short available_height = combo->core.height - (start_y * 2);
+    short available_height = Height(combo) - (start_y * 2);
     Position y, arrow_y;
+    unsigned char unit_type = XmPIXELS;
+    Dimension tmp_width, tmp_height, sep_width;
+    Arg args[3];
     
     ForceChildSizes(combo);
 
+    /* Resolution Independent */
+    if (MUnitType(combo) != XmPIXELS) {
+	unit_type = MUnitType(combo);
+	XtSetArg(args[0], XmNunitType, XmPIXELS);
+	XtSetValues(text_holder, args, 1);
+	XtSetValues(Arrow(combo), args, 1);
+        if (Type(combo) == DtDROP_DOWN_LIST) 
+		XtSetValues(Sep(combo), args, 1);
+    }
     /* Center text_holder within combo_box */
-    y = available_height - text_holder->core.height;
+    /* MotifBc */
+    XtSetArg(args[0], XmNheight, &tmp_height);
+    XtGetValues(text_holder, args, 1);
+    y = available_height - tmp_height;
     y = ((y < 0) ? 0 : y)/2 + start_y;
  
     /* Center arrow within combo_box */
-    arrow_y = available_height - combo_p->arrow->core.height;
+    /* MotifBc */
+    XtSetArg(args[1], XmNwidth, &tmp_width);
+    XtGetValues(Arrow(combo), args, 2);
+    arrow_y = available_height - tmp_height;
     arrow_y = ((arrow_y < 0) ? 0 : arrow_y)/2 + start_y;
 
-    if (combo_p->orientation == DtLEFT) {
-	XtMoveWidget(combo_p->arrow, start_x, arrow_y);
-	start_x += combo_p->arrow->core.width;
-	if (combo_p->type == DtDROP_DOWN_LIST) {
-	    XtMoveWidget(combo_p->sep, start_x, start_y - 
+    /* MotifBc */
+    if (Type(combo) == DtDROP_DOWN_LIST) {
+    	XtSetArg(args[0], XmNwidth, &sep_width);
+    	XtGetValues(Sep(combo), args, 1);
+    }
+    if (Orientation(combo) == DtLEFT) {
+	XtMoveWidget(Arrow(combo), start_x, arrow_y);
+	start_x += tmp_width;
+	if (Type(combo) == DtDROP_DOWN_LIST) {
+	    XtMoveWidget(Sep(combo), start_x, start_y - 
 			 COMBO_V_SPACING(combo));
-	    start_x += combo_p->sep->core.width;
+	    start_x += sep_width;
 	}
-	start_x += combo_p->arrow_spacing;
+	start_x += ArrowSpacing(combo);
 	XtMoveWidget(text_holder, start_x, y);
     }
     else {
@@ -1123,14 +1434,23 @@ DtComboBoxWidget combo;
 	 * We want the arrow at the end of the combo_box, so
 	 * the user can use recompute_size more effectively.
 	 */
-	start_x = combo->core.width - start_x - combo_p->arrow->core.width;
-	if (combo_p->type == DtDROP_DOWN_LIST) {
-	    start_x -= combo_p->sep->core.width;
-	    XtMoveWidget(combo_p->sep, start_x, start_y -
+	start_x = Width(combo) - start_x - tmp_width;
+	if (Type(combo) == DtDROP_DOWN_LIST) {
+	    start_x -= sep_width;
+	    XtMoveWidget(Sep(combo), start_x, start_y -
 			 COMBO_V_SPACING(combo));
-	    start_x += combo_p->sep->core.width;
+	    start_x += sep_width;
 	}
-	XtMoveWidget(combo_p->arrow, start_x, arrow_y);
+	XtMoveWidget(Arrow(combo), start_x, arrow_y);
+    }
+
+    /* Resolution Independent */
+    if (unit_type != XmPIXELS) {
+	XtSetArg(args[0], XmNunitType, unit_type);
+	XtSetValues(text_holder, args, 1);
+	XtSetValues(Arrow(combo), args, 1);
+        if (Type(combo) == DtDROP_DOWN_LIST) 
+		XtSetValues(Sep(combo), args, 1);
     }
 }
 
@@ -1138,23 +1458,45 @@ DtComboBoxWidget combo;
  * SetValues() routine for ComboBox widget. 
  */
 static Boolean
-SetValues(current, request, new)
-DtComboBoxWidget current;
-DtComboBoxWidget request;
-DtComboBoxWidget new;
+SetValues(	DtComboBoxWidget current,
+		DtComboBoxWidget request,
+		DtComboBoxWidget new)
 {
-    DtComboBoxPart *new_p = (DtComboBoxPart*)&(new->combo_box);
-    DtComboBoxPart *cur_p = (DtComboBoxPart*)&(current->combo_box);
+    DtComboBoxPart *new_p = (DtComboBoxPart*)
+	&(XmField(new,ipot,DtComboBox,arrow,Widget));
     Boolean label_size_changed = FALSE;
     Boolean force_label_string = FALSE;
     Arg args[10];
     int n;
+    unsigned char new_unit_type = XmPIXELS, curr_unit_type = XmPIXELS;
 
     CheckResources(new);
 
-    if (new_p->text != cur_p->text) {
-	XtWarning(COMBO_TEXT);
-	new_p->text = cur_p->text;
+    /* Resolution Independent */
+    if (MUnitType(new) != XmPIXELS) {
+	new_unit_type = MUnitType(new);
+        XtSetArg(args[0], XmNunitType, XmPIXELS);
+	if (Arrow(new)) XtSetValues(Arrow(new), args, 1);
+	if (List(new)) XtSetValues(List(new), args, 1);
+	if (Shell(new)) XtSetValues(Shell(new), args, 1);
+	if (Label(new)) XtSetValues(Label(new), args, 1);
+	if (Text(new)) XtSetValues(Text(new), args, 1);
+	if (Sep(new)) XtSetValues(Sep(new), args, 1);
+    }
+    if (MUnitType(current) != XmPIXELS) {
+	curr_unit_type = MUnitType(current);
+        XtSetArg(args[0], XmNunitType, XmPIXELS);
+	if (Arrow(current)) XtSetValues(Arrow(current), args, 1);
+	if (List(current)) XtSetValues(List(current), args, 1);
+	if (Shell(current)) XtSetValues(Shell(current), args, 1);
+	if (Label(current)) XtSetValues(Label(current), args, 1);
+	if (Text(current)) XtSetValues(Text(current), args, 1);
+	if (Sep(current)) XtSetValues(Sep(current), args, 1);
+    }
+
+    if (Text(new) != Text(current)) {
+	XtWarning(CB_TEXT);
+	Text(new) = Text(current);
     }
 
     /*
@@ -1162,75 +1504,85 @@ DtComboBoxWidget new;
      * Check each one, since it's too costly to always set them.
      */
     n = 0;
-    if (new_p->item_count != cur_p->item_count){
-	if (new_p->items && (new_p->item_count < 0)) {
-	    XtWarning(COMBO_ITEM_COUNT);
-	    new_p->item_count = 0;
+    if (ItemCount(new) != ItemCount(current)){
+	if (Items(new) && (ItemCount(new) < 0)) {
+	    XtWarning(CB_ITEM_COUNT);
+	    ItemCount(new) = 0;
 	}
-	XtSetArg(args[n], XmNitemCount, new_p->item_count); n++;
+	XtSetArg(args[n], XmNitemCount, ItemCount(new)); n++;
     }
-    if (new_p->items != cur_p->items) {
-	XtSetArg(args[n], XmNitems, new_p->items); n++;
+    if (Items(new) != ListItems(current)) {
+	XtSetArg(args[n], XmNitems, Items(new)); n++;
 	/* Make sure itemCount will get sent to list */
-	if (new_p->item_count == cur_p->item_count) {
-	    XtSetArg(args[n], XmNitemCount, new_p->item_count); n++;
+	if (ItemCount(new) == ItemCount(current)) {
+	    XtSetArg(args[n], XmNitemCount, ItemCount(new)); n++;
 	}
     }
-    if (new_p->list_font_list != cur_p->list_font_list) {
-	XtSetArg(args[n], XmNfontList, new_p->list_font_list); n++;
+    if (ListFontList(new) != ListFontList(current)) {
+	XtSetArg(args[n], XmNfontList, ListFontList(new)); n++;
     }
-    if (new_p->list_margin_height != cur_p->list_margin_height) {
-	XtSetArg(args[n], XmNlistMarginHeight, new_p->list_margin_height); n++; 
+    if (ListMarginHeight(new) != ListMarginHeight(current)) {
+	XtSetArg(args[n], XmNlistMarginHeight, ListMarginHeight(new)); n++; 
     }
-    if (new_p->list_margin_width != cur_p->list_margin_width) {
-	XtSetArg(args[n], XmNlistMarginWidth, new_p->list_margin_width); n++;
+    if (ListMarginWidth(new) != ListMarginWidth(current)) {
+	XtSetArg(args[n], XmNlistMarginWidth, ListMarginWidth(new)); n++;
     }
-    if (new_p->list_spacing != cur_p->list_spacing) {
-	XtSetArg(args[n], XmNlistSpacing, new_p->list_spacing); n++;
+    if (ListSpacing(new) != ListSpacing(current)) {
+	XtSetArg(args[n], XmNlistSpacing, ListSpacing(new)); n++;
     }
-    if (new->manager.string_direction != current->manager.string_direction) {
-	XtSetArg(args[n], XmNstringDirection, new->manager.string_direction); n++;
+    if (LayoutDirection(new) != LayoutDirection(current)) {
+        XmStringDirection new_direction =
+	  XmDirectionToStringDirection(LayoutDirection(new));
+	XtSetArg(args[n], XmNstringDirection, new_direction); n++;
     }
-    if (new_p->top_item_position != cur_p->top_item_position) {
-	XtSetArg(args[n], XmNtopItemPosition, new_p->top_item_position); n++;
+    if (TopItemPosition(new) != TopItemPosition(current)) {
+	XtSetArg(args[n], XmNtopItemPosition, TopItemPosition(new)); n++;
     }
-    if (new_p->visible_item_count != cur_p->visible_item_count) {
-	XtSetArg(args[n], XmNvisibleItemCount, new_p->visible_item_count); n++;
+    if (VisibleItemCount(new) != VisibleItemCount(current)) {
+	XtSetArg(args[n], XmNvisibleItemCount, VisibleItemCount(new)); n++;
     }
     if (n > 0) {
-	XtSetValues(new_p->list, args, n);
-	new_p->max_shell_width = new_p->shell->core.width;
-	new_p->max_shell_height = new_p->shell->core.height;
+	/* MotifBc */
+	Arg tmp_arg[2];
+	Dimension tmp_width, tmp_height;
+
+	XtSetValues(List(new), args, n);
+	/* MotifBc */
+	XtSetArg(tmp_arg[0], XmNwidth, &tmp_width);
+        XtSetArg(tmp_arg[1], XmNheight, &tmp_height);
+	XtGetValues(((Widget) Shell(new)), tmp_arg, 2);
+	MaxShellWidth(new) = tmp_width;
+	MaxShellHeight(new) = tmp_height;
     }
 
     /* If arrow type changes delete the old one and create the new one */
-    if (new_p->arrow_type != cur_p->arrow_type) {
-	XtRemoveCallback(new_p->arrow, XmNactivateCallback, activate_cb, 
+    if (ArrowType(new) != ArrowType(current)) {
+	XtRemoveCallback(Arrow(new), XmNactivateCallback, activate_cb, 
 			 (XtPointer)new);
-	if (cur_p->arrow_type == DtWINDOWS)
-	    XtRemoveCallback(new_p->arrow, XmNexposeCallback,
+	if (ArrowType(current) == DtWINDOWS)
+	    XtRemoveCallback(Arrow(new), XmNexposeCallback,
 			     arrow_expose_cb, (XtPointer)new);
-	XtDestroyWidget(new_p->arrow);
+	XtDestroyWidget(Arrow(new));
 
 	n = 0;
 	XtSetArg(args[n], XmNtraversalOn, FALSE); n++;
 	XtSetArg(args[n], XmNhighlightThickness, 0); n++;
 	XtSetArg(args[n], XmNshadowThickness, 0); n++;
-	if (new_p->arrow_type == DtMOTIF) {
+	if (ArrowType(new) == DtMOTIF) {
 	    XtSetArg(args[n], XmNarrowDirection, XmARROW_DOWN); n++;
-	    XtSetArg(args[n], XmNforeground, new->core.background_pixel); n++;
-	    new_p->arrow = XtCreateManagedWidget("ComboBoxArrow", 
+	    XtSetArg(args[n], XmNforeground, BackgroundPixel(new)); n++;
+	    Arrow(new) = XtCreateManagedWidget("ComboBoxArrow", 
 						 xmArrowButtonWidgetClass,
 						 (Widget)new, args, n);
 	}
 	else {
-	    new_p->arrow = XtCreateManagedWidget("ComboBoxArrow", 
+	    Arrow(new) = XtCreateManagedWidget("ComboBoxArrow", 
 						 xmDrawnButtonWidgetClass,
 						 (Widget)new, args, n);
-	    XtAddCallback(new_p->arrow, XmNexposeCallback, arrow_expose_cb, 
+	    XtAddCallback(Arrow(new), XmNexposeCallback, arrow_expose_cb, 
 			  (XtPointer)new);
 	}
-	XtAddCallback(new_p->arrow, XmNactivateCallback, activate_cb, 
+	XtAddCallback(Arrow(new), XmNactivateCallback, activate_cb, 
 		      (XtPointer)new);
     }
 
@@ -1243,145 +1595,190 @@ DtComboBoxWidget new;
      * not have created both widgets).
      * If label must be created, also create the separator widget.
      */
-    if (new_p->type != cur_p->type) {
-	if (new_p->type == DtDROP_DOWN_COMBO_BOX) {
-	    if (new_p->text == NULL) {
+    if (Type(new) != Type(current)) {
+	if (Type(new) == DtDROP_DOWN_COMBO_BOX) {
+	    if (Text(new) == NULL) {
 		n = 0;
-		XtSetArg(args[n], XmNcolumns, new_p->text_columns); n++;
-		XtSetArg(args[n], XmNmaxLength, new_p->text_max_length); n++;
+		XtSetArg(args[n], XmNcolumns, TextColumns(new)); n++;
+		XtSetArg(args[n], XmNmaxLength, TextMaxLength(new)); n++;
 		XtSetArg(args[n], XmNmarginWidth, 2); n++;
 		XtSetArg(args[n], XmNmarginHeight, 2); n++;
-		XtSetArg(args[n], XmNnavigationType, XmNONE); n++;
-		new_p->text = XtCreateWidget("Text", 
+		Text(new) = XtCreateWidget("ComboBoxTextField", 
 					     xmTextFieldWidgetClass,
 					     (Widget)new, args, n);
-		XtAddCallback(new_p->text, XmNlosingFocusCallback, 
+		XtAddCallback(Text(new), XmNlosingFocusCallback, 
 			      text_losing_focus_cb, (XtPointer)new);
-		XtAddCallback(new_p->text, XmNactivateCallback, 
+		XtAddCallback(Text(new), XmNactivateCallback, 
 			      text_activate_cb, (XtPointer)new);
-		XtAddCallback(new_p->text, XmNfocusCallback, 
+		XtAddCallback(Text(new), XmNfocusCallback, 
 			      text_focus_cb, (XtPointer)new);
-		if (new_p->horizontal_spacing == cur_p->horizontal_spacing)
-		    new_p->horizontal_spacing = 0;
-		if (new_p->vertical_spacing == cur_p->vertical_spacing)
-		    new_p->vertical_spacing = 0;
+		if (HorizontalSpacing(new) == HorizontalSpacing(current))
+		    HorizontalSpacing(new) = 0;
+		if (VerticalSpacing(new) == VerticalSpacing(current))
+		    VerticalSpacing(new) = 0;
 	    }
-	    XtUnmanageChild(new_p->sep);
-	    XtUnmanageChild(new_p->label);
-	    XtManageChild(new_p->text);
+	    XtUnmanageChild(Sep(new));
+	    XtUnmanageChild(Label(new));
+	    XtManageChild(Text(new));
 	}
 	else {
-	    if (new_p->label == NULL) {
+	    if (Label(new) == NULL) {
+	        XmStringDirection new_direction =
+		  XmDirectionToStringDirection(LayoutDirection(new));
+
 		XtTranslations label_trans = 
 		    XtParseTranslationTable(ComboBoxLabelTranslationTable);
 
 		n = 0;
-		XtSetArg(args[n], XmNalignment, new_p->alignment); n++;
-		XtSetArg(args[n], XmNrecomputeSize, TRUE); n++;
+		XtSetArg(args[n], XmNalignment, Alignment(new)); n++;
+		XtSetArg(args[n], XmNrecomputeSize, FALSE); n++;
 		XtSetArg(args[n], XmNmarginLeft, LABEL_PADDING); n++;
 		XtSetArg(args[n], XmNmarginRight, LABEL_PADDING); n++;
-		XtSetArg(args[n], XmNmarginWidth, 0); n++;
+	        XtSetArg(args[n], XmNmarginWidth, TEXT_CONTEXT_MARGIN); n++;
 		XtSetArg(args[n], XmNmarginHeight, 0); n++;
-		XtSetArg(args[n], XmNstringDirection, 
-			 new->manager.string_direction); n++;
-		new_p->label = XtCreateWidget("ComboBoxLabel", 
+		XtSetArg(args[n], XmNstringDirection, new_direction); n++;
+		Label(new) = XtCreateWidget("ComboBoxLabel", 
 					      xmLabelWidgetClass,
 					      (Widget)new, args, n);
-		XtOverrideTranslations((Widget)new_p->label, label_trans);
-		if (new_p->horizontal_spacing == cur_p->horizontal_spacing)
-		    new_p->horizontal_spacing = 1;
-		if (new_p->vertical_spacing == cur_p->vertical_spacing)
-		    new_p->vertical_spacing = 2;
+		XtOverrideTranslations((Widget)Label(new), label_trans);
+		if (HorizontalSpacing(new) == HorizontalSpacing(current))
+		    HorizontalSpacing(new) = 1;
+		if (VerticalSpacing(new) == VerticalSpacing(current))
+		    VerticalSpacing(new) = 2;
 
 		n = 0;
 		XtSetArg(args[n], XmNorientation, XmVERTICAL); n++;
-		new_p->sep = XtCreateWidget("ComboBoxSeparator", 
+		Sep(new) = XtCreateWidget("ComboBoxSeparator", 
 					    xmSeparatorWidgetClass,
 					    (Widget)new, args, n);
 	    }
-	    else if (new->manager.string_direction != 
-		     current->manager.string_direction) {
-		XtSetArg(args[0], XmNstringDirection, 
-			 new->manager.string_direction);
-		XtSetValues(new_p->label, args, 1);
+	    else if (LayoutDirection(new) != LayoutDirection(current)) {
+	        XmStringDirection new_direction =
+		  XmDirectionToStringDirection(LayoutDirection(new));
+		XtSetArg(args[0], XmNstringDirection, new_direction);
+		XtSetValues(Label(new), args, 1);
 	    }
-	    XtUnmanageChild(new_p->text);
-	    XtManageChild(new_p->label);
-	    XtManageChild(new_p->sep);
+	    XtUnmanageChild(Text(new));
+	    XtManageChild(Label(new));
+	    XtManageChild(Sep(new));
 	}
 	/* 
 	 * Text-fields and labels have different shadows.  Only
 	 * change if user didn't change the shadow resource.
 	 */
 	if (COMBO_SHADOW(new) == COMBO_SHADOW(current))
-	    COMBO_SHADOW(new) = ((new_p->type == DtDROP_DOWN_COMBO_BOX) ?
+	    COMBO_SHADOW(new) = ((Type(new) == DtDROP_DOWN_COMBO_BOX) ?
 				 TEXT_FIELD_SHADOW : LABEL_SHADOW);
     }
 
-    if (new_p->text && (new_p->text == cur_p->text)) {
+    if (Text(new) && (Text(new) == Text(current))) {
 	n = 0;
-	if (new_p->text_columns != cur_p->text_columns) {
-	    XtSetArg(args[n], XmNcolumns, new_p->text_columns); n++;
+	if (TextColumns(new) != TextColumns(current)) {
+	    XtSetArg(args[n], XmNcolumns, TextColumns(new)); n++;
 	}
-	if (new_p->text_max_length != cur_p->text_max_length) {
-	    XtSetArg(args[n], XmNmaxLength, new_p->text_max_length); n++;
+	if (TextMaxLength(new) != TextMaxLength(current) ) {
+	    XtSetArg(args[n], XmNmaxLength, TextMaxLength(new)); n++;
 	}
 	if (n > 0)
-	    XtSetValues(new_p->text, args, n);
+	    XtSetValues(Text(new), args, n);
     }
 
     /*
      * LabelWidget alignment has changed.
      */
-    if (new_p->label && (new_p->alignment != cur_p->alignment)) {
-	XtSetArg(args[0], XmNalignment, new_p->alignment);
-	XtSetValues(new_p->label, args, 1);
+    if (Label(new) && (Alignment(new) != Alignment(current))) {
+	XtSetArg(args[0], XmNalignment, Alignment(new));
+	XtSetValues(Label(new), args, 1);
     }
 
-    if (new_p->label && ((new_p->items != cur_p->items) || 
-			 (new_p->item_count != cur_p->item_count) ||
-			 (new_p->label != cur_p->label))) {
+    if (Label(new) && ((Items(new) != ListItems(current)) || 
+			 (ItemCount(new) != ItemCount(current)) ||
+			 (Label(new) != Label(current)))) {
 	SetMaximumLabelSize(new_p);
 	label_size_changed = TRUE;
     }
 
     /* Copy and free label-string */
-    if (new_p->label_string != cur_p->label_string) {
-	if (new_p->label_string)
-	    new_p->label_string = XmStringCopy(new_p->label_string);
-	if (cur_p->label_string)
-	    XmStringFree(cur_p->label_string);	
+    if (LabelString(new) != LabelString(current)) {
+	if (LabelString(new))
+	    LabelString(new) = XmStringCopy(LabelString(new));
+	if (LabelString(current))
+	    XmStringFree(LabelString(current));	
 	/* 
 	 * force_label_string usage if it is specified and items is not.
 	 * This will be the perminant label string only if update-label
 	 * is false, else it is only used until the user picks something
 	 * new off the list.
 	 */
-	if (new_p->items == cur_p->items)
+	if (Items(new) == ListItems(current))
 	    force_label_string = TRUE;
     }
 
-    if ((new_p->items != cur_p->items) ||
-	(new_p->alignment != cur_p->alignment) ||
-	(new_p->type != cur_p->type) ||
-	(new_p->item_count != cur_p->item_count) ||
-	(new_p->selected_position != cur_p->selected_position) ||
-	(new_p->selected_item != cur_p->selected_item) ||
-	(new_p->label != cur_p->label) ||
-	(new_p->update_label != cur_p->update_label) ||
-	(new_p->label_string != cur_p->label_string)) {
+    if ((Items(new) != ListItems(current)) ||
+	(Alignment(new) != Alignment(current)) ||
+	(Type(new) != Type(current)) ||
+	(ItemCount(new) != ItemCount(current)) ||
+	(SelectedPosition(new) != SelectedPosition(current)) ||
+	(XmStringByteCompare(SelectedItem(new), SelectedItem(current))!=True) ||
+	(Label(new) != Label(current)) ||
+	(UpdateLabel(new) != UpdateLabel(current)) ||
+	(LabelString(new) != LabelString(current))) {
 
 	/* selected_item resource used before selected_position */
-	if (new_p->selected_item &&
-	    (new_p->selected_item != cur_p->selected_item))
-	    DtComboBoxSelectItem((Widget)new, new_p->selected_item);
-	else
-	    XmListSelectPos(new_p->list, new_p->selected_position + 1, FALSE);
+	if (SelectedItem(new) && XmeStringIsValid(SelectedItem(new)) &&
+	    (XmStringByteCompare(SelectedItem(new), 
+				 SelectedItem(current))!=True) ){
+	    if (SelectedItem(current)) {
+		XmStringFree(SelectedItem(current));
+		SelectedItem(current) = NULL;
+	    }
+	    SelectedItem(new) = XmStringCopy(SelectedItem(new));
+	    DtComboBoxSelectItem((Widget)new, SelectedItem(new));
+	}
+	else {
+	    if (SelectedPosition(new)<0||SelectedPosition(new)>=ItemCount(new))
+		SelectedPosition(new) = 0;
+	    if ((ItemCount(new)) && 
+		(SelectedPosition(new) != SelectedPosition(current))) {
+		
+	        XmListSelectPos(List(new), SelectedPosition(new) + 1, FALSE);
+	        if (SelectedItem(current)) {
+		    
+		    XmStringFree(SelectedItem(current));
+		    SelectedItem(current) = NULL;
+		}
+		SyncWithList(new_p);
+		SelectedItem(new) = 
+		    XmStringCopy((ListItems(new))[SelectedPosition(new)]);
+	    }
 
-	if (new_p->type == DtDROP_DOWN_COMBO_BOX)
+	    /* Else, same item selected as last time */
+	    else {
+		SelectedItem(new) = XmStringCopy(SelectedItem(new));
+		if ((SelectedItem(new) != NULL) && (ListItems(new) != NULL))
+		    DtComboBoxSelectItem((Widget)new, SelectedItem(new));
+	        if (SelectedItem(current)) {
+		    XmStringFree(SelectedItem(current));
+		    SelectedItem(current) = NULL;
+		}
+	    }
+	}
+
+	if (Type(new) == DtDROP_DOWN_COMBO_BOX)
 	    SetTextFieldData(new_p, NULL);
 	else
 	    SetLabelData(new_p, NULL, force_label_string);
+    }
+
+    /* Else, same item selected as last time */
+    else {
+	SelectedItem(new) = XmStringCopy(SelectedItem(new));
+	if ((SelectedItem(new) != NULL) && (ListItems(new) != NULL))
+	    DtComboBoxSelectItem((Widget)new, SelectedItem(new));
+	if (SelectedItem(current)) {
+	    XmStringFree(SelectedItem(current));
+	    SelectedItem(current) = NULL;
+	}
     }
 
     /*
@@ -1391,24 +1788,43 @@ DtComboBoxWidget new;
      * because we shrink the label down, and SetComboBoxSize() uses
      * the label's core sizes to figure what size to become.
      */
-    if ((new_p->type != cur_p->type) ||
-	(new_p->arrow_type != cur_p->arrow_type) ||
+    if ((Type(new) != Type(current)) ||
+	(ArrowType(new) != ArrowType(current)) ||
 	(COMBO_MARGIN_W(new) != COMBO_MARGIN_W(current)) ||
 	(COMBO_MARGIN_H(new) != COMBO_MARGIN_H(current)) ||
 	(COMBO_H_SPACING(new) != COMBO_H_SPACING(current)) ||
 	(COMBO_V_SPACING(new) != COMBO_V_SPACING(current)) ||
 	(COMBO_SHADOW(new) != COMBO_SHADOW(current)) ||
-	(new_p->orientation != cur_p->orientation) ||
-	(new_p->arrow_spacing != cur_p->arrow_spacing) ||
-	((new_p->type == DtDROP_DOWN_LIST) && label_size_changed)) {
+	(Orientation(new) != Orientation(current)) ||
+	(ArrowSpacing(new) != ArrowSpacing(current)) ||
+	((Type(new) == DtDROP_DOWN_LIST) && label_size_changed)) {
 	ClearShadow(current, TRUE);
-	if (new_p->recompute_size)
+	if (RecomputeSize(new))
 	    SetComboBoxSize(new);
 	LayoutChildren(new);
 	DrawShadow(new);
     }
 
     SyncWithList(new_p);
+    /* Resolution Independent */
+    if (new_unit_type != XmPIXELS) {
+        XtSetArg(args[0], XmNunitType, new_unit_type);
+	if (Arrow(new)) XtSetValues(Arrow(new), args, 1);
+	if (List(new)) XtSetValues(List(new), args, 1);
+	if (Shell(new)) XtSetValues(Shell(new), args, 1);
+	if (Label(new)) XtSetValues(Label(new), args, 1);
+	if (Text(new)) XtSetValues(Text(new), args, 1);
+	if (Sep(new)) XtSetValues(Sep(new), args, 1);
+    }
+    if (curr_unit_type != XmPIXELS) {
+        XtSetArg(args[0], XmNunitType, curr_unit_type);
+	if (Arrow(current)) XtSetValues(Arrow(current), args, 1);
+	if (List(current)) XtSetValues(List(current), args, 1);
+	if (Shell(current)) XtSetValues(Shell(current), args, 1);
+	if (Label(current)) XtSetValues(Label(current), args, 1);
+	if (Text(current)) XtSetValues(Text(current), args, 1);
+	if (Sep(current)) XtSetValues(Sep(current), args, 1);
+    }
     return(FALSE);
 }
 
@@ -1419,9 +1835,8 @@ DtComboBoxWidget new;
  * sides (during resize). 
  */ 
 static void
-ClearShadow(w, all)
-DtComboBoxWidget w;
-Boolean all;
+ClearShadow(	DtComboBoxWidget w,
+		Boolean all)
 {
     Dimension shadow = COMBO_SHADOW(w);
     Dimension margin_w = COMBO_MARGIN_W(w);
@@ -1432,21 +1847,21 @@ Boolean all;
 	    XClearArea(XtDisplayOfObject((Widget)w),
 		       XtWindowOfObject((Widget)w), 
 		       margin_w, margin_h,
-		       w->combo_box.old_width - (margin_w * 2),
+		       OldWidth(w) - (margin_w * 2),
 		       shadow, FALSE);
 	    XClearArea(XtDisplayOfObject((Widget)w),
 		       XtWindowOfObject((Widget)w), 
 		       margin_w, margin_h, shadow, 
-		       w->combo_box.old_height - (margin_h * 2), FALSE);
+		       OldHeight(w) - (margin_h * 2), FALSE);
 	}
 	XClearArea(XtDisplayOfObject((Widget)w), 
 		   XtWindowOfObject((Widget)w), margin_w,
-		   w->combo_box.old_height - margin_h - shadow,
-		   w->combo_box.old_width - (margin_w * 2), shadow, FALSE);
+		   OldHeight(w) - margin_h - shadow,
+		   OldWidth(w) - (margin_w * 2), shadow, FALSE);
 	XClearArea(XtDisplayOfObject((Widget)w), XtWindowOfObject((Widget)w),
-		   w->combo_box.old_width - margin_w - shadow,
+		   OldWidth(w) - margin_w - shadow,
 		   margin_h, shadow, 
-		   w->combo_box.old_height - (margin_h * 2), FALSE);
+		   OldHeight(w) - (margin_h * 2), FALSE);
     }
     DrawHighlight(w, TRUE);
 }
@@ -1455,21 +1870,20 @@ Boolean all;
  * This functions draws the shadow around our combo-box.
  */
 static void
-DrawShadow(w)
-DtComboBoxWidget w;
+DrawShadow(DtComboBoxWidget w)
 {
     Dimension shadow = COMBO_SHADOW(w);
     Dimension margin_w = COMBO_MARGIN_W(w);
     Dimension margin_h = COMBO_MARGIN_H(w);
     
     if ((shadow > 0) && XtIsRealized((Widget)w)) {
-	_XmDrawShadows(XtDisplayOfObject((Widget)w),
+	XmeDrawShadows(XtDisplayOfObject((Widget)w),
 		       XtWindowOfObject((Widget)w),
-		       w->manager.top_shadow_GC,
-		       w->manager.bottom_shadow_GC, 
+		       TopShadowGC(w),
+		       BottomShadowGC(w), 
 		       margin_w, margin_h,
-		       w->core.width - (margin_w * 2),
-		       w->core.height - (margin_h * 2),
+		       Width(w) - (margin_w * 2),
+		       Height(w) - (margin_h * 2),
 		       shadow, XmSHADOW_OUT);
     }
     DrawHighlight(w, FALSE);
@@ -1484,33 +1898,45 @@ DtComboBoxWidget w;
  * action, speed isn't a problem.
  */
 static void
-SetTextFieldData(combo_p, item)
-DtComboBoxPart *combo_p;
-XmString item;
+SetTextFieldData(DtComboBoxPart *combo_p, XmString item)
 {
     XmListWidget list = (XmListWidget)combo_p->list;
-    XmStringContext context=NULL;
+    XmStringContext context;
     Boolean done = FALSE;
-    Arg arg;
+    Arg args[2];
     XmStringComponentType type;
-    char *text=NULL;
-    XmStringCharSet charset=NULL;
+    char *text;
+    XmStringCharSet charset;
     XmStringDirection direction;
     XmStringComponentType unknown_tag;
-    unsigned short ul=0;
-    unsigned char *uv=NULL;
-
-
-    if (!item && list->list.itemCount>0 && combo_p->selected_position>=0)
-	item = list->list.items[combo_p->selected_position];
+    unsigned short ul;
+    unsigned char *uv;
+    XmStringTable list_items;
+    int item_count;
+    Boolean isItemCopied = FALSE;
+/* MotifBc 
+ */
+    XtSetArg(args[0], XmNitemCount, &item_count);
+    XtSetArg(args[1], XmNitems, &list_items);
+    XtGetValues((Widget)list, args, 2); 
+    if (item_count && item_count>combo_p->selected_position && 
+	!item && list_items) {
+	item = XmStringCopy(list_items[combo_p->selected_position]);
+	isItemCopied = TRUE;
+    }
 
     if (!item) {
 	combo_p->selected_item = NULL;
-	XtSetArg(arg, XmNvalue, "");
-	XtSetValues(combo_p->text, &arg, 1);
+	XtSetArg(args[0], XmNvalue, "");
+	XtSetValues(combo_p->text, args, 1);
     }
     else {
-	combo_p->selected_item = item;
+        if (combo_p->selected_item != item) 
+	  {
+	    if (combo_p->selected_item)
+	      XmStringFree (combo_p->selected_item);
+	    combo_p->selected_item = XmStringCopy(item);
+	  }
 	XmStringInitContext(&context, item);
 	
 	/* Loop until 1st char* found */
@@ -1524,17 +1950,18 @@ XmString item;
 		break;
 	    case XmSTRING_COMPONENT_TEXT:
 	    case XmSTRING_COMPONENT_LOCALE_TEXT:
-		XtSetArg(arg, XmNvalue, text);
-		XtSetValues(combo_p->text, &arg, 1);
-		if(text) XtFree(text);
+		XtSetArg(args[0], XmNvalue, text);
+		XtSetValues(combo_p->text, args, 1);
+		XtFree(text);
 		done = TRUE;
 		break;
 	    default:
-		if(uv) XtFree((char*)uv);
 		break;
 	    }
 	}
-	if (context) XmStringFreeContext(context);
+	XmStringFreeContext(context);
+	if (isItemCopied)
+	    XmStringFree(item);
     }
 }
 
@@ -1544,39 +1971,65 @@ XmString item;
  * characteristics of the list of items.
  */
 static void
-SetMaximumLabelSize(combo_p)
-DtComboBoxPart *combo_p;
+SetMaximumLabelSize(DtComboBoxPart *combo_p)
 {
     XmListWidget list = (XmListWidget)combo_p->list;
     XmFontList font_list;
-    Dimension width, height;
+    Dimension width, height, border_width;
     Dimension longest = 0;
-    Dimension highest = 1;
+    Dimension highest = 0;
     Arg args[5];
-    int i;
+    int i, item_count;
+    XmStringTable list_items;
+    unsigned char unit_type = XmPIXELS;
 
+    /* Resolution Independent */
+    XtSetArg(args[0], XmNunitType, &unit_type);
+    XtGetValues(combo_p->list, args, 1); /* Assume list/Combo has same uniType*/
+    if (unit_type != XmPIXELS) {
+	XtSetArg(args[0], XmNunitType, XmPIXELS);
+	XtSetValues(combo_p->label, args, 1);
+	XtSetValues(combo_p->list, args, 1);
+    }
+	
     /* Get font info from the widget */
     XtSetArg(args[0], XmNfontList, &font_list);
     XtGetValues(combo_p->label, args, 1);
+/* MotifBc
+ */
+    XtSetArg(args[0], XmNitems, &list_items);
+    XtSetArg(args[1], XmNitemCount, &item_count);
+    XtGetValues((Widget)list, args, 2);
 
-    if ( list->list.itemCount>0 && combo_p->update_label) {
+    if ( item_count && item_count >= combo_p->item_count &&
+	 list_items && combo_p->update_label) {
 	/*
 	 * Loop through all the items to find the biggest dimensions
 	 */
 	for (i = 0; i < combo_p->item_count; i++) {
-	    XmStringExtent(font_list, list->list.items[i], &width, &height);
+	    XmStringExtent(font_list, list_items[i], &width, &height);
 	    longest = (width > longest) ? width : longest;
 	    highest = (height > highest) ? height : highest;
-	}
+	 }
     }
     else {
 	XmStringExtent(font_list, combo_p->label_string, &longest, &highest);
     }
 	
-    combo_p->label_max_length = longest + (LABEL_PADDING * 2);
+    combo_p->label_max_length = longest + ((LABEL_PADDING+TEXT_CONTEXT_MARGIN) * 2);
     combo_p->label_max_height = highest;
+    /* MotifBc */
+    XtSetArg(args[0], XmNborderWidth, &border_width);
+    XtGetValues(combo_p->label, args, 1);
     XtResizeWidget(combo_p->label, combo_p->label_max_length, highest, 
-		   combo_p->label->core.border_width);
+		   border_width);
+
+    /* Resolution Independent */
+    if (unit_type != XmPIXELS) {
+	XtSetArg(args[0], XmNunitType, unit_type);
+	XtSetValues(combo_p->label, args, 1);
+	XtSetValues(combo_p->list, args, 1);
+    }
 }
 
 
@@ -1586,29 +2039,32 @@ DtComboBoxPart *combo_p;
  * same as the new item?
  */
 static void
-SetLabelData(combo_p, item, force_label_string)
-DtComboBoxPart *combo_p;
-XmString item;
-Boolean force_label_string;
+SetLabelData(	DtComboBoxPart *combo_p,
+		XmString item,
+		Boolean force_label_string)
 {
     XmListWidget list = (XmListWidget)combo_p->list;
     int index = combo_p->selected_position;
-    Arg arg;
+    Arg args[2];
+    XmStringTable list_items;
+    int item_count;
 
     /*
      * If the item is empty, get the current item from the list, or
      * use label_string if update_label is FALSE.  If that is empty, 
      * use InitLabel.
      */
-#ifdef XTHREADS
-    XtProcessLock();
-#endif
     if (force_label_string || (combo_p->update_label == FALSE))
 	item = combo_p->label_string ? combo_p->label_string : InitLabel;
     else {
 	if (!item) {
-	    if (list->list.itemCount>0 && index<list->list.itemCount)
-		item = list->list.items[index];
+/* MotifBc
+ */
+	    XtSetArg(args[0], XmNitemCount, &item_count);
+	    XtSetArg(args[1], XmNitems, &list_items);
+	    XtGetValues((Widget)list, args, 2);
+	    if (item_count && item_count>index && list_items)
+		item = list_items[index];
 	    else
 		item = InitLabel;
 	}
@@ -1618,13 +2074,10 @@ Boolean force_label_string;
 	    XmStringFree(combo_p->label_string);
 	combo_p->label_string = XmStringCopy(item);
     }
-#ifdef XTHREADS
-    XtProcessUnlock();
-#endif
 
-    combo_p->selected_item = item;
-    XtSetArg(arg, XmNlabelString, item);
-    XtSetValues(combo_p->label, &arg, 1);
+    combo_p->selected_item = XmStringCopy(item);
+    XtSetArg(args[0], XmNlabelString, item);
+    XtSetValues(combo_p->label, args, 1);
 }
 
 /*
@@ -1634,23 +2087,25 @@ Boolean force_label_string;
  * are using a label, then just set the labelString resource.
  */
 static void
-select_cb(w, client_data, call_data)
-Widget w;
-XtPointer client_data;
-XtPointer call_data;
+select_cb(	Widget w,
+		XtPointer client_data,
+		XtPointer call_data)
 {
     DtComboBoxWidget combo_w = (DtComboBoxWidget)client_data;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo_w->combo_box);
+    DtComboBoxPart *combo_p = (DtComboBoxPart*)
+	&(XmField(combo_w,ipot,DtComboBox,arrow,Widget));
     XmListCallbackStruct *info = (XmListCallbackStruct*)call_data;
     DtComboBoxCallbackStruct cb;
     
-    combo_p->selected_position = info->item_position - 1;
-    if (combo_p->selected_position<0) combo_p->selected_position=0;
-    if (combo_p->type == DtDROP_DOWN_COMBO_BOX) {
-	SetTextFieldData(combo_p, info->item);
+    SelectedPosition(combo_w) = info->item_position - 1;
+    if (SelectedItem(combo_w))
+	XmStringFree(SelectedItem(combo_w));
+    SelectedItem(combo_w) = XmStringCopy(info->item);
+    if (Type(combo_w) == DtDROP_DOWN_COMBO_BOX) {
+	SetTextFieldData(combo_p, SelectedItem(combo_w));
     }
     else {	/* Set the labelWidget string */
-	SetLabelData(combo_p, info->item, FALSE);
+	SetLabelData(combo_p, SelectedItem(combo_w), FALSE);
     }
     
     /*
@@ -1661,18 +2116,39 @@ XtPointer call_data;
      * keyboard navigation.  When menu goes away, make sure input
      * focus goes back into the textField (if editable).
      */
-    if (info->reason == XmCR_DEFAULT_ACTION) {
-        cancelPopup(combo_w);
-    }
+    /* This is one of three places to popdown the menu and here is 
+     * to pop it down by Keyboard input: KSelect
+     * Another place using keyboard input to popdown the menu is 
+     * in _ComboBoxKbdCancel() by <Key>osfEsc
+     * the last place is in shell_event_handler and that is for
+     * poping down through Button operation: BSelect
+     */
+    if (info->reason == XmCR_DEFAULT_ACTION) 
+        input_ungrab( combo_w, GRAB_POINTER | GRAB_KEYBOARD );
 
-    if (((ShellWidget)(combo_p->shell))->shell.popped_up == FALSE) {
+    if ( ShellPoppedUp(((ShellWidget)Shell(combo_w))) == FALSE) {
 	/* The list will free info->item */
+	/* The semantic of a DtNselectionCallback is:
+	 * a callback to here + ShellPoppedUp==False
+	 * In reality, there are two scenario for this:
+	 *     1. XmList's XmNdefaultActionCallback which is activated by
+	 *        KSelect, will first pop down the shell (see above) and
+	 *        and then get here.
+	 *     2. BSelect on XmList, which first call the list_event_handler()
+	 *        (for the handler is registered as LIST_HEAD) to pop down
+	 *        the shell, and then call XmList's XmNbrowseSelectionCallback
+	 *	  which in turn get here
+	 */
 	cb.reason = DtCR_SELECT;
 	cb.event = info->event;
-	cb.item_or_text = info->item;
-	cb.item_position = combo_p->selected_position;
-	XtCallCallbackList((Widget)combo_w, combo_p->selection_callback, 
+	cb.item_or_text = XmStringCopy(info->item);
+	cb.item_position = SelectedPosition(combo_w);
+	XtCallCallbackList((Widget)combo_w, SelectionCallback(combo_w), 
 			   (XtPointer)&cb);
+	if (cb.item_or_text != NULL) {
+	    XmStringFree(cb.item_or_text);
+	    cb.item_or_text = NULL;
+	}
     }
 }
 
@@ -1684,25 +2160,67 @@ XtPointer call_data;
  * application.  If the user pressed a button anywhere but inside
  * the shell, then popdown the menu and ungrab everything.
  */
+
 static void
-shell_event_handler(widget, client_data, event, dispatch)
-Widget widget;
-XtPointer client_data;
-XEvent* event;
-Boolean *dispatch;
+shell_event_handler( 	Widget widget,
+			XtPointer client_data,
+			XEvent* event,
+			Boolean *dispatch)
 {
     DtComboBoxWidget combo_w = (DtComboBoxWidget)client_data;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo_w->combo_box);
-    XmScrolledWindowWidget sw = (XmScrolledWindowWidget)XtParent(combo_p->list);
-    XmScrollBarWidget v_scrollbar = sw->swindow.vScrollBar;
-    XmScrollBarWidget h_scrollbar = sw->swindow.hScrollBar;
+    XmScrolledWindowWidget sw = (XmScrolledWindowWidget)XtParent(List(combo_w));
+    XmScrollBarWidget v_scrollbar;
+    XmScrollBarWidget h_scrollbar;
     Window window = event->xbutton.window;
+    Arg args[2];
 
-    if (((ShellWidget)(combo_p->shell))->shell.popped_up &&
-	(window != XtWindowOfObject(combo_p->list)) &&
-	(h_scrollbar && (window != XtWindowOfObject((Widget)h_scrollbar))) &&
-	(v_scrollbar && (window != XtWindowOfObject((Widget)v_scrollbar)))) {
-        cancelPopup(combo_w);
+    _DtProcessLock();
+    if (popup_shell_init) {
+	if (popup_shell_init != DtKeyPressPopup) {
+	    /* Menu popped up by ButtonPress */
+	    popup_shell_init = DtNonePopup;
+	    _DtProcessUnlock();
+	    return;
+	}
+	else
+	    /* Menu popped up by KActivate */
+	    popup_shell_init = DtNonePopup;
+    }
+    _DtProcessUnlock();
+
+    /* MotifBc */
+    XtSetArg(args[0], XmNverticalScrollBar, &v_scrollbar);
+    XtSetArg(args[1], XmNhorizontalScrollBar, &h_scrollbar);
+    XtGetValues((Widget)sw, args, 2);
+
+    /* condition : Shell is popped up;
+     *             ButtonPress event;
+     *             the cursor is Not inside the XmList area,
+     *             the horizontal scrollbar or the vertical one;
+     * action:     remove all the grabs by DtComboBox
+     */
+    if ( ShellPoppedUp(((ShellWidget)Shell(combo_w))) &&
+	 (event->type == ButtonPress &&
+	  (window != XtWindowOfObject(List(combo_w))) &&
+          !(ScrollBarVisible((Widget)h_scrollbar) && 
+	    (window == XtWindowOfObject((Widget)h_scrollbar))) &&
+          !(ScrollBarVisible((Widget)v_scrollbar) && 
+	    (window == XtWindowOfObject((Widget)v_scrollbar))))
+       )
+        input_ungrab( combo_w, GRAB_POINTER | GRAB_KEYBOARD );
+
+    /* condition : ButtonRelease event
+     *             the cursor is outside the scrollbar(horizontal or vertical)
+     * action:     call action routine "Release" of ScrollBar to release
+     *             possible pressed slider arrow (up/down)
+     */
+    if (event->type == ButtonRelease) {
+        if ( ScrollBarVisible((Widget)h_scrollbar) &&
+             window != XtWindowOfObject((Widget)h_scrollbar) )
+            XtCallActionProc((Widget)h_scrollbar, "Release", event,NULL,0);
+        if ( ScrollBarVisible((Widget)v_scrollbar) &&
+             window != XtWindowOfObject((Widget)v_scrollbar) )
+            XtCallActionProc((Widget)v_scrollbar, "Release", event,NULL,0);
     }
 }
 
@@ -1719,66 +2237,133 @@ Boolean *dispatch;
  * the ButtonPress event.
  */
 static void
-list_event_handler(widget, client_data, event, dispatch)
-Widget widget;
-XtPointer client_data;
-XEvent* event;
-Boolean *dispatch;  /* call remaining event handlers */
+list_event_handler(	Widget widget,
+			XtPointer client_data,
+			XEvent* event,
+			Boolean *dispatch)  /* call remaining event handlers */
 {
     DtComboBoxWidget combo_w = (DtComboBoxWidget)client_data;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo_w->combo_box);
-    static int btn_down = False;
+    Arg		args[5];
+    int		num_args;
+    int		top_item_position;
+    int		visible_item_count;
+    int		item_count;
+    XmScrolledWindowWidget sw = (XmScrolledWindowWidget)XtParent(widget);
+    XmScrollBarWidget v_scrollbar;
+    XmScrollBarWidget h_scrollbar;
 
     switch (event->type) {
-    case ButtonPress:
-	/* 
-	 * Can't ungrab shell because of toolkit interaction (the toolkit
-	 * automatically does a grab in between ButtonPress and
-	 * ButtonRelease).
-	 */
-	btn_down = True;
-	break;
     case ButtonRelease:
-	/*
-	 * Get rid of menu when Button is released.
+        /*
+         * Pop down the menu when Button is released inside the menu.
+         */
+	/* Doing the popdown here upon receiving ButtonRelease event, 
+	 * rather than in shell_even_hanlder(), is
+	 * essential to allow select_cb() to recognize that this 
+	 * XmNbrowseSelectionCallback is the last one in this popup session
+	 * and must treat it as a DtNselectionCallback
 	 */
-	cancelPopup(combo_w);
-	btn_down = False;
+        input_ungrab( combo_w, GRAB_KEYBOARD );
+
+        /* condition : ButtonRelease event
+         *             cursor is outside the scrollbar(horizontal or vertical)
+         * action:     call action routine "Release" of ScrollBar to release
+         *             possible pressed slider arrow (up/down)
+         */
+        /* MotifBc */
+        XtSetArg(args[0], XmNverticalScrollBar, &v_scrollbar);
+        XtSetArg(args[1], XmNhorizontalScrollBar, &h_scrollbar);
+        XtGetValues((Widget)sw, args, 2);
+        if ( ScrollBarVisible((Widget)h_scrollbar) )
+            XtCallActionProc((Widget)h_scrollbar, "Release", event,NULL,0);
+        if ( ScrollBarVisible((Widget)v_scrollbar) )
+            XtCallActionProc((Widget)v_scrollbar, "Release", event,NULL,0);
+
 	break;
     case FocusOut:
 	/*
-	 * There are interaction problems between the list and the
+	 * There is interaction conflict between the list and the
 	 * scrollbars in terms of Focus.  We always want our list
 	 * to have focus, so grab it back if we lose it.
 	 */
-	if (((ShellWidget)(combo_p->shell))->shell.popped_up) {
-	    XtGrabKeyboard(widget, False, GrabModeAsync, GrabModeAsync, 
+	if ( ShellPoppedUp(((ShellWidget)(Shell(combo_w)))) ) {
+	    _XmGrabKeyboard(widget, False, GrabModeAsync, GrabModeAsync, 
 			    CurrentTime);
-	    XtSetKeyboardFocus(combo_p->list, RevertToNone);
+	    XtSetKeyboardFocus(List(combo_w), None);
 	}
 	break;
     case EnterNotify:
-	/*
-	 * Don't let the shell have the pointer grabbed while
-	 * we are inside the list.
-	 */
-	if (btn_down == False) {
-	    XtUngrabPointer(combo_p->shell, CurrentTime);
-	}
-	break;
-    case LeaveNotify:
-	/*
-	 * Only let the shell have the grab if the menu is up
-	 * and the btn isn't down.  We don't want the shell to
-	 * have the grab while the user is interacting in any way
-	 * with the list.
-	 */
-	if ((((ShellWidget)(combo_p->shell))->shell.popped_up) &&
-	    (btn_down == FALSE)) {
-	    XtGrabPointer(combo_p->shell, True, ButtonPressMask,
-			   GrabModeAsync, GrabModeAsync, None, 
-			   XmGetMenuCursor(XtDisplayOfObject(combo_p->shell)),
-			   CurrentTime);
+	/* call ListBeginSelect() action directly to simulate Btn1Down*/
+	{Display *disp = XtDisplay(List(combo_w));
+	 Window  win   = XtWindow(List(combo_w));
+	 Window  root;
+	 Window  child;
+	 XmListWidget  list;
+	 int     root_x, root_y, win_x, win_y, item_pos;
+	 unsigned int keys_buttons;
+	 unsigned char unit_type = XmPIXELS;
+
+	 /* Resolution Independent */
+	 if ( MUnitType(combo_w) != XmPIXELS) {
+		unit_type = MUnitType(combo_w);
+		XtSetArg(args[0], XmNunitType, XmPIXELS);
+		XtSetValues(List(combo_w), args, 1);
+	 }
+	 root  = XDefaultRootWindow( disp );
+	 XQueryPointer ( disp, win, &root,
+					&child, &root_x, &root_y,
+					&win_x, &win_y, &keys_buttons );
+	 if ( keys_buttons & Button1Mask ) {
+		item_pos = XmListYToPos(List(combo_w), event->xbutton.y);
+		list = (XmListWidget)List(combo_w);
+/* MotifBc
+ */
+		num_args = 0;
+		XtSetArg(args[num_args],XmNtopItemPosition,&top_item_position);
+		num_args ++;
+		XtSetArg(args[num_args], XmNvisibleItemCount, 
+			&visible_item_count);
+		num_args ++;
+		XtSetArg(args[num_args], XmNitemCount, &item_count);
+		num_args ++;
+		XtGetValues((Widget)list, args, num_args);
+                /* Adjust top_item_position value to its' internal form */
+                if (top_item_position)
+                       top_item_position--;
+                else
+                       top_item_position = item_count - 1;
+
+		if((item_pos<1 ) ||
+		   (item_pos>=(top_item_position + visible_item_count))||
+		   (item_pos < top_item_position) ||
+		   (item_pos >= item_count) )
+		{
+			Position item_x, item_y;
+			Dimension item_height, item_width;
+			
+			XmListPosToBounds((Widget)list, 
+				((top_item_position + visible_item_count )> 
+				 item_count)? item_count:
+				 (top_item_position + visible_item_count ),
+				&item_x, &item_y, &item_width, &item_height);
+
+			if ( item_pos ==0 && event->xbutton.y<(int)(item_height/2) )
+				event->xbutton.y = item_height/2;
+			else
+				event->xbutton.y = item_y + item_height/2;
+			event->xbutton.x = item_x;
+		}
+		
+		XtCallActionProc(List(combo_w), "ListBeginSelect",
+						/* XEvent */ event,
+						/* params */NULL,
+						/* num_params */0);
+	 }
+	 /* Resolution Independent */
+	 if ( unit_type != XmPIXELS) {
+		XtSetArg(args[0], XmNunitType, unit_type);
+		XtSetValues(List(combo_w), args, 1);
+	 }
 	}
 	break;
     }
@@ -1787,8 +2372,7 @@ Boolean *dispatch;  /* call remaining event handlers */
 
 /* Caller must free string */
 static char*
-GetTextString(xm_string)
-XmString xm_string;
+GetTextString(XmString xm_string)
 {
     XmStringContext context;
     XmStringComponentType type;
@@ -1824,9 +2408,7 @@ XmString xm_string;
 }
 
 static void
-TextFieldActivate(combo_p,event)
-DtComboBoxPart *combo_p;
-XEvent *event;
+TextFieldActivate(DtComboBoxPart *combo_p, XtPointer call_data)
 {
     XmTextFieldWidget w = (XmTextFieldWidget)(combo_p->text);
     XmListWidget list = (XmListWidget)combo_p->list;
@@ -1834,26 +2416,38 @@ XEvent *event;
     char *data = NULL;
     char *text = NULL;
     Arg arg;
+    XmStringTable list_items;
     
     XtSetArg(arg, XmNvalue, &data);
     XtGetValues((Widget)w, &arg, 1);
+/* MotifBc
+ */
+    XtSetArg(arg, XmNitems, &list_items);
+    XtGetValues((Widget)list, &arg, 1);
 
-    if ( list->list.itemCount>0 && combo_p->selected_position>=0 )
-	text = GetTextString(list->list.items[combo_p->selected_position]);
+    if ( list_items)
+	text = GetTextString(list_items[combo_p->selected_position]);
 
     if (text && data && (strcmp(text, data) == 0)) {
 	XtFree(text);
-	return;
     }
     /* Only send callback if both are not NULL */
     else if (!((text == NULL) && (data == NULL))) {
+	XmAnyCallbackStruct *local_cb = (XmAnyCallbackStruct *)call_data;
+
 	cb.reason = XmCR_ACTIVATE;
-	cb.event  = event;
-	XtCallCallbackList((Widget)w, w->text.activate_callback,
-			   (XtPointer) &cb);
+	cb.event  = local_cb ? local_cb->event : NULL;
+/* MotifBc
+ */
+        if (XtHasCallbacks((Widget)w, XmNactivateCallback)==XtCallbackHasSome)
+               XtCallCallbacks((Widget)w, XmNactivateCallback, 
+                               (XtPointer) &cb);
 	if (text)   
 	    XtFree(text);
     }
+
+    if ( data )
+	XtFree (data);
 }
 
 /*
@@ -1862,34 +2456,44 @@ XEvent *event;
  * puts the shell on the screen.
  */
 static void
-activate_cb(w, client_data, call_data)
-Widget w;
-XtPointer client_data;
-XtPointer call_data;
+activate_cb(	Widget w,
+		XtPointer client_data,
+		XtPointer call_data)
 {
     DtComboBoxWidget combo_w = (DtComboBoxWidget)client_data;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo_w->combo_box);
+    DtComboBoxPart *combo_p = (DtComboBoxPart*)
+	&(XmField(combo_w,ipot,DtComboBox,arrow,Widget));
     Display *disp = XtDisplayOfObject((Widget)combo_w);
+    XmDisplay xmdisp = (XmDisplay) XmGetXmDisplay(disp);
     int screen;
     Dimension width, height;
     Dimension disp_width, disp_height;
-    Position root_x, root_y;
+    Position root_x, root_y, root_y0;
     Arg args[5];
     int n;
+    unsigned char unit_type = XmPIXELS;
 
-    if (combo_p->popped_up) {
-        cancelPopup(combo_w);
-	return;
-    }
+    /* Resolution Independent Handling */
+    XtSetArg(args[0], XmNunitType, &unit_type);
+    XtGetValues((Widget)combo_w, args, 1);
+   /* Getting Focus */
+   if ( !_XmFocusIsHere( (Widget)combo_w) )
+    XmProcessTraversal((Widget)combo_w, 
+			(XmTraversalDirection) XmTRAVERSE_CURRENT);
 
-    if (combo_p->type == DtDROP_DOWN_COMBO_BOX)
-	TextFieldActivate(combo_p,
-	    call_data?((XmAnyCallbackStruct*)call_data)->event:NULL);
+    if (Type(combo_w) == DtDROP_DOWN_COMBO_BOX)
+	TextFieldActivate(combo_p, call_data);
 
     /*
      * Don't popup if no items in the list.
      */
-    if (((XmListWidget)combo_p->list)->list.itemCount<=0)
+/* MotifBc
+ */
+    XtSetArg(args[0], XmNitemCount, &n);
+    XtGetValues(((Widget)List(combo_w)), args, 1);
+    if ( n != ItemCount(combo_w) )
+	SyncWithList(combo_p);
+    if ( !n )
 	return;
 
     screen = DefaultScreen(disp);
@@ -1904,21 +2508,23 @@ XtPointer call_data;
      * could disallow SetValues while the menu is posted, but let's see
      * how things go first.
      */
-    if (combo_p->menu_post_callback) {
+    if (MenuPostCallback(combo_w)) {
 	XmAnyCallbackStruct info;
 
 	info.reason = DtCR_MENU_POST;
 	info.event = (XEvent*)NULL;
-	XtCallCallbackList((Widget)combo_w, combo_p->menu_post_callback, 
+	XtCallCallbackList((Widget)combo_w, MenuPostCallback(combo_w), 
 			   (XtPointer)&info);
     }
 
-    width = combo_p->max_shell_width;
-    height = combo_p->max_shell_height;
+    width = MaxShellWidth(combo_w);
+    height = MaxShellHeight(combo_w);
+
 
     /* Get root coords of ComboBox */
-    XtTranslateCoords((Widget)combo_w, combo_w->core.x, combo_w->core.y,
+    XtTranslateCoords((Widget)combo_w, X(combo_w), Y(combo_w),
 		      &root_x, &root_y);
+	root_y0 = root_y;
 
     /*
      * Make necessary adjustments for offset of our widget 
@@ -1927,30 +2533,83 @@ XtPointer call_data;
      * the x/y can change as well as the width (from list's visibleItemCount 
      * or geometry management changes).
      */
-    root_x -= combo_w->core.x;
-    root_y -= combo_w->core.y;
-    root_y += (combo_w->core.height - COMBO_MARGIN_H(combo_w));
+    root_x -= X(combo_w);
+    root_y -= Y(combo_w);
+    root_y += (Height(combo_w) - COMBO_MARGIN_H(combo_w));
 
     /*
      * Make sure the shell is at least as big as our combo-box, and
      * make sure it stays on the screen.
      */
-    if (width < combo_w->core.width)
-	width = combo_w->core.width;
-    if ((int)(root_x + width) > (int)disp_width)
-	width = (disp_width - root_x);
-    if ((int)(root_y + height) > (int)disp_height)
-	height = (disp_height - root_y);
+	/* to enforce a scrollbar with Shell */
+    if (width < Width(combo_w))
+	{
+		Dimension sb_width, spacing, list_width;
+		Widget sb;
+		n = 0;
+		XtSetArg(args[n], XmNverticalScrollBar, &sb); n++;
+		XtSetArg(args[n], XmNspacing, &spacing); n++;
+		XtGetValues(XtParent(List(combo_w)), args, n);
+		/* Resolution Independent Resource */
+		if ( unit_type != XmPIXELS) {
+			n = XmConvertUnits(List(combo_w), XmHORIZONTAL, 
+				(int)unit_type, spacing, XmPIXELS);	
+			spacing = n;
+		}
+		if (sb && XtIsWidget(sb) ) {
+		    n = 0;
+		    XtSetArg(args[n], XmNwidth, &sb_width); n++;
+		    XtGetValues(sb, args, n);
+		    /* Resolution Independent Resource */
+                    if (unit_type != XmPIXELS) { 
+                        n = XmConvertUnits(sb, XmHORIZONTAL, 
+                                (int)unit_type, sb_width, XmPIXELS);
+                        sb_width = n;
+                    } 
+		}
+		else
+			sb_width = 0;
 
+		n = 0;
+		width = Width(combo_w);
+		list_width = ( ScrollBarVisible(sb) ?
+                                (width - sb_width - spacing)
+				:(width - spacing) );
+
+		if (unit_type != XmPIXELS) {
+                        n = XmConvertUnits(sb, XmHORIZONTAL,
+                                XmPIXELS, list_width, (int)unit_type);
+                        list_width = n; n=0;
+                }
+		XtSetArg(args[n], XmNwidth, list_width); n++;
+		XtSetValues(List(combo_w), args, n);
+	}
+    if ((int)(root_x + width) > (int)disp_width)
+	root_x = (disp_width - width);
+	else if (root_x <=0)
+	root_x = 0;
+	else 
+	  ;
+
+    if ((int)(root_y + height) > (int)disp_height)
+	root_y = root_y0 - Y(combo_w) - height;
+
+    if (unit_type != XmPIXELS) {
+	XtSetArg(args[0], XmNunitType, XmPIXELS);
+	XtSetValues(Shell(combo_w), args, 1);
+    }
     n = 0;
     XtSetArg(args[n], XmNx, root_x); n++;
     XtSetArg(args[n], XmNy, root_y); n++;
-    XtSetArg(args[n], XmNwidth, width); n++;
-    XtSetArg(args[n], XmNheight, height); n++;
-    XtSetValues(combo_p->shell, args, n);
+    XtSetValues(Shell(combo_w), args, n);
+    if (unit_type != XmPIXELS) {
+        XtSetArg(args[0], XmNunitType, unit_type); 
+        XtSetValues(Shell(combo_w), args, 1); 
+    } 
 
-    combo_p->popped_up = TRUE;
-    XtPopupSpringLoaded(combo_p->shell);
+
+    PoppedUp(combo_w) = TRUE;
+    XtPopup(Shell(combo_w), XtGrabNone);
 
     /*
      * Set up the grab for the shell and list.  The shell gets the
@@ -1958,13 +2617,14 @@ XtPointer call_data;
      * correctly, but events outside the shell will go to the shell.
      * See shell and list event handlers for details about grabs.
      */
-    XtGrabPointer(combo_p->shell, True, SHELL_EVENTS,
-		   GrabModeAsync, GrabModeAsync, None, 
+    _XmAddGrab(Shell(combo_w), True, True);
+    _XmGrabPointer(Shell(combo_w), True, ButtonPressMask |ButtonReleaseMask,
+			GrabModeAsync, GrabModeAsync, None, 
 		   XmGetMenuCursor(disp), CurrentTime);
-    XtGrabKeyboard(combo_p->list, False, GrabModeAsync, GrabModeAsync, 
+    _XmGrabKeyboard(List(combo_w), False, GrabModeAsync, GrabModeAsync, 
 		   CurrentTime);
-    /*_XmAddGrab(combo_p->shell, True, True);*/
-
+    xmdisp->display.userGrabbed = True;
+	
     /*
      * Where to define the cursor for the list widget.  It would be
      * nice to do it in the list's realize function, but that's not
@@ -1973,7 +2633,7 @@ XtPointer call_data;
      * way to get this done.  This is needed to make sure the list has the
      * correct menu during browse scrolling, etc.
      */
-    XDefineCursor(disp, XtWindowOfObject(combo_p->shell), 
+    XDefineCursor(disp, XtWindowOfObject(Shell(combo_w)), 
 		  XmGetMenuCursor(disp));
 }
 
@@ -1984,26 +2644,35 @@ XtPointer call_data;
  * the toolkit)?
  */
 static void
-arrow_expose_cb(w, client_data, call_data)
-Widget w;
-XtPointer client_data;
-XtPointer call_data;
+arrow_expose_cb(Widget w,
+		XtPointer client_data,
+		XtPointer call_data)
 {
-#if 0
     DtComboBoxWidget combo_w = (DtComboBoxWidget)client_data;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo_w->combo_box);
-#endif
     Display *disp = XtDisplayOfObject(w);
     Window win = XtWindowOfObject(w);
     XGCValues values;
-    short center_w = w->core.width/2;
-    short center_h = ((int)(w->core.height - 3))/2;
+    short center_w;
+    short center_h;
     XPoint points[10];
-    Arg arg;
+    Arg args[3];
     GC gc;
+    Dimension arrow_width, arrow_height;
+    unsigned char unit_type = XmPIXELS;
 
-    XtSetArg(arg, XmNforeground, &(values.foreground));
-    XtGetValues(w, &arg, 1);
+    /* Resolution Independent */
+    if ( MUnitType(combo_w) != XmPIXELS ) {
+	unit_type = MUnitType(combo_w);
+	XtSetArg(args[0], XmNunitType, XmPIXELS);
+	XtSetValues(w, args, 1);
+    }
+    /* MotifBc */
+    XtSetArg(args[0], XmNwidth, &arrow_width);
+    XtSetArg(args[1], XmNheight, &arrow_height);
+    XtSetArg(args[2], XmNforeground, &(values.foreground));
+    XtGetValues(w, args, 3);
+    center_w = arrow_width/2;
+    center_h = (int) (arrow_height -3.)/2;
 
     values.line_width = 0;
     values.line_style = LineSolid;
@@ -2011,7 +2680,7 @@ XtPointer call_data;
     gc = XtGetGC(w, GCForeground | GCFillStyle | GCLineStyle | GCLineWidth,
 		 &values);
 
-    XDrawLine(disp, win, gc, 1, center_h + center_w + 1, w->core.width - 2,
+    XDrawLine(disp, win, gc, 1, center_h + center_w + 1, Width(w) - 2,
 	      center_h + center_w + 1);
 
     /* A - bottom point */
@@ -2049,42 +2718,80 @@ XtPointer call_data;
     XDrawLines(disp, win, gc, points, 8, CoordModeOrigin);
     XFillPolygon(disp, win, gc, points, 8, Convex, CoordModeOrigin);
     XtReleaseGC(w, gc);
+
+    /* Resolution Independent */
+    if ( unit_type != XmPIXELS ) {
+	XtSetArg(args[0], XmNunitType, unit_type);
+	XtSetValues(w, args, 1);
+    }
 }
 
 /*
  * We get the text-field losing-focus callback, so pass it on to
-
  * the user if they requested it.  Our losing-focus callback 
  * is just a convenience callback, so that the user doesn't
  * have to get the text-field first.  This make our integration
- * with XDesigner a little easier.
+ * with XDesigner a little easier.d
  */
 static void
-text_losing_focus_cb(w, client_data, call_data)
-Widget w;
-XtPointer client_data;
-XtPointer call_data;
+text_losing_focus_cb(	Widget w,
+			XtPointer client_data,
+			XtPointer call_data)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)client_data;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-    XEvent *event=((XmAnyCallbackStruct*)call_data)->event;
-    Modifiers mod;
-    KeySym keysym;
+    DtComboBoxPart *combo_p = (DtComboBoxPart*)
+	&(XmField(combo,ipot,DtComboBox,arrow,Widget));
+    XmTextFieldWidget wt=(XmTextFieldWidget) Text(combo);
+    XmString xmStr;
+    Arg arg;
+    String text_string;
+    int i, need_sync_flag=1;
+/* MotifBc
+ */
+    XtSetArg(arg, XmNvalue, &text_string);
+    XtGetValues((Widget)wt, &arg, 1);
+    xmStr = (XmString) XmStringCreateLocalized(text_string?text_string:"");
+    if ( text_string )
+	XtFree (text_string);
 
-    if(event->type==KeyPress){
-      XmTranslateKey(XtDisplay(w),
-	  ((XKeyEvent*)event)->keycode,
-	  ((XKeyEvent*)event)->state,
-	  &mod,&keysym);
-      if(keysym==osfXK_Down || keysym==osfXK_Up){
-	activate_cb((Widget)combo->combo_box.arrow, (XtPointer)combo, NULL);
-	return;
-      }
+    if (LosingFocusCallback(combo))
+	XtCallCallbackList((Widget)combo, LosingFocusCallback(combo), 
+			   (XtPointer)call_data);
+
+    /* To synchronize the ComboBox record with XmList */
+    XtVaGetValues(List(combo), XmNitemCount, &i, NULL);
+    if (i != ItemCount(combo) ) {
+	SyncWithList(combo_p);
+	need_sync_flag = 0;
+    }
+	
+    for (i = 0; i < ItemCount(combo); i++) {
+	if ( need_sync_flag && 
+	     !( (ListItems(combo))[i] && XmeStringIsValid((ListItems(combo))[i]) )) {
+	    SyncWithList(combo_p);
+	    need_sync_flag = 0;
+	}
+	if (XmStringCompare(xmStr, (ListItems(combo))[i]))
+	    break;
     }
 
-    if (combo_p->losing_focus_callback)
-	XtCallCallbackList((Widget)combo, combo_p->losing_focus_callback, 
-			   (XtPointer)call_data);
+    if (i < ItemCount(combo) && i != SelectedPosition(combo) ) {
+	SelectedPosition(combo) = i;
+	if (SelectedItem(combo))
+	    XmStringFree(SelectedItem(combo));
+	SelectedItem(combo) = xmStr;
+	if (Type(combo) == DtDROP_DOWN_COMBO_BOX)
+	    SetTextFieldData(combo_p, NULL);
+	else
+	    SetLabelData(combo_p, NULL, FALSE);
+	XmListSetPos(List(combo), SelectedPosition(combo) + 1);
+	XmListSelectPos(List(combo), SelectedPosition(combo) + 1, True);
+	
+        XtVaGetValues(List(combo), XmNtopItemPosition,
+		      &(combo_p->top_item_position), NULL);
+    }
+    else
+	XmStringFree( xmStr );
 }
 
 /*
@@ -2095,17 +2802,65 @@ XtPointer call_data;
  * with XDesigner a little easier.
  */
 static void
-text_activate_cb(w, client_data, call_data)
-Widget w;
-XtPointer client_data;
-XtPointer call_data;
+text_activate_cb(	Widget w,
+			XtPointer client_data,
+			XtPointer call_data)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)client_data;
+    DtComboBoxPart *combo_p = (DtComboBoxPart*)
+	&(XmField(combo,ipot,DtComboBox,arrow,Widget));
+    XmTextFieldWidget wt=(XmTextFieldWidget) Text(combo);
+    XmString xmStr;
+    Arg arg;
+    String text_string;
+    int i, need_sync_flag=1;
+/* MotifBc
+ */
+    XtSetArg(arg, XmNvalue, &text_string);
+    XtGetValues((Widget)wt, &arg, 1);
+    xmStr = (XmString) XmStringCreateLocalized(text_string?text_string:"");
+    if ( text_string )
+	XtFree (text_string);
 
-    if (combo->combo_box.activate_callback)
+    if (ActivateCallback(combo))
 	XtCallCallbackList((Widget)combo, 
-			   combo->combo_box.activate_callback, 
+			   ActivateCallback(combo),
 			   (XtPointer)call_data);
+
+    /* To synchronize the ComboBox record with XmList */
+    XtVaGetValues(List(combo), XmNitemCount, &i, NULL);
+    if (i != ItemCount(combo) ) {
+	SyncWithList(combo_p);
+	need_sync_flag = 0;
+    }
+	
+    for (i = 0; i < ItemCount(combo); i++) {
+	if ( need_sync_flag && 
+	     !( (ListItems(combo))[i] && 
+	       XmeStringIsValid((ListItems(combo))[i]) )) {
+	    SyncWithList(combo_p);
+	    need_sync_flag = 0;
+	}
+	if (XmStringCompare(xmStr, (ListItems(combo))[i]))
+	    break;
+    }
+
+    if (i < ItemCount(combo) && i != SelectedPosition(combo) ) {
+	SelectedPosition(combo) = i;
+	if (SelectedItem(combo))
+	    XmStringFree(SelectedItem(combo));
+	SelectedItem(combo) = xmStr;
+	if (Type(combo) == DtDROP_DOWN_COMBO_BOX)
+	    SetTextFieldData(combo_p, NULL);
+	else
+	    SetLabelData(combo_p, NULL, FALSE);
+	XmListSetPos(List(combo), SelectedPosition(combo) + 1);
+	XmListSelectPos(List(combo), SelectedPosition(combo) + 1, True);
+        XtVaGetValues(List(combo), XmNtopItemPosition,
+		      &(combo_p->top_item_position), NULL);
+    }
+    else
+	XmStringFree( xmStr );
 }
 
 
@@ -2117,16 +2872,14 @@ XtPointer call_data;
  * with XDesigner a little easier.
  */
 static void
-text_focus_cb(w, client_data, call_data)
-Widget w;
-XtPointer client_data;
-XtPointer call_data;
+text_focus_cb(	Widget w,
+		XtPointer client_data,
+		XtPointer call_data)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)client_data;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
 
-    if (combo_p->focus_callback)
-	XtCallCallbackList((Widget)combo, combo_p->focus_callback, 
+    if (FocusCallback(combo))
+	XtCallCallbackList((Widget)combo, FocusCallback(combo), 
 			   (XtPointer)call_data);
 }
 
@@ -2139,23 +2892,50 @@ XtPointer call_data;
  * names are changed?
  */
 static void
-SyncWithList(combo_p)
-DtComboBoxPart *combo_p;
+SyncWithList(DtComboBoxPart *combo_p)
 {
     XmListWidget list = (XmListWidget)combo_p->list;
+    Arg		args[10];
+    int		num_args;
+    unsigned char unit_type = XmPIXELS;
 
-    combo_p->items = list->list.items;
-    combo_p->item_count = list->list.itemCount;
-    combo_p->list_font_list = list->list.font;
-    combo_p->list_margin_height = list->list.margin_height;
-    combo_p->list_margin_width = list->list.margin_width;
-    combo_p->list_spacing = list->list.ItemSpacing;
-    combo_p->top_item_position = list->list.top_position;
-    combo_p->visible_item_count = list->list.visibleItemCount;
+/* Resolution Independent */
+    XtSetArg(args[0],XmNunitType,&unit_type); 
+    XtGetValues((Widget)list, args, 1);
+    if (unit_type != XmPIXELS) {
+	XtSetArg(args[0],XmNunitType,XmPIXELS); 
+	XtSetValues((Widget)list, args, 1);
+    }
+/* MotifBc
+ */
+    num_args = 0;
+    XtSetArg(args[num_args],XmNitems,&(combo_p->list_items)); num_args ++;
+    XtSetArg(args[num_args],XmNitems,&(combo_p->items)); num_args ++;
+    XtSetArg(args[num_args],XmNitemCount,&(combo_p->item_count)); num_args ++;
+    XtSetArg(args[num_args],XmNfontList,&(combo_p->list_font_list));
+    num_args ++;
+    XtSetArg(args[num_args],XmNlistMarginHeight,&(combo_p->list_margin_height));
+    num_args ++;
+    XtSetArg(args[num_args],XmNlistMarginWidth,&(combo_p->list_margin_width));
+    num_args ++;
+    XtSetArg(args[num_args],XmNlistSpacing,&(combo_p->list_spacing));
+    num_args ++;
+    XtSetArg(args[num_args],XmNtopItemPosition,&(combo_p->top_item_position));
+    num_args ++;
+    XtSetArg(args[num_args],XmNvisibleItemCount,&(combo_p->visible_item_count));
+    num_args ++;
+    XtGetValues((Widget)list, args, num_args);
+    /* Adjustment with empty list */
+    if (! combo_p->item_count) {
+	combo_p->items = NULL;
+	combo_p->list_items = NULL;
+    }
 
-    /* selected position must be into the items */
-    if (!(combo_p->selected_position < combo_p->item_count))
-        combo_p->selected_position = 0;
+/* Resolution Independent */
+    if (unit_type != XmPIXELS) {
+	XtSetArg(args[0],XmNunitType,unit_type); 
+	XtSetValues((Widget)list, args, 1);
+    }
 }
 
 /*
@@ -2163,178 +2943,247 @@ DtComboBoxPart *combo_p;
  * for use by users of our widget.
  */
 Widget 
-DtCreateComboBox(parent, name, arglist, num_args)
-Widget parent;
-char *name;
-Arg *arglist;
-Cardinal num_args;
+DtCreateComboBox(Widget parent,
+		char *name,
+		ArgList arglist,
+		Cardinal num_args)
 {
     return(XtCreateWidget(name, dtComboBoxWidgetClass, parent,
 			  arglist, num_args));
 }
 
 void
-DtComboBoxAddItem(combo_w, item, pos, unique)
-Widget combo_w;
-XmString item;
-int pos;
-Boolean unique;
+DtComboBoxAddItem(	Widget combow,
+			XmString item,
+			int pos,
+			Boolean unique)
 {
-    DtComboBoxWidget combo = (DtComboBoxWidget)combo_w;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-    XmStringTable list_items = ((XmListWidget)combo_p->list)->list.items;
+    DtComboBoxWidget combo = (DtComboBoxWidget)combow;
+    DtComboBoxPart *combo_p = (DtComboBoxPart*)
+	&(XmField(combo,ipot,DtComboBox,arrow,Widget));
+    XmStringTable list_items;
     int i;
-#ifdef XTHREADS
-    XtAppContext app=XtWidgetToApplicationContext(combo_w);
-    XtAppLock(app);
-#endif
+    Arg arg;
+    _DtWidgetToAppContext(combow);
+    _DtAppLock(app);
 
-    /* AxY addition 1999-11-10 */
-    SyncWithList(combo_p);
+    /* Try to help confused applications. */
+    if (XmIsComboBox(combow))
+      {
+	XmComboBoxAddItem(combow, item, pos, unique);
+	_DtAppUnlock(app);
+	return;
+      }
 
-    if (item && ((XmListWidget)combo_p->list)->list.itemCount>0) {
-	for (i = 0; i < combo_p->item_count; i++)
+/* MotifBc
+ */
+    XtSetArg(arg, XmNitems, &list_items);
+    XtGetValues(((Widget)List(combo)), &arg, 1);
+
+    if (item && list_items) {
+	for (i = 0; i < ItemCount(combo); i++)
 	    if (XmStringCompare(item, list_items[i]))
 		break;
-	if ((i < combo_p->item_count) && unique) {
-#ifdef XTHREADS
-	    XtAppUnlock(app);
-#endif
+	if ((i < ItemCount(combo)) && unique)
+	  {
+	    _DtAppUnlock(app);
 	    return;
-	}
+	  }
     }
 
-    XmListAddItem(combo_p->list, item, pos);
+    XmListAddItemUnselected(List(combo), item, pos);
     SyncWithList(combo_p);
 
-    if (combo_p->label) {
-	if (!XtIsRealized((Widget)combo)) SetMaximumLabelSize(combo_p);
-	if (combo_p->type == DtDROP_DOWN_LIST) {
+    if (Label(combo)) {
+	SetMaximumLabelSize(combo_p);
+	if (Type(combo) == DtDROP_DOWN_LIST) {
 	    ClearShadow(combo, TRUE);
-	    if (combo_p->recompute_size)
+	    if (RecomputeSize(combo))
 		SetComboBoxSize(combo);
 	    LayoutChildren(combo);
 	    DrawShadow(combo);
 	}
     }
-    if (combo_p->type == DtDROP_DOWN_COMBO_BOX)
+    if (Type(combo) == DtDROP_DOWN_COMBO_BOX)
 	SetTextFieldData(combo_p, NULL);
     else
 	SetLabelData(combo_p, NULL, FALSE);
-#ifdef XTHREADS
-    XtAppUnlock(app);
-#endif
+
+    _DtAppUnlock(app);
 }
 
 
 
 void
-DtComboBoxDeletePos(combo_w, pos)
-Widget combo_w;
-int pos;
+DtComboBoxDeletePos(	Widget combow,
+			int pos)
 {
-    DtComboBoxWidget combo = (DtComboBoxWidget)combo_w;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-#ifdef XTHREADS
-    XtAppContext app=XtWidgetToApplicationContext(combo_w);
-    XtAppLock(app);
-#endif
+    DtComboBoxWidget combo = (DtComboBoxWidget)combow;
+    DtComboBoxPart *combo_p = (DtComboBoxPart*)
+	&(XmField(combo,ipot,DtComboBox,arrow,Widget));
+    int selection_changed = 0;
+    _DtWidgetToAppContext(combow);
+    _DtAppLock(app);
 
-    XmListDeletePos(combo_p->list, pos);
+    /* Try to help confused applications. */
+    if (XmIsComboBox(combow))
+      {
+	XmComboBoxDeletePos(combow, pos);
+	_DtAppUnlock(app);
+	return;
+      }
+
+    if ( pos <= 0 || pos >combo_p->item_count ) {
+	XtWarning(CB_DEL_POS);
+	_DtAppUnlock(app);
+	return;
+    }
+
+    XmListDeletePos(List(combo), pos);
+    if ( pos == (combo_p->selected_position+1) ) {
+	/* Since we delete the current item, we have to set one */
+	if ( pos == combo_p->item_count && combo_p->selected_position>0) {
+	    combo_p->selected_position--;
+	    selection_changed ++;
+	}
+	XmListSelectPos(List(combo), combo_p->selected_position+1, True);
+    }
+    else if ( pos <= combo_p->selected_position) {
+	combo_p->selected_position--;
+	selection_changed ++;
+    }	
     SyncWithList(combo_p);
+    if ( selection_changed ) {
+        if ( combo_p->selected_item )
+	    XmStringFree(combo_p->selected_item );
+        combo_p->selected_item = 
+	    ItemCount(combo)?
+		XmStringCopy(combo_p->list_items[combo_p->selected_position]):
+		(XmString) NULL;
+    }
 
-    if (combo_p->label) {
-	if (!XtIsRealized((Widget)combo)) SetMaximumLabelSize(combo_p);
-	if (combo_p->type == DtDROP_DOWN_LIST) {
+    if (Label(combo)) {
+	SetMaximumLabelSize(combo_p);
+	if (Type(combo) == DtDROP_DOWN_LIST) {
 	    ClearShadow(combo, TRUE);
-	    if (combo_p->recompute_size)
+	    if (RecomputeSize(combo))
 		SetComboBoxSize(combo);
 	    LayoutChildren(combo);
 	    DrawShadow(combo);
 	}
     }
-    if (combo_p->type == DtDROP_DOWN_COMBO_BOX)
+    if (Type(combo) == DtDROP_DOWN_COMBO_BOX)
 	SetTextFieldData(combo_p, NULL);
     else
 	SetLabelData(combo_p, NULL, FALSE);
-#ifdef XTHREADS
-    XtAppUnlock(app);
-#endif
+
+    _DtAppUnlock(app);
 }
 
 void
-DtComboBoxSetItem(combo_w, item)
-Widget combo_w;
-XmString item;
+DtComboBoxSetItem(	Widget combow,
+			XmString item)
 {
-    DtComboBoxWidget combo = (DtComboBoxWidget)combo_w;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-    XmStringTable list_items = ((XmListWidget)combo_p->list)->list.items;
+    DtComboBoxWidget combo = (DtComboBoxWidget)combow;
+    DtComboBoxPart *combo_p = (DtComboBoxPart*)
+	&(XmField(combo,ipot,DtComboBox,arrow,Widget));
+    XmStringTable list_items;
     int i;
-#ifdef XTHREADS
-    XtAppContext app=XtWidgetToApplicationContext(combo_w);
-    XtAppLock(app);
-#endif
+    Arg arg;
+    _DtWidgetToAppContext(combow);
+    _DtAppLock(app);
 
-    if (item && ((XmListWidget)combo_p->list)->list.itemCount>0) {
-	for (i = 0; i < combo_p->item_count; i++)
+    /* Try to help confused applications. */
+    if (XmIsComboBox(combow))
+      {
+	XmComboBoxSetItem(combow, item);
+	_DtAppUnlock(app);
+	return;
+      }
+
+/* MotifBc
+ */
+    XtSetArg(arg, XmNitems, &list_items);
+    XtGetValues(((Widget)List(combow)), &arg, 1);
+
+    if (item && list_items) {
+	for (i = 0; i < ItemCount(combo); i++)
 	    if (XmStringCompare(item, list_items[i]))
 		break;
-	if (i < combo_p->item_count) {
-	    combo_p->selected_position = i;
-	    if (combo_p->type == DtDROP_DOWN_COMBO_BOX)
+	if (i < ItemCount(combo)) {
+	    SelectedPosition(combo) = i;
+	    if (SelectedItem(combo))
+		XmStringFree(SelectedItem(combo));
+	    SelectedItem(combo) = XmStringCopy(item);
+	    if (Type(combo) == DtDROP_DOWN_COMBO_BOX)
 		SetTextFieldData(combo_p, NULL);
 	    else
 		SetLabelData(combo_p, NULL, FALSE);
-	    XmListSetItem(combo_p->list, item);
+	    XmListSetItem(List(combo), item);
+	    XmListSelectItem(List(combo), item, FALSE);
 	    SyncWithList(combo_p);
 	}
 	else
-	    XtWarning(COMBO_SET_ITEM);
+	    XtWarning(CB_SET_ITEM);
     }
     else
-	XtWarning(COMBO_SET_ITEM);
-#ifdef XTHREADS
-    XtAppUnlock(app);
-#endif
+	XtWarning(CB_SET_ITEM);
+
+    _DtAppUnlock(app);
 }
 
 void
-DtComboBoxSelectItem(combo_w, item)
-Widget combo_w;
-XmString item;
+DtComboBoxSelectItem(	Widget combow,
+			XmString item)
 {
-    DtComboBoxWidget combo = (DtComboBoxWidget)combo_w;
-    DtComboBoxPart *combo_p = (DtComboBoxPart*)&(combo->combo_box);
-    XmStringTable list_items = ((XmListWidget)combo_p->list)->list.items;
+    DtComboBoxWidget combo = (DtComboBoxWidget)combow;
+    DtComboBoxPart *combo_p = (DtComboBoxPart*)
+	&(XmField(combo,ipot,DtComboBox,arrow,Widget));
+    XmStringTable list_items;
+    XmString tmpStr;
     int i;
-#ifdef XTHREADS
-    XtAppContext app=XtWidgetToApplicationContext(combo_w);
-    XtAppLock(app);
-#endif
+    Arg arg;
+    _DtWidgetToAppContext(combow);
+    _DtAppLock(app);
 
-    if (item && ((XmListWidget)combo_p->list)->list.itemCount>0) {
-	for (i = 0; i < combo_p->item_count; i++)
+    /* Try to help confused applications. */
+    if (XmIsComboBox(combow))
+      {
+	XmComboBoxSelectItem(combow, item);
+	_DtAppUnlock(app);
+	return;
+      }
+
+/* MotifBc
+ */
+    XtSetArg(arg, XmNitems, &list_items);
+    XtGetValues(((Widget)List(combo)), &arg, 1);
+
+    if (item && list_items) {
+	for (i = 0; i < ItemCount(combo); i++)
 	    if (XmStringCompare(item, list_items[i]))
 		break;
-	if (i < combo_p->item_count) {
-	    combo_p->selected_position = i;
-	    if (combo_p->type == DtDROP_DOWN_COMBO_BOX)
+	if (i < ItemCount(combo)) {
+	    SelectedPosition(combo) = i;
+	    tmpStr=SelectedItem(combo);
+	    SelectedItem(combo) = XmStringCopy(item);
+	    if (Type(combo) == DtDROP_DOWN_COMBO_BOX)
 		SetTextFieldData(combo_p, NULL);
 	    else
 		SetLabelData(combo_p, NULL, FALSE);
-	    XmListDeselectAllItems(combo_p->list);
-	    XmListSelectItem(combo_p->list, item, FALSE);
+	    XmListDeselectAllItems(List(combo));
+	    XmListSelectItem(List(combo), item, FALSE);
+	    if(tmpStr)
+		XmStringFree(tmpStr);
 	    SyncWithList(combo_p);
 	}
 	else
-	    XtWarning(COMBO_SELECT_ITEM);
+	    XtWarning(CB_SELECT_ITEM);
     }
     else
-	XtWarning(COMBO_SELECT_ITEM);
-#ifdef XTHREADS
-    XtAppUnlock(app);
-#endif
+	XtWarning(CB_SELECT_ITEM);
+
+    _DtAppUnlock(app);
 }
 
 
@@ -2343,156 +3192,215 @@ XmString item;
  */
 
 static XmImportOperator
-_XmSetSyntheticResForChild(widget, offset, value)
-Widget widget;
-int offset;
-XtArgVal * value;
+_XmSetSyntheticResForChild(	Widget widget,
+				int offset,
+				XtArgVal * value)
 { 
     return(XmSYNTHETIC_LOAD);
 }
 
 void
-_DtComboBoxGetArrowSize(w, resource_offset, value)
-Widget w;
-int resource_offset;
-XtArgVal *value;
+_DtComboBoxGetArrowSize(Widget w,
+			int resource_offset,
+			XtArgVal *value)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)w;
+    Dimension data;
+    Arg arg;
 
-    *value = (XtArgVal)combo->combo_box.arrow->core.height;
+    XtSetArg(arg, XmNheight, &data);
+    XtGetValues(Arrow(combo), &arg, 1);
+    *value = (XtArgVal)data;
 }
 
 void
-_DtComboBoxGetLabelString(w, resource_offset, value)
-Widget w;
-int resource_offset;
-XtArgVal *value;
+_DtComboBoxGetLabelString(	Widget w,
+				int resource_offset,
+				XtArgVal *value)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)w;
 
-    if (combo->combo_box.label_string)
-	*value = (XtArgVal)XmStringCopy(combo->combo_box.label_string);
+    if (LabelString(combo))
+	*value = (XtArgVal)XmStringCopy(LabelString(combo));
     else
 	*value = (XtArgVal)NULL;
 }
 
 void
-_DtComboBoxGetListItemCount(w, resource_offset, value)
-Widget w;
-int resource_offset;
-XtArgVal *value;
+_DtComboBoxGetListItemCount(	Widget w,
+				int resource_offset,
+				XtArgVal *value)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)w;
     int data;
     Arg arg;
 
     XtSetArg(arg, XmNitemCount, &data);
-    XtGetValues(combo->combo_box.list, &arg, 1);
+    XtGetValues(List(combo), &arg, 1);
     *value = (XtArgVal)data;
 }
 
 void
-_DtComboBoxGetListItems(w, resource_offset, value)
-Widget w;
-int resource_offset;
-XtArgVal *value;
+_DtComboBoxGetListItems(Widget w,
+			int resource_offset,
+			XtArgVal *value)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)w;
     XmStringTable data;
     Arg arg;
 
     XtSetArg(arg, XmNitems, &data);
-    XtGetValues(combo->combo_box.list, &arg, 1);
+    XtGetValues(List(combo), &arg, 1);
     *value = (XtArgVal)data;
 }
 
 void
-_DtComboBoxGetListFontList(w, resource_offset, value)
-Widget w;
-int resource_offset;
-XtArgVal *value;
+_DtComboBoxGetListFontList(	Widget w,
+				int resource_offset,
+				XtArgVal *value)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)w;
     XmFontList data;
     Arg arg;
 
     XtSetArg(arg, XmNfontList, &data);
-    XtGetValues(combo->combo_box.list, &arg, 1);
+    XtGetValues(List(combo), &arg, 1);
     *value = (XtArgVal)data;
 }
 
 void
-_DtComboBoxGetListMarginHeight(w, resource_offset, value)
-Widget w;
-int resource_offset;
-XtArgVal *value;
+_DtComboBoxGetListMarginHeight(	Widget w,
+				int resource_offset,
+				XtArgVal *value)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)w;
     Dimension data;
     Arg arg;
 
     XtSetArg(arg, XmNmarginHeight, &data);
-    XtGetValues(combo->combo_box.list, &arg, 1);
+    XtGetValues(List(combo), &arg, 1);
     *value = (XtArgVal)data;
 }
 
 void
-_DtComboBoxGetListMarginWidth(w, resource_offset, value)
-Widget w;
-int resource_offset;
-XtArgVal *value;
+_DtComboBoxGetListMarginWidth(	Widget w,
+				int resource_offset,
+				XtArgVal *value)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)w;
     Dimension data;
     Arg arg;
 
     XtSetArg(arg, XmNmarginWidth, &data);
-    XtGetValues(combo->combo_box.list, &arg, 1);
+    XtGetValues(List(combo), &arg, 1);
     *value = (XtArgVal)data;
 }
 
 void
-_DtComboBoxGetListSpacing(w, resource_offset, value)
-Widget w;
-int resource_offset;
-XtArgVal *value;
+_DtComboBoxGetListSpacing(	Widget w,
+				int resource_offset,
+				XtArgVal *value)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)w;
     Dimension data;
     Arg arg;
 
     XtSetArg(arg, XmNspacing, &data);
-    XtGetValues(combo->combo_box.list, &arg, 1);
+    XtGetValues(List(combo), &arg, 1);
     *value = (XtArgVal)data;
 }
 
 void
-_DtComboBoxGetListTopItemPosition(w, resource_offset, value)
-Widget w;
-int resource_offset;
-XtArgVal *value;
+_DtComboBoxGetListTopItemPosition(	Widget w,
+					int resource_offset,
+					XtArgVal *value)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)w;
     int data;
     Arg arg;
 
     XtSetArg(arg, XmNtopItemPosition, &data);
-    XtGetValues(combo->combo_box.list, &arg, 1);
+    XtGetValues(List(combo), &arg, 1);
     *value = (XtArgVal)data;
 }
 
 void
-_DtComboBoxGetListVisibleItemCount(w, resource_offset, value)
-Widget w;
-int resource_offset;
-XtArgVal *value;
+_DtComboBoxGetListVisibleItemCount(	Widget w,
+					int resource_offset,
+					XtArgVal *value)
 {
     DtComboBoxWidget combo = (DtComboBoxWidget)w;
     int data;
     Arg arg;
 
     XtSetArg(arg, XmNvisibleItemCount, &data);
-    XtGetValues(combo->combo_box.list, &arg, 1);
+    XtGetValues(List(combo), &arg, 1);
     *value = (XtArgVal)data;
 }
 
+static Boolean
+_CvtStringToType(
+Display *dpy,
+XrmValuePtr args,
+Cardinal *num_args,
+XrmValuePtr from, 
+XrmValuePtr to,
+XtPointer *data)
+{
+    char *from_str;
+    static unsigned char to_value;
+
+    if(*num_args !=0 ) {
+	XtError(CB_CVTSTRING);
+    }
+
+    from_str = (char *)from->addr;
+    if(strcmp(from_str, "DROP_DOWN_LIST")==0 ||
+       strcmp(from_str, "drop_down_list")==0 ||
+       strcmp(from_str, "DtDROP_DOWN_LIST")==0)
+	to_value = DtDROP_DOWN_LIST;
+    else if (strcmp(from_str, "DROP_DOWN_COMBO_BOX")==0 ||
+             strcmp(from_str, "drop_down_combo_box")==0 ||
+             strcmp(from_str, "DtDROP_DOWN_COMBO_BOX")==0)
+	to_value = DtDROP_DOWN_COMBO_BOX;
+    else {
+	XtDisplayStringConversionWarning(dpy, from->addr, "ComboBoxType");
+	return False;
+    }
+
+    if (to->addr == NULL) to->addr = (caddr_t) &to_value;
+    else if (to->size <sizeof(unsigned char)) {
+	XtDisplayStringConversionWarning(dpy, from->addr, "ComboBoxType");
+	return False;
+    }
+    else
+	*(unsigned char *) to->addr = to_value;
+
+    to->size = sizeof(unsigned char);
+
+    return True;
+}
+
+static void	
+input_ungrab ( DtComboBoxWidget combo, int ungrab_mask)
+{
+    XmDisplay disp = (XmDisplay) XmGetXmDisplay(XtDisplay(combo));
+
+    if ( ungrab_mask & GRAB_POINTER )
+        XtUngrabPointer(Shell(combo), CurrentTime);
+    if ( ungrab_mask & GRAB_KEYBOARD )
+        XtUngrabKeyboard(List(combo), CurrentTime);
+    _XmRemoveGrab(Shell(combo));
+    
+    /* We move XtPopdown() here and do _XmRemoveGrab first.
+     * This is a fix to solve an MR in Desktop which over a time period
+     * develope a possible core-dump due to duplicated removeGrab() calls
+     */
+    PoppedUp(combo) = FALSE;
+    XtPopdown(Shell(combo));
+    if (Type(combo) == DtDROP_DOWN_COMBO_BOX)
+        XmProcessTraversal(Text(combo), XmTRAVERSE_CURRENT);
+
+    /* This is to enable the Drag-and-Drop operation */
+    disp->display.userGrabbed = False;
+}
