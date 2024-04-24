@@ -1,4 +1,7 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
+
+#include <stdlib.h>
+
 #include"axyftp.h"
 #include"utils.h"
 #include"multi.h"
