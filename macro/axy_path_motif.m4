@@ -3,7 +3,7 @@ dnl	AXY_PATH_MOTIF
 dnl	(borrowed from Xbae distribution and modified)
 dnl
 
-AC_DEFUN(AXY_PATH_MOTIF,
+m4_define([AXY_PATH_MOTIF], [
 [AC_REQUIRE_CPP()dnl
 
 AC_MSG_CHECKING(for Motif)

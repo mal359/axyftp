@@ -27,8 +27,8 @@ sysconfdir = ${prefix}/etc
 sharedstatedir = ${prefix}/com
 localstatedir = ${prefix}/var
 libdir = ${exec_prefix}/lib
-infodir = ${prefix}/info
-mandir = ${prefix}/man
+infodir = ${prefix}/share/info
+mandir = ${prefix}/share/man
 includedir = ${prefix}/include
 oldincludedir = /usr/include
 
@@ -40,10 +40,10 @@ pkgincludedir = $(includedir)/axyftp
 
 top_builddir = ..
 
-ACLOCAL = /home/matt/axyftp/missing aclocal-1.4
-AUTOCONF = autoconf
-AUTOMAKE = /home/matt/axyftp/missing automake-1.4
-AUTOHEADER = autoheader
+ACLOCAL = ${SHELL} '/home/matt/axyftp/missing' aclocal-1.16
+AUTOCONF = ${SHELL} '/home/matt/axyftp/missing' autoconf
+AUTOMAKE = ${SHELL} '/home/matt/axyftp/missing' automake-1.16
+AUTOHEADER = ${SHELL} '/home/matt/axyftp/missing' autoheader
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -57,27 +57,24 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-AXYFTP_DEPS = 
-AXYFTP_GUI = 
-AXYFTP_INCLUDES = 
-AXYFTP_LIBS = 
+AXYFTP_DEPS = @AXYFTP_DEPS@
+AXYFTP_GUI = @AXYFTP_GUI@
+AXYFTP_INCLUDES = @AXYFTP_INCLUDES@
+AXYFTP_LIBS = @AXYFTP_LIBS@
 CC = gcc
 CPP = gcc -E
-DT_CFLAGS = 
-DT_LIBS = 
-GTK_CFLAGS = @GTK_CFLAGS@
-GTK_CONFIG = @GTK_CONFIG@
-GTK_LIBS = @GTK_LIBS@
-MAKEINFO = makeinfo
+DT_CFLAGS = @DT_CFLAGS@
+DT_LIBS = @DT_LIBS@
+MAKEINFO = ${SHELL} '/home/matt/axyftp/missing' makeinfo
 MOTIF_CFLAGS = 
 MOTIF_LIBS = -lXm
 PACKAGE = axyftp
 VERSION = 0.5.1
-XMAXY_CFLAGS = 
-XMAXY_LIBS = 
+XMAXY_CFLAGS = @XMAXY_CFLAGS@
+XMAXY_LIBS = @XMAXY_LIBS@
 XPM_CFLAGS = 
 XPM_LIBS = -lXpm
-helpdir = ${prefix}/share/axyftp/help
+helpdir = @helpdir@
 
 AUTOMAKE_OPTIONS = foreign
 
@@ -97,7 +94,7 @@ TAR = tar
 GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:
-$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.ac $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps xpms/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status

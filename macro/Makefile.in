@@ -65,9 +65,6 @@ CC = @CC@
 CPP = @CPP@
 DT_CFLAGS = @DT_CFLAGS@
 DT_LIBS = @DT_LIBS@
-GTK_CFLAGS = @GTK_CFLAGS@
-GTK_CONFIG = @GTK_CONFIG@
-GTK_LIBS = @GTK_LIBS@
 MAKEINFO = @MAKEINFO@
 MOTIF_CFLAGS = @MOTIF_CFLAGS@
 MOTIF_LIBS = @MOTIF_LIBS@
@@ -97,7 +94,7 @@ TAR = tar
 GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:
-$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.ac $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps macro/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status

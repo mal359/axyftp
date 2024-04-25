@@ -3,7 +3,7 @@ dnl	AXY_PATH_XMAXY
 dnl	(borrowed from Xbae distribution and modified)
 dnl
 
-AC_DEFUN(AXY_PATH_XMAXY,
+m4_define([AXY_PATH_XMAXY], [
 [AC_REQUIRE_CPP()dnl
 
 AC_MSG_CHECKING(for XmAxy)

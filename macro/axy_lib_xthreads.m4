@@ -2,7 +2,7 @@ dnl	AXY_LIB_XTHREADS
 dnl	(borrowed from Xbae distribution and modified)
 dnl
 
-AC_DEFUN(AXY_LIB_XTHREADS,
+m4_define([AXY_LIB_XTHREADS], [
 [AC_REQUIRE([AC_PATH_X])
 AC_CACHE_CHECK(whether libXt was compiled with -DXTHREADS, axy_cv_xthreads,
 [axy_save_CPPFLAGS="$CPPFLAGS"

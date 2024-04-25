@@ -18,7 +18,6 @@ top_srcdir = ..
 
 prefix = /usr/local
 exec_prefix = ${prefix}
-
 bindir = ${exec_prefix}/bin
 sbindir = ${exec_prefix}/sbin
 libexecdir = ${exec_prefix}/libexec
@@ -65,9 +64,6 @@ CC = gcc
 CPP = gcc -E
 DT_CFLAGS = 
 DT_LIBS = 
-GTK_CFLAGS = @GTK_CFLAGS@
-GTK_CONFIG = @GTK_CONFIG@
-GTK_LIBS = @GTK_LIBS@
 MAKEINFO = makeinfo
 MOTIF_CFLAGS = 
 MOTIF_LIBS = -lXm
@@ -97,7 +93,7 @@ TAR = tar
 GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:
-$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
+$(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.ac $(ACLOCAL_M4) 
 	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps icons/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status

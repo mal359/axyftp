@@ -3,7 +3,7 @@ dnl	AXY_PATH_XPM
 dnl	(borrowed from Xbae distribution and modified)
 dnl
 
-AC_DEFUN(AXY_PATH_XPM,
+m4_define([AXY_PATH_XPM], [
 [AC_REQUIRE_CPP()dnl
 
 AC_MSG_CHECKING(for XPM)
