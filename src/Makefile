@@ -27,23 +27,23 @@ sysconfdir = ${prefix}/etc
 sharedstatedir = ${prefix}/com
 localstatedir = ${prefix}/var
 libdir = ${exec_prefix}/lib
-infodir = ${prefix}/info
-mandir = ${prefix}/man
+infodir = ${prefix}/share/info
+mandir = ${prefix}/share/man
 includedir = ${prefix}/include
 oldincludedir = /usr/include
 
 DESTDIR =
 
-pkgdatadir = $(datadir)/axyftp
-pkglibdir = $(libdir)/axyftp
-pkgincludedir = $(includedir)/axyftp
+pkgdatadir = $(datadir)/axy-ftp
+pkglibdir = $(libdir)/axy-ftp
+pkgincludedir = $(includedir)/axy-ftp
 
 top_builddir = ..
 
-ACLOCAL = /home/matt/axyftp/missing aclocal-1.4
-AUTOCONF = autoconf
-AUTOMAKE = /home/matt/axyftp/missing automake-1.4
-AUTOHEADER = autoheader
+ACLOCAL = ${SHELL} '/home/matt/axyftp/missing' aclocal-1.16
+AUTOCONF = ${SHELL} '/home/matt/axyftp/missing' autoconf
+AUTOMAKE = ${SHELL} '/home/matt/axyftp/missing' automake-1.16
+AUTOHEADER = ${SHELL} '/home/matt/axyftp/missing' autoheader
 
 INSTALL = /usr/bin/install -c
 INSTALL_PROGRAM = ${INSTALL} $(AM_INSTALL_PROGRAM_FLAGS)
@@ -57,20 +57,20 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-AXYFTP_DEPS = 
-AXYFTP_INCLUDES = 
-AXYFTP_LIBS = 
+AXYFTP_DEPS = @AXYFTP_DEPS@
+AXYFTP_INCLUDES = @AXYFTP_INCLUDES@
+AXYFTP_LIBS = @AXYFTP_LIBS@
 CC = gcc
 CPP = gcc -E
-DT_CFLAGS = 
-MAKEINFO = makeinfo
+DT_CFLAGS = @DT_CFLAGS@
+MAKEINFO = ${SHELL} '/home/matt/axyftp/missing' makeinfo
 MOTIF_CFLAGS = 
-PACKAGE = axyftp
+PACKAGE = axy-ftp
 VERSION = 0.5.1
-XMAXY_CFLAGS = 
+XMAXY_CFLAGS = @XMAXY_CFLAGS@
 XPM_CFLAGS = 
 XPM_LIBS = -lXpm
-helpdir = ${prefix}/share/axyftp/help
+helpdir = @helpdir@
 
 AUTOMAKE_OPTIONS = foreign
 
@@ -82,21 +82,21 @@ MAINTAINERCLEANFILES = Makefile.in
 #MALLOC = -u malloc -lefence
 MALLOC = 
 
-AXYFTP_GUI = 
-AXYFTP_HELP_DIR = ${prefix}/share/axyftp/help
+AXYFTP_GUI = @AXYFTP_GUI@
+AXYFTP_HELP_DIR = @helpdir@
 
 bin_PROGRAMS = axyftp
 
-axyftp_DEPENDENCIES = 
+axyftp_DEPENDENCIES = @AXYFTP_DEPS@
 
-INCLUDES = -D$(AXYFTP_GUI) -DAXYFTP_HELP_DIR=\"$(AXYFTP_HELP_DIR)\"          -I$(top_srcdir)/xpms 
+INCLUDES = -D$(AXYFTP_GUI) -DAXYFTP_HELP_DIR=\"$(AXYFTP_HELP_DIR)\"          -I$(top_srcdir)/xpms @AXYFTP_INCLUDES@
 
 
-DT_LIBS = 
-XMAXY_LIBS = 
+DT_LIBS = @DT_LIBS@
+XMAXY_LIBS = @XMAXY_LIBS@
 MOTIF_LIBS = -lXm
 
-axyftp_LDADD =  $(MALLOC)
+axyftp_LDADD = @AXYFTP_LIBS@ $(MALLOC)
 
 axyftp_SOURCES = axyftp.c main_frame.c buttonbar.c arrows.c status.c proto.c                  panel.c buttons.c dirname.c dirlist.c session_data.c ftp.c 		 utils.c  read_init.c functions.c fileinfo.c dirinfo.c 		 pixmaps.c ftp_xfer.c dialogs.c session_dialog.c 		 session_general.c session_startup.c about_dialog.c 		 progress_dialog.c little_dialogs.c prompt_dialogs.c viewer.c 		 session_advanced.c options_dialog.c options_general.c 		 options_display.c options_sound.c options_data.c multi.c 	         options_advanced.c
 
@@ -108,7 +108,7 @@ CONFIG_CLEAN_FILES =
 PROGRAMS =  $(bin_PROGRAMS)
 
 
-DEFS = -DPACKAGE_NAME=\"\" -DPACKAGE_TARNAME=\"\" -DPACKAGE_VERSION=\"\" -DPACKAGE_STRING=\"\" -DPACKAGE_BUGREPORT=\"\" -DPACKAGE=\"axyftp\" -DVERSION=\"0.5.1\"  -I. -I$(srcdir) 
+DEFS = -DHAVE_CONFIG_H -I. -I$(srcdir) 
 CPPFLAGS = 
 LDFLAGS = 
 LIBS = 

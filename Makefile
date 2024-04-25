@@ -69,10 +69,10 @@ am__make_running_with_option = \
   test $$has_opt = yes
 am__make_dryrun = (target_option=n; $(am__make_running_with_option))
 am__make_keepgoing = (target_option=k; $(am__make_running_with_option))
-pkgdatadir = $(datadir)/axyftp
-pkgincludedir = $(includedir)/axyftp
-pkglibdir = $(libdir)/axyftp
-pkglibexecdir = $(libexecdir)/axyftp
+pkgdatadir = $(datadir)/axy-ftp
+pkgincludedir = $(includedir)/axy-ftp
+pkglibdir = $(libdir)/axy-ftp
+pkglibexecdir = $(libexecdir)/axy-ftp
 am__cd = CDPATH="$${ZSH_VERSION+.}$(PATH_SEPARATOR)" && cd
 install_sh_DATA = $(install_sh) -c -m 644
 install_sh_PROGRAM = $(install_sh) -c
@@ -234,11 +234,11 @@ MKDIR_P = /usr/bin/mkdir -p
 MOTIF_CFLAGS = 
 MOTIF_LIBS = -lXm
 OBJEXT = o
-PACKAGE = axyftp
+PACKAGE = axy-ftp
 PACKAGE_BUGREPORT = 
-PACKAGE_NAME = axyftp
-PACKAGE_STRING = axyftp 0.5.1
-PACKAGE_TARNAME = axyftp
+PACKAGE_NAME = AxY FTP
+PACKAGE_STRING = AxY FTP 0.5.1
+PACKAGE_TARNAME = axy-ftp
 PACKAGE_URL = 
 PACKAGE_VERSION = 0.5.1
 PATH_SEPARATOR = :
@@ -301,7 +301,7 @@ CLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in configure aclocal.m4 acinclude.m4
 EXTRA_DIST = Artistic CHANGES LGPL README LICENSE TODO
 uninst_DIST = README.bin
-SUBDIRS = macro xpms icons src doc 
+SUBDIRS = macro xpms icons @subdirs@ src doc 
 DIST_SUBDIRS = macro xpms icons dtwidget xmaxy src doc
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

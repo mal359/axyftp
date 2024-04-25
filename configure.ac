@@ -4,7 +4,15 @@ AC_CONFIG_AUX_DIR([.])
 AC_CONFIG_MACRO_DIR([macro])
 AM_INIT_AUTOMAKE
 
-AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([
+	Makefile
+	macro/Makefile
+	xpms/Makefile
+	icons/Makefile
+	src/Makefile
+	doc/Makefile
+]) 
+
 AC_CONFIG_HEADERS([config.h])
 
 AC_DEFINE([XTHREADS], [], [Check for Xthreads])
@@ -59,5 +67,5 @@ if test -z "$axyftp_gui" || test "x$axyftp_gui" = xmotif ; then
     AC_MSG_ERROR([Required X libraries and Motif are not available])
   fi
 fi
-
+    
 AC_OUTPUT

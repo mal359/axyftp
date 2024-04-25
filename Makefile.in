@@ -153,7 +153,8 @@ am__define_uniq_tagged_files = \
     if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
   done | $(am__uniquify_input)`
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in README \
-	TODO compile install-sh ltmain.sh missing mkinstalldirs
+	TODO compile depcomp install-sh ltmain.sh missing \
+	mkinstalldirs
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -301,7 +302,7 @@ CLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in configure aclocal.m4 acinclude.m4
 EXTRA_DIST = Artistic CHANGES LGPL README LICENSE TODO
 uninst_DIST = README.bin
-SUBDIRS = macro xpms icons @subdirs@ src doc 
+SUBDIRS = macro xpms icons src doc 
 DIST_SUBDIRS = macro xpms icons dtwidget xmaxy src doc
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
