@@ -2,18 +2,21 @@ dnl	AXY_LIB_XTHREADS
 dnl	(borrowed from Xbae distribution and modified)
 dnl
 
-AC_DEFUN(AXY_LIB_XTHREADS,
-[AC_REQUIRE([AC_PATH_X])
-AC_CACHE_CHECK(whether libXt was compiled with -DXTHREADS, axy_cv_xthreads,
-[axy_save_CPPFLAGS="$CPPFLAGS"
+AC_DEFUN([AXY_LIB_XTHREADS],
+[
+AC_REQUIRE([AC_PATH_X])
+AC_CACHE_CHECK([whether libXt was compiled with -DXTHREADS], [axy_cv_xthreads],
+[
+axy_save_CPPFLAGS="$CPPFLAGS"
 axy_save_LDFLAGS="$LDFLAGS"
 axy_save_LIBS="$LIBS"
 CPPFLAGS="-I$ac_x_includes"
 LDFLAGS="-L$ac_x_libraries"
 LIBS="-lXt -lSM -lICE -lX11"
-AC_TRY_LINK(,[_XtProcessLock()],
+AC_TRY_LINK([], [_XtProcessLock()],
 axy_cv_xthreads=yes,
 axy_cv_xthreads=no)
+])
 ])
 if test x$axy_cv_xthreads = xyes; then
   AC_DEFINE(XTHREADS)
@@ -28,34 +31,34 @@ dnl	AXY_PATH_DT
 dnl	(borrowed from Xbae distribution and modified)
 dnl
 
-AC_DEFUN(AXY_PATH_DT,
-[AC_REQUIRE_CPP()dnl
+AC_DEFUN([AXY_PATH_DT],
+[
+AC_REQUIRE_CPP()dnl
 
-AC_MSG_CHECKING(for Dt)
+AC_MSG_CHECKING([for Dt])
 
 no_dt=
-AC_ARG_WITH(dt,
+AC_ARG_WITH([dt],
    [  --with-dt      enable use of already installed Dt library],
-   if test "x$with_dt" = xno ; then
+   [if test "x$with_dt" = xno ; then
      no_dt=yes
    fi
-)dnl
+])dnl
 
 if test "x$no_dt" != xyes ; then 
 
-  AC_ARG_WITH(dt-includes, 
+  AC_ARG_WITH([dt-includes], 
      [  --with-dt-includes=DIR     Dt include files are in DIR])
   if test  -n "$with_dt_includes" ; then
     dt_includes=$with_dt_includes
   fi
-  AC_ARG_WITH(dt-libraries, 
+  AC_ARG_WITH([dt-libraries], 
      [  --with-dt-libraries=DIR    Dt library files are in DIR])
   if test -n "$with_dt_libraries" ; then
     dt_libraries=$with_dt_libraries
   fi
 
-
-  AC_CACHE_VAL(ac_cv_path_dt, [
+  AC_CACHE_VAL([ac_cv_path_dt], [
     no_dt=yes
 
     test -z "$dt_direct_test_library" && 
@@ -96,7 +99,6 @@ if test "x$no_dt" != xyes ; then
     fi
 
     if test "x$no_dt" = xyes ; then
-
       if test -n "$dt_includes" ; then
 	ac_dt_includes="$dt_includes"
       else
@@ -203,7 +205,7 @@ if test "x$no_dt" != xyes ; then
 fi
 
 if test "x$no_dt" = xyes ; then
-  AC_MSG_RESULT(no)
+  AC_MSG_RESULT([no])
 else
   dt_includes=$ac_dt_includes
   dt_libraries=$ac_dt_libraries
@@ -250,15 +252,15 @@ else
     no_dt=yes
     DT_LIBS=
     DT_CFLAGS=
-    AC_MSG_RESULT(no)
+    AC_MSG_RESULT([no])
   else
     AC_MSG_RESULT([libraries $dt_libraries, headers $dt_includes])
   fi
 
 fi
 
-AC_SUBST(DT_LIBS)
-AC_SUBST(DT_CFLAGS)
+AC_SUBST([DT_LIBS])
+AC_SUBST([DT_CFLAGS])
 ])dnl
 
 dnl
@@ -266,24 +268,24 @@ dnl	AXY_PATH_MOTIF
 dnl	(borrowed from Xbae distribution and modified)
 dnl
 
-AC_DEFUN(AXY_PATH_MOTIF,
-[AC_REQUIRE_CPP()dnl
+AC_DEFUN([AXY_PATH_MOTIF],
+[
+AC_REQUIRE_CPP()dnl
 
-AC_MSG_CHECKING(for Motif)
+AC_MSG_CHECKING([for Motif])
 
-AC_ARG_WITH(motif-includes, 
+AC_ARG_WITH([motif-includes], 
    [  --with-motif-includes=DIR     Motif include files are in DIR])
 if test  -n "$with_motif_includes" ; then
   motif_includes=$with_motif_includes
 fi
-AC_ARG_WITH(motif-libraries, 
+AC_ARG_WITH([motif-libraries], 
    [  --with-motif-libraries=DIR    Motif library files are in DIR])
 if test -n "$with_motif_libraries" ; then
   motif_libraries=$with_motif_libraries
 fi
 
-
-AC_CACHE_VAL(ac_cv_path_motif, [
+AC_CACHE_VAL([ac_cv_path_motif], [
   no_motif=yes
 
   test -z "$motif_direct_test_library" && 
@@ -426,7 +428,7 @@ AC_CACHE_VAL(ac_cv_path_motif, [
 eval "$ac_cv_path_motif"
 
 if test "x$no_motif" = xyes; then
-  AC_MSG_RESULT(no)
+  AC_MSG_RESULT([no])
 else
   motif_includes=$ac_motif_includes
   motif_libraries=$ac_motif_libraries
@@ -443,8 +445,8 @@ else
   AC_MSG_RESULT([libraries $motif_libraries, headers $motif_includes])
 fi
 
-AC_SUBST(MOTIF_LIBS)
-AC_SUBST(MOTIF_CFLAGS)
+AC_SUBST([MOTIF_LIBS])
+AC_SUBST([MOTIF_CFLAGS])
 ])dnl
 
 dnl
@@ -452,18 +454,17 @@ dnl	AXY_PATH_XMAXY
 dnl	(borrowed from Xbae distribution and modified)
 dnl
 
-AC_DEFUN(AXY_PATH_XMAXY,
-[AC_REQUIRE_CPP()dnl
+m4_define([AXY_PATH_XMAXY], [
+  AC_REQUIRE_CPP()dnl
 
-AC_MSG_CHECKING(for XmAxy)
-
-no_xmaxy=
-AC_ARG_WITH(xmaxy,
-   [  --with-xmaxy      enable use of already installed XmAxy library],
-   if test "x$with_xmaxy" = xno ; then
-     no_xmaxy=yes
-   fi
-)dnl
+  AC_MSG_CHECKING(for XmAxy)
+  no_xmaxy=
+  AC_ARG_WITH(xmaxy,
+     [  --with-xmaxy      enable use of already installed XmAxy library],
+     if test "x$with_xmaxy" = xno ; then
+       no_xmaxy=yes
+     fi
+  )dnl
 
 if test "x$no_xmaxy" != xyes ; then 
 
@@ -648,9 +649,9 @@ dnl	AXY_PATH_XPM
 dnl	(borrowed from Xbae distribution and modified)
 dnl
 
-AC_DEFUN(AXY_PATH_XPM,
-[AC_REQUIRE_CPP()dnl
-
+m4_define([AXY_PATH_XPM], [
+  AC_REQUIRE_CPP()dnl
+  
 AC_MSG_CHECKING(for XPM)
 
 AC_ARG_WITH(xpm-includes, 
