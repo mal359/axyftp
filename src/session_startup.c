@@ -2,95 +2,6 @@
 #include"axyftp.h"
 #include"session_startup.h"
 
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-
-GtkWidget* create_session_startup(GtkWidget* parent){
-  GtkWidget *startup;
-  GtkWidget *current,*child;
-  int i;
-
-  startup=gtk_table_new(8,6,TRUE);
-  gtk_container_border_width(GTK_CONTAINER(startup),8);
-  for(i=0;i<7;i++){
-    gtk_table_set_row_spacing(GTK_TABLE(startup),i,4);
-  }
-  gtk_widget_show(startup);
-
-  current=gtk_alignment_new(0,1,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(startup),current,0,6,0,1);
-  child=gtk_label_new(
-      "Initial Command: (use ';' to separate multiple commands)");
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-
-  current=gtk_entry_new();
-  gtk_widget_set_usize(current,0,gtkfontheight*2);
-  gtk_widget_set_name(current,"initcom");
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(startup),current,0,6,1,2);
-  
-  current=gtk_alignment_new(0,1,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(startup),current,0,6,2,3);
-  child=gtk_label_new("Initial Remote Directory:");
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-
-  current=gtk_entry_new();
-  gtk_widget_set_usize(current,0,gtkfontheight*2);
-  gtk_widget_set_name(current,"remdir");
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(startup),current,0,6,3,4);
-  
-  current=gtk_alignment_new(0,1,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(startup),current,0,6,4,5);
-  child=gtk_label_new("Initial Local Directory:");
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-
-  current=gtk_entry_new();
-  gtk_widget_set_usize(current,0,gtkfontheight*2);
-  gtk_widget_set_name(current,"locdir");
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(startup),current,0,6,5,6);
-  
-  current=gtk_alignment_new(1,0.5,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(startup),current,0,2,6,7);
-  child=gtk_label_new("Remote File Mask: ");
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-
-  current=gtk_entry_new();
-  gtk_widget_set_usize(current,gdk_string_width(mystyle->font,"W")*8,
-      gtkfontheight*2);
-  gtk_widget_set_name(current,"remmask");
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(startup),current,2,3,6,7);
-  
-  current=gtk_alignment_new(1,0.5,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(startup),current,0,2,7,8);
-  child=gtk_label_new("Local File Mask: ");
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-
-  current=gtk_entry_new();
-  gtk_widget_set_usize(current,gdk_string_width(mystyle->font,"W")*8,
-      gtkfontheight*2);
-  gtk_widget_set_name(current,"locmask");
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(startup),current,2,3,7,8);
-
-  return startup;
-}
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Xm.h>
 #include<Xm/Form.h>
 #include<Xm/Label.h>
@@ -261,7 +172,3 @@ Widget create_session_startup(Widget parent){
 
   return startup;
 }
-
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif

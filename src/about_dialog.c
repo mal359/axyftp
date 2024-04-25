@@ -3,71 +3,6 @@
 #include"pixmaps.h"
 #include"about_dialog.h"
 
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-
-static int hide_about_cb(GtkWidget *w){
-  gtk_widget_hide(appdata.about);
-  return TRUE;
-}
-
-GtkWidget* create_about_dialog(GtkWidget *parent){
-  GtkWidget *about,*hbox,*vbox,*picture,*version,*copyright,*form,*button;
-  char version_str[64];
-
-  about=gtk_window_new(GTK_WINDOW_TOPLEVEL);
-  gtk_widget_realize(about);
-
-  gtk_signal_connect(GTK_OBJECT(about),"delete_event",
-      GTK_SIGNAL_FUNC(hide_about_cb),NULL);
-  gtk_window_set_title(GTK_WINDOW(about),"About AxY FTP");
-  gtk_container_border_width(GTK_CONTAINER(about),6);
-  /*
-  gtk_window_position(GTK_WINDOW(about),GTK_WIN_POS_NONE);
-  */
-
-  hbox=gtk_hbox_new(FALSE,4);
-  gtk_container_add(GTK_CONTAINER(about),hbox);
-  gtk_widget_show(hbox);
-
-  picture=gtk_pixmap_new(portret,portmask);
-  gtk_box_pack_start(GTK_BOX(hbox),picture,FALSE,FALSE,0);
-  gtk_widget_show(picture);
-
-  vbox=gtk_vbox_new(FALSE,2);
-  gtk_box_pack_start(GTK_BOX(hbox),vbox,TRUE,TRUE,0);
-  gtk_widget_show(vbox);
-
-  sprintf(version_str,
-   "AxY FTP  GTK+ %d.%d version %d.%d.%d",
-   gtk_major_version,gtk_minor_version,
-   AXYFTP_MAJOR,AXYFTP_MINOR,AXYFTP_MICRO);
-  version=gtk_label_new(version_str);
-  gtk_box_pack_start(GTK_BOX(vbox),version,TRUE,TRUE,4);
-  gtk_widget_show(version);
-
-  copyright=gtk_label_new("Copyright (c) 1999  Alexander Yukhimets."
-      " All rights reserved.");
-  gtk_box_pack_start(GTK_BOX(vbox),copyright,TRUE,TRUE,4);
-  gtk_widget_show(copyright);
-
-  form=gtk_alignment_new(0.5,0.5,0,0);
-  gtk_box_pack_start(GTK_BOX(vbox),form,FALSE,FALSE,4);
-  gtk_widget_show(form);
-
-  button=gtk_button_new_with_label(" OK ");
-  gtk_container_add(GTK_CONTAINER(form),button);
-  gtk_widget_show(button);
-  
-  gtk_signal_connect(GTK_OBJECT(button),"clicked",
-      GTK_SIGNAL_FUNC(hide_about_cb),NULL);
-
-  return about;
-}
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Xm.h>
 #include<Xm/Form.h>
 #include<Xm/Label.h>
@@ -157,7 +92,3 @@ Widget create_about_dialog(Widget parent){
 
   return about;
 }
-
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif

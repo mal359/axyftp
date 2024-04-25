@@ -16,16 +16,6 @@ AC_PROG_CPP
 AC_PROG_INSTALL
 AC_PROG_MAKE_SET
 
-AC_ARG_WITH(gui,
-  [ --with-gui=GUI        Where GUI is either motif (default) or gtk],
-  if test "x$with_gui" = xmotif || test "x$with_gui" = xgtk ; then
-    axyftp_gui="$with_gui"
-  else 
-    axyftp_gui=
-  fi ,
-  axyftp_gui=
-)
-
 if test -z "$axyftp_gui" || test "x$axyftp_gui" = xmotif ; then
   AC_PATH_XTRA
   AXY_PATH_MOTIF
@@ -43,25 +33,10 @@ fi
 if test -z "$axyftp_gui" && test "x$axyftp_can_do_motif" = xyes ; then
   axyftp_gui=motif
 fi
-if test -z "$axyftp_gui" && test "x$axyftp_can_do_motif" != xyes ; then
-  axyftp_gui=gtk
-fi
 
 AXYFTP_DEPS=
 
-if test "x$axyftp_gui" = xgtk ; then
-  axyftp_old_gtk=
-  AM_PATH_GTK(1.2.0,axyftp_can_do_gtk=yes)
-  if test "x$axyftp_can_do_gtk" != xyes ; then
-    AM_PATH_GTK(1.0.0,axyftp_can_do_gtk=yes axyftp_old_gtk=yes)
-  fi
-fi
-
 if test "x$axyftp_gui" = xmotif && test "x$axyftp_can_do_motif" != xyes ; then
-  AC_MSG_ERROR(GUI library not found)
-fi
-
-if test "x$axyftp_gui" = xgtk && test "x$axyftp_can_do_gtk" != xyes ; then
   AC_MSG_ERROR(GUI library not found)
 fi
 
@@ -91,13 +66,6 @@ if test "x$axyftp_gui" = xmotif ; then
   AXYFTP_LIBS="\$(XMAXY_LIBS) \$(DT_LIBS) \$(MOTIF_LIBS) \
                $X_LIBS -lXt $X_PRE_LIBS -lX11 $X_EXTRA_LIBS \$(XPM_LIBS)"
   AXYFTP_GUI="BUILD_MOTIF"
-else 
-  AXYFTP_INCLUDES="$GTK_CFLAGS"
-  if test "x$old_gtk" = xyes ; then
-    AXYFTP_INCLUDES="-DOLD_GTK $AXYFTP_INCLUDES"
-  fi
-  AXYFTP_LIBS="$GTK_LIBS"
-  AXYFTP_GUI="BUILD_GTK"
 fi
 
 AC_SUBST(AXYFTP_INCLUDES)

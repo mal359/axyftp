@@ -11,7 +11,7 @@
 # PARTICULAR PURPOSE.
 
 
-SHELL = /bin/sh
+SHELL = /bin/bash
 
 srcdir = .
 top_srcdir = ..
@@ -58,23 +58,23 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 AXYFTP_DEPS = 
-AXYFTP_GUI = BUILD_MOTIF
-AXYFTP_INCLUDES = $(XMAXY_CFLAGS) $(DT_CFLAGS) $(MOTIF_CFLAGS)                     $(XPM_CFLAGS)
-AXYFTP_LIBS = $(XMAXY_LIBS) $(DT_LIBS) $(MOTIF_LIBS)                 -lXt  -lSM -lICE -lX11  $(XPM_LIBS)
+AXYFTP_GUI = 
+AXYFTP_INCLUDES = 
+AXYFTP_LIBS = 
 CC = gcc
 CPP = gcc -E
 DT_CFLAGS = 
-DT_LIBS = -lDtWidget
-GTK_CFLAGS = 
-GTK_CONFIG = 
-GTK_LIBS = 
+DT_LIBS = 
+GTK_CFLAGS = @GTK_CFLAGS@
+GTK_CONFIG = @GTK_CONFIG@
+GTK_LIBS = @GTK_LIBS@
 MAKEINFO = makeinfo
 MOTIF_CFLAGS = 
 MOTIF_LIBS = -lXm
 PACKAGE = axyftp
 VERSION = 0.5.1
 XMAXY_CFLAGS = 
-XMAXY_LIBS = -lXmAxy
+XMAXY_LIBS = 
 XPM_CFLAGS = 
 XPM_LIBS = -lXpm
 helpdir = ${prefix}/share/axyftp/help

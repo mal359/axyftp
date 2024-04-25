@@ -7,70 +7,6 @@
 #include"proto.h"
 #include"panel.h"
 
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-
-GtkWidget* create_main_frame(GtkWidget* parent){
-  GtkWidget *frame;
-  GtkWidget *panels,*lbox,*protobox,*proto,*status,*buttonbar;
-  GtkWidget *local, *remote, *arrows,*align,*dummy;
-
-  frame=gtk_vbox_new(FALSE,2);
-  gtk_container_add(GTK_CONTAINER(parent),frame);
-  gtk_widget_show(frame);
-
-  panels=gtk_hpaned_new();
-  gtk_box_pack_start(GTK_BOX(frame),panels,TRUE,TRUE,0);
-  gtk_widget_show(panels);
-  gtk_paned_gutter_size(GTK_PANED(panels),0);
-
-  lbox=gtk_hbox_new(FALSE,2);
-  gtk_paned_add1(GTK_PANED(panels),lbox);
-  gtk_widget_show(lbox);
-
-  local=create_panel(lbox,LOCAL);
-  gtk_box_pack_start(GTK_BOX(lbox),local,TRUE,TRUE,0);
-  arrows=create_arrows(lbox);
-  gtk_box_pack_start(GTK_BOX(lbox),arrows,FALSE,TRUE,0);
-  remote=create_panel(panels,REMOTE);
-  gtk_paned_add2(GTK_PANED(panels),remote);
-  gtk_widget_show(remote);
-
-
-  protobox=gtk_hbox_new(TRUE,0);
-  gtk_box_pack_start(GTK_BOX(frame),protobox,FALSE,TRUE,0);
-  gtk_widget_show(protobox);
-
-  dummy=gtk_label_new("");
-  gtk_box_pack_start(GTK_BOX(protobox),dummy,TRUE,TRUE,0);
-  gtk_widget_show(dummy);
-  proto=create_proto(protobox);
-  gtk_box_pack_start(GTK_BOX(protobox),proto,FALSE,TRUE,0);
-  appdata.proto=proto;
-
-  align=gtk_alignment_new(1,0.5,0,0);
-  gtk_box_pack_end(GTK_BOX(protobox),align,TRUE,TRUE,0);
-  gtk_widget_show(align);
-  dummy=gtk_label_new("");
-  gtk_container_add(GTK_CONTAINER(align),dummy);
-  gtk_container_border_width(GTK_CONTAINER(align),8);
-  gtk_widget_show(dummy);
-  appdata.listprogress=dummy;
-
-
-  status=create_status(frame);
-  gtk_box_pack_start(GTK_BOX(frame),status,FALSE,TRUE,0);
-
-  buttonbar=create_buttonbar(frame);
-  gtk_box_pack_start(GTK_BOX(frame),buttonbar,FALSE,TRUE,0);
-  
-
-  return frame;
-}
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Xm.h>
 #include<Xm/MainW.h>
 #include<Xm/Form.h>
@@ -220,7 +156,3 @@ int adjust_main_frame(Widget id){
 
   return 0;
 }
-
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif

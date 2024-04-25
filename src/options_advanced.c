@@ -6,53 +6,6 @@
 #include"utils.h"
 #include"read_init.h"
 
-
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-
-
-GtkWidget* create_options_advanced(GtkWidget *parent){
-  GtkWidget *table;
-  GtkWidget *current,*child;
-
-  table=gtk_table_new(6,4,TRUE);
-  gtk_container_border_width(GTK_CONTAINER(table),8);
-  gtk_widget_show(table);
-
-  current=gtk_alignment_new(1,1,0,1);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(table),current,1,5,1,2);
-  child=gtk_label_new("Number of redial attempts: ");
-  gtk_container_add(GTK_CONTAINER(current),child);
-  gtk_widget_show(child);
-
-  current=gtk_entry_new();
-  gtk_widget_set_name(current,"redial");
-  gtk_widget_set_usize(current,gdk_string_width(mystyle->font,"W")*4,
-      gtkfontheight*2);
-  gtk_table_attach_defaults(GTK_TABLE(table),current,5,6,1,2);
-  gtk_widget_show(current);
-  
-  current=gtk_alignment_new(1,0.5,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(table),current,1,5,2,3);
-  child=gtk_label_new("Delay between attempts (sec): ");
-  gtk_container_add(GTK_CONTAINER(current),child);
-  gtk_widget_show(child);
-
-  current=gtk_entry_new();
-  gtk_widget_set_name(current,"delay");
-  gtk_widget_set_usize(current,gdk_string_width(mystyle->font,"W")*4,
-      gtkfontheight*2);
-  gtk_table_attach_defaults(GTK_TABLE(table),current,5,6,2,3);
-  gtk_widget_show(current);
-  
-  return table;
-}
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Xm.h>
 #include<Xm/Form.h>
 #include<Xm/PushB.h>
@@ -144,7 +97,3 @@ Widget create_options_advanced(Widget parent){
 
   return general;
 }
-
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif

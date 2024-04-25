@@ -6,95 +6,6 @@
 #include"utils.h"
 #include"read_init.h"
 
-
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-
-static void toggle_cb(GtkWidget* w,gpointer app){
-  gtk_widget_set_sensitive(GTK_WIDGET(app),GTK_TOGGLE_BUTTON(w)->active);
-}
-
-GtkWidget* create_options_display(GtkWidget *parent){
-  GtkWidget *table;
-  GtkWidget *current,*child,*save;
-
-  table=gtk_table_new(6,7,TRUE);
-  gtk_widget_show(table);
-  gtk_container_border_width(GTK_CONTAINER(table),8);
-
-  current=gtk_alignment_new(0,0.5,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(table),current,0,6,0,1);
-  child=gtk_check_button_new_with_label(
-      "Show Session Window on startup");
-  gtk_widget_set_name(child,"show_session");
-  gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(child),FALSE);
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-  
-  current=gtk_alignment_new(0,0.5,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(table),current,0,6,2,3);
-  save=child=gtk_check_button_new_with_label(
-      "Enable automatic column width adjustment");
-  gtk_widget_set_name(child,"columnadjustment");
-  gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(child),TRUE);
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-  
-  child=gtk_alignment_new(1,1,0,1);
-  gtk_widget_show(child);
-  gtk_table_attach_defaults(GTK_TABLE(table),child,1,5,3,4);
-  current=gtk_label_new("Maximum column width ");
-  gtk_widget_set_name(current,"maxwidth_label");
-  gtk_widget_show(current);
-  gtk_container_add(GTK_CONTAINER(child),current);
-
-  gtk_signal_connect(GTK_OBJECT(save),"toggled",
-      GTK_SIGNAL_FUNC(toggle_cb),(gpointer)current);
-
-  child=gtk_entry_new();
-  gtk_widget_set_name(child,"maxwidth");
-  gtk_widget_set_usize(child,4*gdk_string_width(mystyle->font,"W"),
-      gtkfontheight*2);
-  gtk_widget_show(child);
-  gtk_table_attach_defaults(GTK_TABLE(table),child,5,6,3,4);
-
-  current=gtk_alignment_new(0,0.5,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(table),current,0,6,5,6);
-  save=child=gtk_check_button_new_with_label(
-      "Show progress bar");
-  gtk_widget_set_name(child,"show_progress");
-  gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(child),TRUE);
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-  
-  child=gtk_alignment_new(1,0.5,0,1);
-  gtk_widget_show(child);
-  gtk_table_attach_defaults(GTK_TABLE(table),child,1,5,6,7);
-  current=gtk_label_new(
-      "Hide progress bar if file size less than (Kbytes) ");
-  gtk_widget_set_name(current,"progress_treshold_label");
-  gtk_widget_show(current);
-  gtk_container_add(GTK_CONTAINER(child),current);
-
-  gtk_signal_connect(GTK_OBJECT(save),"toggled",
-      GTK_SIGNAL_FUNC(toggle_cb),(gpointer)current);
-
-  child=gtk_entry_new();
-  gtk_widget_set_name(child,"progress_treshold");
-  gtk_widget_set_usize(child,4*gdk_string_width(mystyle->font,"W"),
-      gtkfontheight*2);
-  gtk_widget_show(child);
-  gtk_table_attach_defaults(GTK_TABLE(table),child,5,6,6,7);
-
-  return table;
-}
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Xm.h>
 #include<Xm/Form.h>
 #include<Xm/PushB.h>
@@ -257,7 +168,3 @@ Widget create_options_display(Widget parent){
 
   return general;
 }
-
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif

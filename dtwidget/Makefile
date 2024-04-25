@@ -11,10 +11,10 @@
 # PARTICULAR PURPOSE.
 
 
-SHELL = /bin/bash
+SHELL = /bin/sh
 
 srcdir = .
-top_srcdir = ..
+top_srcdir = .
 
 prefix = /usr/local
 exec_prefix = ${prefix}
@@ -27,22 +27,22 @@ sysconfdir = ${prefix}/etc
 sharedstatedir = ${prefix}/com
 localstatedir = ${prefix}/var
 libdir = ${exec_prefix}/lib
-infodir = ${prefix}/info
-mandir = ${prefix}/man
+infodir = ${prefix}/share/info
+mandir = ${prefix}/share/man
 includedir = ${prefix}/include
 oldincludedir = /usr/include
 
 DESTDIR =
 
-pkgdatadir = $(datadir)/axyftp
-pkglibdir = $(libdir)/axyftp
-pkgincludedir = $(includedir)/axyftp
+pkgdatadir = $(datadir)/DtWidget
+pkglibdir = $(libdir)/DtWidget
+pkgincludedir = $(includedir)/DtWidget
 
-top_builddir = ..
+top_builddir = .
 
-ACLOCAL = /home/matt/axyftp/missing aclocal-1.4
+ACLOCAL = /home/matt/axyftp/dtwidget/missing aclocal-1.4
 AUTOCONF = autoconf
-AUTOMAKE = /home/matt/axyftp/missing automake-1.4
+AUTOMAKE = /home/matt/axyftp/dtwidget/missing automake-1.4
 AUTOHEADER = autoheader
 
 INSTALL = /usr/bin/install -c
@@ -57,43 +57,39 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-AXYFTP_DEPS = 
-AXYFTP_GUI = 
-AXYFTP_INCLUDES = 
-AXYFTP_LIBS = 
+AXY_DIRINC = $(AXY_DIRINC)
+AXY_H = 
+AXY_L = 
 CC = gcc
 CPP = gcc -E
-DT_CFLAGS = 
-DT_LIBS = 
-GTK_CFLAGS = @GTK_CFLAGS@
-GTK_CONFIG = @GTK_CONFIG@
-GTK_LIBS = @GTK_LIBS@
+DT_CFLAGS = @DT_CFLAGS@
+DT_LIBS = @DT_LIBS@
+INSTALL_AXY_H = $(EXTRA_HEADERS)
+INSTALL_AXY_L = $(EXTRA_LIBRARIES)
 MAKEINFO = makeinfo
 MOTIF_CFLAGS = 
 MOTIF_LIBS = -lXm
-PACKAGE = axyftp
-VERSION = 0.5.1
-XMAXY_CFLAGS = 
-XMAXY_LIBS = 
-XPM_CFLAGS = 
-XPM_LIBS = -lXpm
-helpdir = ${prefix}/share/axyftp/help
+PACKAGE = DtWidget
+RANLIB = ranlib
+VERSION = 1.4.0
+XMAXY_CFLAGS = @XMAXY_CFLAGS@
+XMAXY_LIBS = @XMAXY_LIBS@
+XPM_CFLAGS = @XPM_CFLAGS@
+XPM_LIBS = @XPM_LIBS@
 
-AUTOMAKE_OPTIONS = foreign
+AUTOMAKE_OPTIONS = foreign 
 
 CLEANFILES = *~
-MAINTAINERCLEANFILES = Makefile.in
+MAINTAINERCLEANFILES = Makefile.in configure aclocal.m4 acinclude.m4
 
-man_MANS = axyftp.1
-EXTRA_DIST = $(man_MANS)
-SUBDIRS = help
+EXTRA_DIST = INSTALL README.ComboBox
+SUBDIRS = Dt 
+DIST_SUBDIRS = Dt orig cwikla cwikla-clean moz moz-clean jra 
+ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
-man1dir = $(mandir)/man1
-MANS = $(man_MANS)
-
-NROFF = nroff
-DIST_COMMON =  Makefile.am Makefile.in
+DIST_COMMON =  INSTALL Makefile.am Makefile.in acinclude.m4 aclocal.m4 \
+configure configure.in install-sh missing mkinstalldirs
 
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
@@ -103,51 +99,19 @@ GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps doc/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
-	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
+	  && CONFIG_FILES=$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
+$(ACLOCAL_M4):  configure.in  acinclude.m4
+	cd $(srcdir) && $(ACLOCAL)
 
-install-man1:
-	$(mkinstalldirs) $(DESTDIR)$(man1dir)
-	@list='$(man1_MANS)'; \
-	l2='$(man_MANS)'; for i in $$l2; do \
-	  case "$$i" in \
-	    *.1*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  if test -f $(srcdir)/$$i; then file=$(srcdir)/$$i; \
-	  else file=$$i; fi; \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " $(INSTALL_DATA) $$file $(DESTDIR)$(man1dir)/$$inst"; \
-	  $(INSTALL_DATA) $$file $(DESTDIR)$(man1dir)/$$inst; \
-	done
-
-uninstall-man1:
-	@list='$(man1_MANS)'; \
-	l2='$(man_MANS)'; for i in $$l2; do \
-	  case "$$i" in \
-	    *.1*) list="$$list $$i" ;; \
-	  esac; \
-	done; \
-	for i in $$list; do \
-	  ext=`echo $$i | sed -e 's/^.*\\.//'`; \
-	  inst=`echo $$i | sed -e 's/\\.[0-9a-z]*$$//'`; \
-	  inst=`echo $$inst | sed '$(transform)'`.$$ext; \
-	  echo " rm -f $(DESTDIR)$(man1dir)/$$inst"; \
-	  rm -f $(DESTDIR)$(man1dir)/$$inst; \
-	done
-install-man: $(MANS)
-	@$(NORMAL_INSTALL)
-	$(MAKE) $(AM_MAKEFLAGS) install-man1
-uninstall-man:
-	@$(NORMAL_UNINSTALL)
-	$(MAKE) $(AM_MAKEFLAGS) uninstall-man1
+config.status: $(srcdir)/configure $(CONFIG_STATUS_DEPENDENCIES)
+	$(SHELL) ./config.status --recheck
+$(srcdir)/configure: $(srcdir)/configure.in $(ACLOCAL_M4) $(CONFIGURE_DEPENDENCIES)
+	cd $(srcdir) && $(AUTOCONF)
 
 # This directory's subdirectories are mostly independent; you can cd
 # into them and run `make' without going through this Makefile.
@@ -238,11 +202,44 @@ distclean-tags:
 
 maintainer-clean-tags:
 
-distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
+distdir = $(PACKAGE)-$(VERSION)
+top_distdir = $(distdir)
 
-subdir = doc
-
+# This target untars the dist file and tries a VPATH configuration.  Then
+# it guarantees that the distribution is self-contained by making another
+# tarfile.
+distcheck: dist
+	-rm -rf $(distdir)
+	GZIP=$(GZIP_ENV) $(TAR) zxf $(distdir).tar.gz
+	mkdir $(distdir)/=build
+	mkdir $(distdir)/=inst
+	dc_install_base=`cd $(distdir)/=inst && pwd`; \
+	cd $(distdir)/=build \
+	  && ../configure --srcdir=.. --prefix=$$dc_install_base \
+	  && $(MAKE) $(AM_MAKEFLAGS) \
+	  && $(MAKE) $(AM_MAKEFLAGS) dvi \
+	  && $(MAKE) $(AM_MAKEFLAGS) check \
+	  && $(MAKE) $(AM_MAKEFLAGS) install \
+	  && $(MAKE) $(AM_MAKEFLAGS) installcheck \
+	  && $(MAKE) $(AM_MAKEFLAGS) dist
+	-rm -rf $(distdir)
+	@banner="$(distdir).tar.gz is ready for distribution"; \
+	dashes=`echo "$$banner" | sed s/./=/g`; \
+	echo "$$dashes"; \
+	echo "$$banner"; \
+	echo "$$dashes"
+dist: distdir
+	-chmod -R a+r $(distdir)
+	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
+	-rm -rf $(distdir)
+dist-all: distdir
+	-chmod -R a+r $(distdir)
+	GZIP=$(GZIP_ENV) $(TAR) chozf $(distdir).tar.gz $(distdir)
+	-rm -rf $(distdir)
 distdir: $(DISTFILES)
+	-rm -rf $(distdir)
+	mkdir $(distdir)
+	-chmod 777 $(distdir)
 	@for file in $(DISTFILES); do \
 	  d=$(srcdir); \
 	  if test -d $$d/$$file; then \
@@ -253,13 +250,13 @@ distdir: $(DISTFILES)
 	    || cp -p $$d/$$file $(distdir)/$$file || :; \
 	  fi; \
 	done
-	for subdir in $(SUBDIRS); do \
+	for subdir in $(DIST_SUBDIRS); do \
 	  if test "$$subdir" = .; then :; else \
 	    test -d $(distdir)/$$subdir \
 	    || mkdir $(distdir)/$$subdir \
 	    || exit 1; \
 	    chmod 777 $(distdir)/$$subdir; \
-	    (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) top_distdir=../$(top_distdir) distdir=../$(distdir)/$$subdir distdir) \
+	    (cd $$subdir && $(MAKE) $(AM_MAKEFLAGS) top_distdir=../$(distdir) distdir=../$(distdir)/$$subdir distdir) \
 	      || exit 1; \
 	  fi; \
 	done
@@ -274,21 +271,20 @@ installcheck: installcheck-recursive
 install-exec-am:
 install-exec: install-exec-recursive
 
-install-data-am: install-man
+install-data-am:
 install-data: install-data-recursive
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-recursive
-uninstall-am: uninstall-man
+uninstall-am:
 uninstall: uninstall-recursive
-all-am: Makefile $(MANS)
+all-am: Makefile
 all-redirect: all-recursive
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs: installdirs-recursive
 installdirs-am:
-	$(mkinstalldirs)  $(DESTDIR)$(mandir)/man1
 
 
 mostlyclean-generic:
@@ -313,6 +309,7 @@ clean: clean-recursive
 distclean-am:  distclean-tags distclean-generic clean-am
 
 distclean: distclean-recursive
+	-rm -f config.status
 
 maintainer-clean-am:  maintainer-clean-tags maintainer-clean-generic \
 		distclean-am
@@ -320,12 +317,13 @@ maintainer-clean-am:  maintainer-clean-tags maintainer-clean-generic \
 	@echo "it deletes files that may require special tools to rebuild."
 
 maintainer-clean: maintainer-clean-recursive
+	-rm -f config.status
 
-.PHONY: install-man1 uninstall-man1 install-man uninstall-man \
-install-data-recursive uninstall-data-recursive install-exec-recursive \
-uninstall-exec-recursive installdirs-recursive uninstalldirs-recursive \
-all-recursive check-recursive installcheck-recursive info-recursive \
-dvi-recursive mostlyclean-recursive distclean-recursive clean-recursive \
+.PHONY: install-data-recursive uninstall-data-recursive \
+install-exec-recursive uninstall-exec-recursive installdirs-recursive \
+uninstalldirs-recursive all-recursive check-recursive \
+installcheck-recursive info-recursive dvi-recursive \
+mostlyclean-recursive distclean-recursive clean-recursive \
 maintainer-clean-recursive tags tags-recursive mostlyclean-tags \
 distclean-tags clean-tags maintainer-clean-tags distdir info-am info \
 dvi-am dvi check check-am installcheck-am installcheck install-exec-am \

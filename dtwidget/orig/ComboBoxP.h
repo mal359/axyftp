@@ -1,5 +1,34 @@
 /*
- * ComboBoxP.h, Interleaf, 16aug93 2:37pm Version 1.1.
+ * CDE - Common Desktop Environment
+ *
+ * Copyright (c) 1993-2012, The Open Group. All rights reserved.
+ *
+ * These libraries and programs are free software; you can
+ * redistribute them and/or modify them under the terms of the GNU
+ * Lesser General Public License as published by the Free Software
+ * Foundation; either version 2 of the License, or (at your option)
+ * any later version.
+ *
+ * These libraries and programs are distributed in the hope that
+ * they will be useful, but WITHOUT ANY WARRANTY; without even the
+ * implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
+ * PURPOSE. See the GNU Lesser General Public License for more
+ * details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with these libraries and programs; if not, write
+ * to the Free Software Foundation, Inc., 51 Franklin Street, Fifth
+ * Floor, Boston, MA 02110-1301 USA
+ */
+/* $XConsortium: ComboBoxP.h /main/3 1995/10/26 09:29:58 rswiston $ */
+/*
+ * DtWidget/ComboBoxP.h
+ */
+/*
+ *  (c) Copyright 1993, 1994 Hewlett-Packard Company
+ *  (c) Copyright 1993, 1994 International Business Machines Corp.
+ *  (c) Copyright 1993, 1994 Novell, Inc.
+ *  (c) Copyright 1993, 1994 Sun Microsystems, Inc.
  */
 /***********************************************************
 Copyright 1993 Interleaf, Inc.
@@ -29,10 +58,6 @@ express or implied warranty.
 #ifndef _ComboBoxP_h
 #define _ComboBoxP_h
 
-#ifndef AA
-#define AA(args) ()
-#endif
-
 #include <X11/IntrinsicP.h>
 #include <X11/ShellP.h>
 #include <Xm/DrawnB.h>
@@ -48,10 +73,14 @@ express or implied warranty.
 #include <Xm/ManagerP.h>
 #include "ComboBox.h"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /*
  * External definitions of syn_resources for our list widget.
  */
-#define SYN_RESOURCE_AA AA((Widget w, int resource_offset, XtArgVal *value))
+#define SYN_RESOURCE_AA (Widget w, int resource_offset, XtArgVal *value)
 extern void _DtComboBoxGetArrowSize		SYN_RESOURCE_AA;
 extern void _DtComboBoxGetLabelString		SYN_RESOURCE_AA;
 extern void _DtComboBoxGetListItemCount		SYN_RESOURCE_AA;
@@ -69,7 +98,58 @@ extern void _DtComboBoxGetListVisibleItemCount	SYN_RESOURCE_AA;
 #define LABEL_PADDING	    2
 #define LABEL_SHADOW	    2
 #define TEXT_FIELD_SHADOW   1
+#define TEXT_CONTEXT_MARGIN 4
 
+/****************************************************************
+ *
+ *	Message	Defines
+ *
+ ****************************************************************/
+
+#define CB_ALIGNMENT	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_ALIGNMENT, _DtMsgComboBox_0000)
+
+#define CB_MARGIN_HEIGHT	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_MARGIN_HEIGHT, _DtMsgComboBox_0001)
+
+#define CB_MARGIN_WIDTH	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_MARGIN_WIDTH, _DtMsgComboBox_0002)
+
+#define CB_HORIZONTAL_SPACING	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_HORIZONTAL_SPACING, _DtMsgComboBox_0003)
+
+#define CB_VERTICAL_SPACING	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_VERTICAL_SPACING, _DtMsgComboBox_0004)
+
+#define CB_ORIENTATION	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_ORIENTATION, _DtMsgComboBox_0005)
+
+#define CB_ITEM_COUNT	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_ITEM_COUNT, _DtMsgComboBox_0006)
+
+#define CB_VISIBLE_ITEM	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_VISIBLE_ITEM, _DtMsgComboBox_0007)
+
+#define CB_TEXT		DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_TEXT, _DtMsgComboBox_0008)
+
+#define CB_SET_ITEM		DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_SET_ITEM, _DtMsgComboBox_0009)
+
+#define CB_SELECT_ITEM		DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_SELECT_ITEM, _DtMsgComboBox_0010)
+
+#define CB_RESIZE	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_RESIZE, _DtMsgComboBox_0011)
+
+#define CB_LABEL	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_LABEL, _DtMsgComboBox_0012)
+
+#define CB_CVTSTRING	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_CVTSTRING, _DtMsgComboBox_0013)
+
+#define CB_DEL_POS	DTWIDGET_GETMESSAGE( \
+                          MS_ComboBox, COMBO_DEL_POS, _DtMsgComboBox_0014)
 /* 
  * Class Records
  */
@@ -113,22 +193,31 @@ typedef struct _DtComboBoxPart {
      * the shell up the size may be different; therefore, we set the shell
      * size to the maximum everytime it gets popped up, then we will
      * make adjustments, only if needed.
-     * This value gets saved every time the user updates XmNitems.
+     * This value gets saved every time the user updates DtNitems.
      */
     Dimension max_shell_width;
     Dimension max_shell_height;
 
-    /* ComboBox specific resources */
+    /* ComboBox specific public resources */
+    Dimension margin_height;
+    Dimension margin_width;
+    XmString selected_item;
+    int selected_position;
+    XtCallbackList selection_callback;
+    unsigned char type;
+    Dimension arrow_spacing;
+
+    /* ComboBox specific private resources */
+    Dimension arrow_size;
     XtCallbackList activate_callback;
     unsigned char alignment;
-    Dimension arrow_size;
-    Dimension arrow_spacing;
     unsigned char arrow_type;
     short text_columns;
     XtCallbackList focus_callback;
     Dimension horizontal_spacing;
     int item_count;
     XmStringTable items;
+    XmStringTable list_items;
     XmString label_string;
     Widget list;
     XmFontList list_font_list;
@@ -136,19 +225,13 @@ typedef struct _DtComboBoxPart {
     Dimension list_margin_width;
     Dimension list_spacing;
     XtCallbackList losing_focus_callback;
-    Dimension margin_height;
-    Dimension margin_width;
     unsigned int text_max_length;
     XtCallbackList menu_post_callback;
     unsigned char orientation;
     Boolean popped_up;
     Boolean recompute_size;
-    XmString selected_item;
-    unsigned int selected_position;
-    XtCallbackList selection_callback;
     Widget text;
     int top_item_position;
-    unsigned char type;
     Boolean update_label;
     Dimension vertical_spacing;
     int visible_item_count;
@@ -164,21 +247,9 @@ typedef struct _DtComboBoxRec {
 } DtComboBoxRec;
 
 
-/*
- * Error defines.
- */
-#define COMBO_ALIGNMENT "DtComboButtonWidget: Invalid alignment resource (defaulting to XmALIGNMENT_CENTER)."
-#define COMBO_MARGIN_HEIGHT "DtComboButtonWidget: Invalid marginHeight resource (defaulting to 2)."
-#define COMBO_MARGIN_WIDTH "DtComboButtonWidget: Invalid marginHeight resource (defaulting to 2)."
-#define COMBO_HORIZONTAL_SPACING "DtComboButtonWidget: Invalid horizontalSpacing resource (defaulting to 0)."
-#define COMBO_VERTICAL_SPACING "DtComboButtonWidget: Invalid verticalSpacing resource (defaulting to 0)."
-#define COMBO_ORIENTATION "DtComboButtonWidget: Invalid orientation resource (defaulting to XmRIGHT)."
-#define COMBO_ITEM_COUNT "DtComboButtonWidget: Invalid itemCount resource (defaulting to 0)."
-#define COMBO_VISIBLE_ITEM "DtComboButtonWidget: Invalid selectedPosition resource (defaulting to 0)."
-#define COMBO_TEXT "DtComboButtonWidget: Unable to set textField resource."
-#define COMBO_ITEM_COUNT "DtComboButtonWidget: Invalid itemCount resource (defaulting to 0)."
-#define COMBO_SET_ITEM "DtComboBoxWidget: Unable to find item to set (DtComboBoxSetItem)."
-#define COMBO_SELECT_ITEM "DtComboBoxWidget: Unable to find item to select (XmComboBoxSelectItem)."
 
+#ifdef __cplusplus
+}  /* Close scope of 'extern "C"' declaration which encloses file. */
+#endif
 
 #endif /* _XmComboBoxP_h */

@@ -2,76 +2,6 @@
 #include"axyftp.h"
 #include"status.h"
 
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-
-void append_status(char* start){
-  int len;
-
-  if(start==NULL) return;
-  len=strlen(start);
-  if(len && start[--len]=='\r'){
-    start[len]='\n';
-    start[len+1]='\0';
-  }
-  if(len && start[--len]=='\r'){
-    start[len]='\n';
-    start[len+1]='\0';
-  }
-  gtk_text_set_point(GTK_TEXT(appdata.status),
-      gtk_text_get_length(GTK_TEXT(appdata.status)));
-  gtk_text_insert(GTK_TEXT(appdata.status),NULL,NULL,NULL,start,-1);
-}
-
-GtkWidget* create_status(GtkWidget *parent){
-  GtkWidget *statusb,*box,*text,*texta,*scroll;
-  GtkStyle *ns;
-  gint i;
-
-  statusb=gtk_frame_new(NULL);
-  gtk_frame_set_shadow_type(GTK_FRAME(statusb),GTK_SHADOW_ETCHED_OUT);
-  gtk_container_border_width(GTK_CONTAINER(statusb),3);
-  gtk_widget_show(statusb);
-
-  box=gtk_hbox_new(FALSE,2);
-  gtk_container_border_width(GTK_CONTAINER(box),6);
-  gtk_container_add(GTK_CONTAINER(statusb),box);
-  gtk_widget_show(box);
-  
-  texta=gtk_alignment_new(0,0.5,1,0);
-  gtk_box_pack_start(GTK_BOX(box),texta,TRUE,TRUE,3);
-  gtk_widget_show(texta);
-  text=gtk_text_new(NULL,NULL);
-  appdata.status=text;
-  gtk_text_set_editable(GTK_TEXT(text),FALSE);
-  /*gtk_widget_set_sensitive(text,FALSE);*/
-  gtk_widget_set_usize(text,100,gtkfontheight*3+2);
-  gtk_container_add(GTK_CONTAINER(texta),text);
-  gtk_widget_show(text);
-
-  scroll=gtk_vscrollbar_new(GTK_TEXT(text)->vadj);
-  gtk_box_pack_end(GTK_BOX(box),scroll,FALSE,FALSE,3);
-  gtk_widget_show(scroll);
-
-  ns=style_full_copy(gtk_widget_get_style(text));
-  
-  for(i=0;i<5;i++){
-    ns->base[i].pixel=ns->bg[GTK_STATE_NORMAL].pixel;
-    ns->base[i].red=ns->bg[GTK_STATE_NORMAL].red;
-    ns->base[i].green=ns->bg[GTK_STATE_NORMAL].green;
-    ns->base[i].blue=ns->bg[GTK_STATE_NORMAL].blue;
-  }
-  ns->klass->xthickness=0;
-  ns->klass->ythickness=0;
-
-  gtk_widget_set_style(text,ns);
-
-  return statusb;
-}
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Xm.h>
 #include<Xm/List.h>
 #include<Xm/ScrolledW.h>
@@ -138,6 +68,3 @@ Widget create_status(Widget parent){
   return status;
 
 }
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif

@@ -2,48 +2,6 @@
 #include"axyftp.h"
 #include"session_advanced.h"
 
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-
-GtkWidget* create_session_advanced(GtkWidget* parent){
-  GtkWidget *advanced;
-  GtkWidget *current,*child;
-  int i;
-
-  advanced=gtk_table_new(1,6,TRUE);
-  gtk_container_border_width(GTK_CONTAINER(advanced),8);
-  for(i=0;i<0;i++){
-    gtk_table_set_row_spacing(GTK_TABLE(advanced),i,4);
-  }
-  gtk_widget_show(advanced);
-
-  current=gtk_alignment_new(1,0.5,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(advanced),current,0,2,0,1);
-  child=gtk_label_new("Remote Port ");
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-
-  current=gtk_entry_new();
-  gtk_widget_set_usize(current,gdk_string_width(mystyle->font,"W")*8,
-      gtkfontheight*2);
-  gtk_widget_set_name(current,"port");
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(advanced),current,2,3,0,1);
-  
-  current=gtk_alignment_new(0,0.5,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(advanced),current,3,6,0,1);
-  child=gtk_label_new(" Remote host control connection port.\nUsually 21.");
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-
-  return advanced;
-}
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Xm.h>
 #include<Xm/Form.h>
 #include<Xm/Label.h>
@@ -114,7 +72,3 @@ Widget create_session_advanced(Widget parent){
 
   return advanced;
 }
-
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif

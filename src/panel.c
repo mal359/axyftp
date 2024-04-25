@@ -5,55 +5,6 @@
 #include"dirname.h"
 #include"dirlist.h"
 
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-GtkWidget* create_panel(GtkWidget* parent,int which){
-  GtkWidget *panel,*form,*box,*dirname,*buttons,*buttonsa,*dirlist;
-
-  switch(which){
-    case LOCAL:
-      panel=gtk_frame_new("Local System");
-      break;
-    case REMOTE:
-      panel=gtk_frame_new("Remote System");
-      break;
-    default:
-      return NULL;
-  }
-
-  gtk_frame_set_label_align(GTK_FRAME(panel),0.05,0);
-  gtk_container_border_width(GTK_CONTAINER(panel),6);
-  gtk_widget_show(panel);
-  gtk_frame_set_shadow_type(GTK_FRAME(panel),GTK_SHADOW_ETCHED_IN);
-
-  form=gtk_vbox_new(FALSE,2);
-  gtk_container_add(GTK_CONTAINER(panel),form);
-  gtk_widget_show(form);
-  gtk_container_border_width(GTK_CONTAINER(form),6);
-
-  dirname=create_dirname(form,which);
-  gtk_box_pack_start(GTK_BOX(form),dirname,FALSE,TRUE,2);
-
-  box=gtk_hbox_new(FALSE,6);
-  gtk_widget_show(box);
-  gtk_box_pack_start(GTK_BOX(form),box,TRUE,TRUE,2);
-  
-  buttonsa=gtk_alignment_new(1,0,1,0);
-  gtk_widget_show(buttonsa);
-  buttons=create_buttons(buttonsa,which);
-  gtk_container_add(GTK_CONTAINER(buttonsa),buttons);
-  gtk_box_pack_end(GTK_BOX(box),buttonsa,FALSE,FALSE,0);
-  
-  dirlist=create_dirlist(box,which);
-  gtk_box_pack_end(GTK_BOX(box),dirlist,TRUE,TRUE,0);
-
-  return panel;
-
-}
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Screen.h>
 #include<Xm/Xm.h>
 #include<Xm/Form.h>
@@ -140,7 +91,3 @@ Widget create_panel(Widget parent,int which){
 
   return panel;
 }
-
-#else 
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif

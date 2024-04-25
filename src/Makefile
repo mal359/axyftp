@@ -11,7 +11,7 @@
 # PARTICULAR PURPOSE.
 
 
-SHELL = /bin/sh
+SHELL = /bin/bash
 
 srcdir = .
 top_srcdir = ..
@@ -58,14 +58,14 @@ NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
 AXYFTP_DEPS = 
-AXYFTP_INCLUDES = $(XMAXY_CFLAGS) $(DT_CFLAGS) $(MOTIF_CFLAGS)                     $(XPM_CFLAGS)
-AXYFTP_LIBS = $(XMAXY_LIBS) $(DT_LIBS) $(MOTIF_LIBS)                 -lXt  -lSM -lICE -lX11  $(XPM_LIBS)
+AXYFTP_INCLUDES = 
+AXYFTP_LIBS = 
 CC = gcc
 CPP = gcc -E
 DT_CFLAGS = 
-GTK_CFLAGS = 
-GTK_CONFIG = 
-GTK_LIBS = 
+GTK_CFLAGS = @GTK_CFLAGS@
+GTK_CONFIG = @GTK_CONFIG@
+GTK_LIBS = @GTK_LIBS@
 MAKEINFO = makeinfo
 MOTIF_CFLAGS = 
 PACKAGE = axyftp
@@ -85,21 +85,21 @@ MAINTAINERCLEANFILES = Makefile.in
 #MALLOC = -u malloc -lefence
 MALLOC = 
 
-AXYFTP_GUI = BUILD_MOTIF
+AXYFTP_GUI = 
 AXYFTP_HELP_DIR = ${prefix}/share/axyftp/help
 
 bin_PROGRAMS = axyftp
 
 axyftp_DEPENDENCIES = 
 
-INCLUDES = -D$(AXYFTP_GUI) -DAXYFTP_HELP_DIR=\"$(AXYFTP_HELP_DIR)\"          -I$(top_srcdir)/xpms $(XMAXY_CFLAGS) $(DT_CFLAGS) $(MOTIF_CFLAGS)                     $(XPM_CFLAGS)
+INCLUDES = -D$(AXYFTP_GUI) -DAXYFTP_HELP_DIR=\"$(AXYFTP_HELP_DIR)\"          -I$(top_srcdir)/xpms 
 
 
-DT_LIBS = -lDtWidget
-XMAXY_LIBS = -lXmAxy
+DT_LIBS = 
+XMAXY_LIBS = 
 MOTIF_LIBS = -lXm
 
-axyftp_LDADD = $(XMAXY_LIBS) $(DT_LIBS) $(MOTIF_LIBS)                 -lXt  -lSM -lICE -lX11  $(XPM_LIBS) $(MALLOC)
+axyftp_LDADD =  $(MALLOC)
 
 axyftp_SOURCES = axyftp.c main_frame.c buttonbar.c arrows.c status.c proto.c                  panel.c buttons.c dirname.c dirlist.c session_data.c ftp.c 		 utils.c  read_init.c functions.c fileinfo.c dirinfo.c 		 pixmaps.c ftp_xfer.c dialogs.c session_dialog.c 		 session_general.c session_startup.c about_dialog.c 		 progress_dialog.c little_dialogs.c prompt_dialogs.c viewer.c 		 session_advanced.c options_dialog.c options_general.c 		 options_display.c options_sound.c options_data.c multi.c 	         options_advanced.c
 

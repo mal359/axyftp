@@ -14,7 +14,7 @@
 SHELL = /bin/bash
 
 srcdir = .
-top_srcdir = ../..
+top_srcdir = ..
 
 prefix = /usr/local
 exec_prefix = ${prefix}
@@ -34,15 +34,15 @@ oldincludedir = /usr/include
 
 DESTDIR =
 
-pkgdatadir = $(datadir)/axyftp
-pkglibdir = $(libdir)/axyftp
-pkgincludedir = $(includedir)/axyftp
+pkgdatadir = $(datadir)/DtWidget
+pkglibdir = $(libdir)/DtWidget
+pkgincludedir = $(includedir)/DtWidget
 
-top_builddir = ../..
+top_builddir = ..
 
-ACLOCAL = /home/matt/axyftp/missing aclocal-1.4
+ACLOCAL = /home/matt/axyftp/dtwidget/missing aclocal-1.4
 AUTOCONF = autoconf
-AUTOMAKE = /home/matt/axyftp/missing automake-1.4
+AUTOMAKE = /home/matt/axyftp/dtwidget/missing automake-1.4
 AUTOHEADER = autoheader
 
 INSTALL = /usr/bin/install -c
@@ -57,42 +57,34 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-AXYFTP_DEPS = 
-AXYFTP_GUI = 
-AXYFTP_INCLUDES = 
-AXYFTP_LIBS = 
+AXY_DIRINC = $(AXY_DIRINC)
+AXY_H = 
+AXY_L = 
 CC = gcc
 CPP = gcc -E
-DT_CFLAGS = 
-DT_LIBS = 
-GTK_CFLAGS = @GTK_CFLAGS@
-GTK_CONFIG = @GTK_CONFIG@
-GTK_LIBS = @GTK_LIBS@
+DT_CFLAGS = @DT_CFLAGS@
+DT_LIBS = @DT_LIBS@
+INSTALL_AXY_H = $(EXTRA_HEADERS)
+INSTALL_AXY_L = $(EXTRA_LIBRARIES)
 MAKEINFO = makeinfo
 MOTIF_CFLAGS = 
 MOTIF_LIBS = -lXm
-PACKAGE = axyftp
-VERSION = 0.5.1
-XMAXY_CFLAGS = 
-XMAXY_LIBS = 
-XPM_CFLAGS = 
-XPM_LIBS = -lXpm
+PACKAGE = DtWidget
+RANLIB = ranlib
+VERSION = 1.4.0
+XMAXY_CFLAGS = @XMAXY_CFLAGS@
+XMAXY_LIBS = @XMAXY_LIBS@
+XPM_CFLAGS = @XPM_CFLAGS@
+XPM_LIBS = @XPM_LIBS@
 
-AUTOMAKE_OPTIONS = foreign
+AUTOMAKE_OPTIONS = foreign 
 
 CLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in
 
-helpdir = ${prefix}/share/axyftp/help
-
-help_DATA = doc.gif help.html link.gif panels.html up.gif artistic.txt           folder.gif intro.html main.html problems.html axyftp.html 	  glossary.html lgpl.txt options.html session.html
-
-
-EXTRA_DIST = $(help_DATA)
+EXTRA_DIST = ComboBox.c  ComboBox.h  ComboBoxP.h  README.cwikla
 mkinstalldirs = $(SHELL) $(top_srcdir)/mkinstalldirs
 CONFIG_CLEAN_FILES = 
-DATA =  $(help_DATA)
-
 DIST_COMMON =  Makefile.am Makefile.in
 
 
@@ -103,38 +95,19 @@ GZIP_ENV = --best
 all: all-redirect
 .SUFFIXES:
 $(srcdir)/Makefile.in: Makefile.am $(top_srcdir)/configure.in $(ACLOCAL_M4) 
-	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps doc/help/Makefile
+	cd $(top_srcdir) && $(AUTOMAKE) --foreign --include-deps cwikla/Makefile
 
 Makefile: $(srcdir)/Makefile.in  $(top_builddir)/config.status
 	cd $(top_builddir) \
 	  && CONFIG_FILES=$(subdir)/$@ CONFIG_HEADERS= $(SHELL) ./config.status
 
-
-install-helpDATA: $(help_DATA)
-	@$(NORMAL_INSTALL)
-	$(mkinstalldirs) $(DESTDIR)$(helpdir)
-	@list='$(help_DATA)'; for p in $$list; do \
-	  if test -f $(srcdir)/$$p; then \
-	    echo " $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(helpdir)/$$p"; \
-	    $(INSTALL_DATA) $(srcdir)/$$p $(DESTDIR)$(helpdir)/$$p; \
-	  else if test -f $$p; then \
-	    echo " $(INSTALL_DATA) $$p $(DESTDIR)$(helpdir)/$$p"; \
-	    $(INSTALL_DATA) $$p $(DESTDIR)$(helpdir)/$$p; \
-	  fi; fi; \
-	done
-
-uninstall-helpDATA:
-	@$(NORMAL_UNINSTALL)
-	list='$(help_DATA)'; for p in $$list; do \
-	  rm -f $(DESTDIR)$(helpdir)/$$p; \
-	done
 tags: TAGS
 TAGS:
 
 
 distdir = $(top_builddir)/$(PACKAGE)-$(VERSION)/$(subdir)
 
-subdir = doc/help
+subdir = cwikla
 
 distdir: $(DISTFILES)
 	@for file in $(DISTFILES); do \
@@ -158,20 +131,19 @@ installcheck: installcheck-am
 install-exec-am:
 install-exec: install-exec-am
 
-install-data-am: install-helpDATA
+install-data-am:
 install-data: install-data-am
 
 install-am: all-am
 	@$(MAKE) $(AM_MAKEFLAGS) install-exec-am install-data-am
 install: install-am
-uninstall-am: uninstall-helpDATA
+uninstall-am:
 uninstall: uninstall-am
-all-am: Makefile $(DATA)
+all-am: Makefile
 all-redirect: all-am
 install-strip:
 	$(MAKE) $(AM_MAKEFLAGS) AM_INSTALL_PROGRAM_FLAGS=-s install
 installdirs:
-	$(mkinstalldirs)  $(DESTDIR)$(helpdir)
 
 
 mostlyclean-generic:
@@ -203,12 +175,12 @@ maintainer-clean-am:  maintainer-clean-generic distclean-am
 
 maintainer-clean: maintainer-clean-am
 
-.PHONY: uninstall-helpDATA install-helpDATA tags distdir info-am info \
-dvi-am dvi check check-am installcheck-am installcheck install-exec-am \
-install-exec install-data-am install-data install-am install \
-uninstall-am uninstall all-redirect all-am all installdirs \
-mostlyclean-generic distclean-generic clean-generic \
-maintainer-clean-generic clean mostlyclean distclean maintainer-clean
+.PHONY: tags distdir info-am info dvi-am dvi check check-am \
+installcheck-am installcheck install-exec-am install-exec \
+install-data-am install-data install-am install uninstall-am uninstall \
+all-redirect all-am all installdirs mostlyclean-generic \
+distclean-generic clean-generic maintainer-clean-generic clean \
+mostlyclean distclean maintainer-clean
 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.

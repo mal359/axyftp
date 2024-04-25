@@ -8,100 +8,6 @@
 #include"dirinfo.h"
 #include"viewer.h"
 
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-
-void fill_dirinfo(GtkWidget* text,dirinfo* di){
-  int i;
-  char* line;
-  for(i=1;i<=di->total;i++){
-    line=get_fileinfo_string(di->files[i]);
-    if(line){
-      gtk_text_set_point(GTK_TEXT(text),gtk_text_get_length(GTK_TEXT(text)));
-      gtk_text_insert(GTK_TEXT(text),NULL,NULL,NULL,line,-1);
-      WXfree(line);
-    }
-  }
-  gtk_text_set_point(GTK_TEXT(text),0);
-}
-
-int fill_viewer(GtkWidget* text,int fd){
-  char buf[1025];
-  int len;
-
-  while((len=read(fd,buf,1024))>0){
-    buf[len]='\0';
-    gtk_text_set_point(GTK_TEXT(text),gtk_text_get_length(GTK_TEXT(text)));
-    gtk_text_insert(GTK_TEXT(text),NULL,NULL,NULL,buf,-1);
-  }
-  close(fd);
-  return len;
-}
-
-static void destroy_cb(GtkWidget* w){
-  while(!GTK_IS_WINDOW(w))w=gtk_widget_get_toplevel(w);
-  gtk_widget_destroy(w);
-}
-
-GtkWidget* create_viewer(GtkWidget* parent,char* name){
-  GtkWidget *viewer,*box,*text,*actions,*align,*button,*scroll;
-  char* title;
-
-  title=WXmalloc(strlen(name)+20);
-  sprintf(title,"AxY FTP viewer - %s",name);
-
-  viewer=gtk_dialog_new();
-  gtk_window_set_title(GTK_WINDOW(viewer),title);
-  WXfree(title);
-
-  gtk_container_border_width(GTK_CONTAINER(viewer),6);
-
-  box=gtk_hbox_new(FALSE,0);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(viewer)->vbox),box,TRUE,TRUE,0);
-  gtk_widget_show(box);
-
-  text=gtk_text_new(NULL,NULL);
-  gtk_box_pack_start(GTK_BOX(box),text,TRUE,TRUE,0);
-  gtk_widget_show(text);
-  gtk_widget_set_usize(text,gdk_string_width(mystyle->font,"W")*80+8,
-      gtkfontheight*24+8);
-
-  scroll=gtk_vscrollbar_new(GTK_TEXT(text)->vadj);
-  gtk_box_pack_start(GTK_BOX(box),scroll,FALSE,FALSE,0);
-  gtk_widget_show(scroll);
-
-  /*scroll=gtk_hscrollbar_new(GTK_TEXT(text)->hadj);
-  gtk_box_pack_start(GTK_BOX(GTK_DIALOG(viewer)->vbox),scroll,FALSE,FALSE,0);
-  gtk_widget_show(scroll);*/
-  
-  actions=gtk_hbox_new(TRUE,6);
-  gtk_container_add(GTK_CONTAINER(GTK_DIALOG(viewer)->action_area),actions);
-  gtk_widget_show(actions);
-
-  align=gtk_alignment_new(0.5,0.5,0,0);
-  gtk_box_pack_start(GTK_BOX(actions),align,TRUE,TRUE,4);
-  gtk_widget_show(align);
-
-  button=gtk_button_new_with_label(" CANCEL ");
-  gtk_container_add(GTK_CONTAINER(align),button);
-  gtk_widget_show(button);
-
-  gtk_signal_connect(GTK_OBJECT(button),"clicked",
-      GTK_SIGNAL_FUNC(destroy_cb),NULL);
-  gtk_signal_connect(GTK_OBJECT(viewer),"destroy",
-      GTK_SIGNAL_FUNC(destroy_cb),NULL);
-  /*
-  XtAddCallback(XtParent(viewer),XmNpopdownCallback,destroy_cb,NULL);
-  */
-
-  gtk_widget_show(viewer);
-
-  return text;
-}
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Xm.h>
 #include<Xm/Form.h>
 #include<Xm/Text.h>
@@ -212,7 +118,3 @@ Widget create_viewer(Widget parent,char* name){
 
   return text;
 }
-
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif

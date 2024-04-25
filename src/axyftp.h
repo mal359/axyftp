@@ -13,19 +13,8 @@
 #include"options_data.h"
 #include"ftp.h"
 
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-typedef GtkWidget* WXwidget;
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Xm.h>
 typedef Widget WXwidget;
-
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif
 
 typedef struct _sitestate {
   WXwidget table;
@@ -75,18 +64,6 @@ typedef struct _appstate {
 extern struct _appstate appdata;
 extern WXwidget toplevel;
 
-#ifdef BUILD_GTK
-
-extern int gtkfontheight;
-extern GtkStyle* mystyle;
-GtkStyle* style_full_copy(GtkStyle*);
-
-#elif defined BUILD_MOTIF
-
 extern XtAppContext appcontext;
-
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif
 
 #endif /* AXYFTP_H */

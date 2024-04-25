@@ -6,34 +6,6 @@
 #include"utils.h"
 #include"read_init.h"
 
-
-#ifdef BUILD_GTK
-
-#include<gtk/gtk.h>
-
-
-GtkWidget* create_options_sound(GtkWidget *parent){
-  GtkWidget *table;
-  GtkWidget *current,*child;
-
-  table=gtk_table_new(6,4,TRUE);
-  gtk_widget_show(table);
-  gtk_container_border_width(GTK_CONTAINER(table),8);
-
-  current=gtk_alignment_new(0,0.5,0,0);
-  gtk_widget_show(current);
-  gtk_table_attach_defaults(GTK_TABLE(table),current,0,6,1,2);
-  child=gtk_check_button_new_with_label("Beep at the end of download/upload");
-  gtk_widget_set_name(child,"xferbeep");
-  gtk_toggle_button_set_state(GTK_TOGGLE_BUTTON(child),TRUE);
-  gtk_widget_show(child);
-  gtk_container_add(GTK_CONTAINER(current),child);
-  
-  return table;
-}
-
-#elif defined BUILD_MOTIF
-
 #include<Xm/Xm.h>
 #include<Xm/Form.h>
 #include<Xm/PushB.h>
@@ -79,7 +51,3 @@ Widget create_options_sound(Widget parent){
 
   return general;
 }
-
-#else
-#error Either BUILD_GTK or BUILD_MOTIF should be defined
-#endif
