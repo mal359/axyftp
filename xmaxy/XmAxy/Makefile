@@ -7,6 +7,7 @@ MAKEDEPEND = gcc -M
 
 CC = gcc
 CFLAGS = -O2 -g -fPIC
+C_OPTS = -DLINUX -DMOTIF -D_GNU_SOURCE
 	 
 #XPM_INCLUDE = -I/usr/X11R6/include
 XPM_INCLUDE = -I/usr/include
@@ -29,7 +30,7 @@ MOTIF_LIB= -lXm
 
 X_INCLUDE=-I/usr/include/X11
 
-X_LIB=-lX11 -lXt
+X_LIB=-lX11 -lXt -lXmu
 
 SOURCES = List.c Notebook.c Util.c
 
@@ -52,7 +53,7 @@ DEMO_OBJ = demo.o
 all:		shared static
 
 shared:		$(OBJECTS)
-		$(CC) $(CFLAGS) -shared -Wl,-soname,$(LIB_SHARED) -o $(LIB_SHARED) $(OBJECTS) $(X_LIB) $(XPM_LIB) $(MOTIF_LIB) 
+		$(CC) $(CFLAGS) $(C_OPTS) -shared -Wl,-soname,$(LIB_SHARED) -o $(LIB_SHARED) $(OBJECTS) $(X_LIB) $(XPM_LIB) $(MOTIF_LIB) 
 		ln -sf $(LIB_SHARED) $(SYMLINK)
 
 static: 	$(OBJECTS)
