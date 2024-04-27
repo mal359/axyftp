@@ -10,8 +10,8 @@
 
 #include <Xm/DrawingA.h>
 
-#include <XmAxy/NotebookP.h>
-#include <XmAxy/Util.h>
+#include "NotebookP.h"
+#include "Util.h"
 
 #include <Xm/XmP.h>
 #include <Xm/DrawP.h>

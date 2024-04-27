@@ -1,27 +1,27 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include<stdio.h>
-#include<string.h>
+#include <stdio.h>
+#include <string.h>
 
-#include"axyftp.h"
-#include"options_data.h"
-#include"options_dialog.h"
-#include"options_general.h"
-#include"options_display.h"
-#include"options_sound.h"
-#include"options_advanced.h"
-#include"utils.h"
-#include"read_init.h"
-#include"functions.h"
+#include "axyftp.h"
+#include "options_data.h"
+#include "options_dialog.h"
+#include "options_general.h"
+#include "options_display.h"
+#include "options_sound.h"
+#include "options_advanced.h"
+#include "utils.h"
+#include "read_init.h"
+#include "functions.h"
 
-#include<Xm/Xm.h>
-#include<Xm/Form.h>
-#include<Xm/PushB.h>
-#include<Xm/ToggleB.h>
-#include<Xm/TextF.h>
-#include<Xm/ComboBox.h>
-#include<Xm/Label.h>
-#include<Xm/List.h>
-#include<XmAxy/Notebook.h>
+#include <Xm/Xm.h>
+#include <Xm/Form.h>
+#include <Xm/PushB.h>
+#include <Xm/ToggleB.h>
+#include <Xm/TextF.h>
+#include <Xm/ComboBox.h>
+#include <Xm/Label.h>
+#include <Xm/List.h>
+#include <Xm/Notebook.h>
 
 void put_options_data(Widget dialog,options_data* opt){
   Widget current;
@@ -191,7 +191,7 @@ Widget create_options_dialog(Widget parent){
   XtSetArg(args[n],XmNbackPageNumber,1);n++;
   XtSetArg(args[n],XmNbackPageSize,0);n++;
   */
-  notebook=XmAxyCreateNotebook(options,"notebook",args,n);
+  notebook=XmCreateNotebook(options,"notebook",args,n);
   XtManageChild(notebook);
 
   /*
@@ -250,7 +250,6 @@ Widget create_options_dialog(Widget parent){
       XmNtopAttachment,XmATTACH_FORM,
       XmNleftAttachment,XmATTACH_FORM,NULL);
 
-  XmAxyNotebookSetCurrentPage(notebook,1,FALSE);
 
   put_options_data(options,appdata.odata);
 

@@ -153,7 +153,8 @@ am__define_uniq_tagged_files = \
     if test -f "$$i"; then echo $$i; else echo $(srcdir)/$$i; fi; \
   done | $(am__uniquify_input)`
 am__DIST_COMMON = $(srcdir)/Makefile.in $(srcdir)/config.h.in README \
-	TODO compile install-sh ltmain.sh missing mkinstalldirs
+	TODO compile depcomp install-sh ltmain.sh missing \
+	mkinstalldirs
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -206,7 +207,7 @@ AUTOHEADER = ${SHELL} '/home/matt/axyftp/missing' autoheader
 AUTOMAKE = ${SHELL} '/home/matt/axyftp/missing' automake-1.16
 AWK = gawk
 CC = gcc
-CCDEPMODE = depmode=none
+CCDEPMODE = depmode=gcc3
 CFLAGS = -g -O2
 CPP = gcc -E
 CPPFLAGS = 
@@ -227,12 +228,10 @@ INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LDFLAGS = 
 LIBOBJS = 
-LIBS = 
+LIBS = -lXpm -lX11 -lXm 
 LTLIBOBJS = 
 MAKEINFO = ${SHELL} '/home/matt/axyftp/missing' makeinfo
 MKDIR_P = /usr/bin/mkdir -p
-MOTIF_CFLAGS = 
-MOTIF_LIBS = -lXm
 OBJEXT = o
 PACKAGE = axy-ftp
 PACKAGE_BUGREPORT = 
@@ -246,13 +245,6 @@ SET_MAKE =
 SHELL = /bin/bash
 STRIP = 
 VERSION = 0.5.1
-XMKMF = 
-XPM_CFLAGS = 
-XPM_LIBS = -lXpm
-X_CFLAGS = 
-X_EXTRA_LIBS = 
-X_LIBS = 
-X_PRE_LIBS =  -lSM -lICE
 abs_builddir = /home/matt/axyftp
 abs_srcdir = /home/matt/axyftp
 abs_top_builddir = /home/matt/axyftp
@@ -301,7 +293,7 @@ CLEANFILES = *~
 MAINTAINERCLEANFILES = Makefile.in configure aclocal.m4 acinclude.m4
 EXTRA_DIST = Artistic CHANGES LGPL README LICENSE TODO
 uninst_DIST = README.bin
-SUBDIRS = macro xpms icons @subdirs@ src doc 
+SUBDIRS = macro xpms icons src doc 
 DIST_SUBDIRS = macro xpms icons dtwidget xmaxy src doc
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive

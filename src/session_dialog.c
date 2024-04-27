@@ -1,42 +1,39 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
 
-#define XM_NOTEBOOK 0
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <unistd.h>
+#include <stdlib.h>
 
-#include<stdio.h>
-#include<string.h>
-#include<signal.h>
-#include<unistd.h>
-#include<stdlib.h>
-
-#include"axyftp.h"
-#include"utils.h"
-#include"multi.h"
-#include"status.h"
-#include"read_init.h"
-#include"session_data.h"
-#include"functions.h"
-#include"session_dialog.h"
-#include"session_general.h"
-#include"session_startup.h"
-#include"session_advanced.h"
+#include "axyftp.h"
+#include "utils.h"
+#include "multi.h"
+#include "status.h"
+#include "read_init.h"
+#include "session_data.h"
+#include "functions.h"
+#include "session_dialog.h"
+#include "session_general.h"
+#include "session_startup.h"
+#include "session_advanced.h"
 
 static void time_to_retry(int sig){
   siglongjmp(jmp_down_env,2);
 }
 
-#include<Xm/Xm.h>
-#include<Xm/Form.h>
-#include<Xm/PushB.h>
-#include<Xm/ToggleB.h>
-#include<Xm/TextF.h>
-#include<Xm/ComboBox.h>
-#include<Xm/Label.h>
-#include<Xm/List.h>
-#if XM_NOTEBOOK
-#include<Xm/Notebook.h>
-#else
+#include <Xm/Xm.h>
+#include <Xm/Form.h>
+#include <Xm/PushB.h>
+#include <Xm/ToggleB.h>
+#include <Xm/TextF.h>
+#include <Xm/ComboBox.h>
+#include <Xm/Label.h>
+#include <Xm/List.h>
+#include <Xm/Notebook.h>
+/* #else
 #include<XmAxy/Notebook.h>
-#endif
+#endif */
 
 static void init_session_dialog(Widget);
 static void action_cb(Widget,XtPointer,XtPointer);
@@ -251,10 +248,10 @@ static void action_cb(Widget w,XtPointer app,XtPointer call){
 	fetch_session_data(appdata.session,appdata.sdata->next);
 	item=XmStringCreateLocalized(appdata.sdata->next->profile);
 	XtVaGetValues(list,XmNitemCount,&i,NULL);
-	DtComboBoxAddItem(combo,item,1,FALSE);
+	XmComboBoxAddItem(combo,item,1,FALSE);
 	i++;
 	if(i<=MAX_VISIBLE_ITEMS){
-	  XtVaSetValues(combo,DtNvisibleItemCount,i,NULL);
+	  XtVaSetValues(combo,XmNvisibleItemCount,i,NULL);
 	  XtVaSetValues(list,XmNvisibleItemCount,i,NULL);
 	}
 	XmStringFree(item);
@@ -317,7 +314,7 @@ Widget create_session_dialog(Widget parent){
   actions=create_actions(session);
 
   n=0;
-#if XM_NOTEBOOK 
+/* #if XM_NOTEBOOK */
   XtSetArg(args[n],XmNbackPagePlacement,XmTOP_RIGHT);n++;
   XtSetArg(args[n],XmNmajorTabSpacing,0);n++;
   XtSetArg(args[n],XmNorientation,XmVERTICAL);n++;
@@ -325,48 +322,48 @@ Widget create_session_dialog(Widget parent){
   XtSetArg(args[n],XmNbackPageNumber,1);n++;
   XtSetArg(args[n],XmNbackPageSize,0);n++;
   notebook=XmCreateNotebook(session,"notebook",args,n);
-#else
+/* #else
   notebook=XmAxyCreateNotebook(session,"notebook",args,n);
-#endif
+#endif */
   XtManageChild(notebook);
 
-#if XM_NOTEBOOK 
+/* #if XM_NOTEBOOK */ 
   n=0;
   XtSetArg(args[n],XmNnotebookChildType,XmPAGE_SCROLLER);n++;
   XtManageChild(XmCreateLabel(notebook,"",args,n));
-#endif  
+/* #endif */
 
   general=create_session_general(notebook);
   XtManageChild(general);
 
-#if XM_NOTEBOOK 
+/* #if XM_NOTEBOOK */ 
   n=0;
   XtSetArg(args[n],XmNnotebookChildType,XmMAJOR_TAB);n++;
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtManageChild(XmCreatePushButton(notebook,"General",args,n));
-#endif
+/* #endif */
 
   n=0;
   startup=create_session_startup(notebook);
   XtManageChild(startup);
 
-#if XM_NOTEBOOK 
+/* #if XM_NOTEBOOK */ 
   n=0;
   XtSetArg(args[n],XmNnotebookChildType,XmMAJOR_TAB);n++;
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtManageChild(XmCreatePushButton(notebook,"Startup",args,n));
-#endif
+/* #endif */
 
   n=0;
   advanced=create_session_advanced(notebook);
   XtManageChild(advanced);
 
-#if XM_NOTEBOOK 
+/* #if XM_NOTEBOOK */ 
   n=0;
   XtSetArg(args[n],XmNnotebookChildType,XmMAJOR_TAB);n++;
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtManageChild(XmCreatePushButton(notebook,"Advanced",args,n));
-#endif
+/* #endif */
 
 
   XtVaSetValues(actions,
@@ -382,9 +379,9 @@ Widget create_session_dialog(Widget parent){
       XmNtopAttachment,XmATTACH_FORM,
       XmNleftAttachment,XmATTACH_FORM,NULL);
 
-#if !XM_NOTEBOOK
+/* #if !XM_NOTEBOOK
   XmAxyNotebookSetCurrentPage(notebook,1,FALSE);
-#endif
+#endif */
   init_session_dialog(session);
   
   return session;
@@ -405,12 +402,12 @@ void set_profile_strings(Widget combo){
   while(top->next!=NULL){
     top=top->next;
     xms=XmStringCreateLocalized(top->profile);
-    DtComboBoxAddItem(combo,xms,0,FALSE);
+    XmComboBoxAddItem(combo,xms,0,FALSE);
     XmStringFree(xms);
   }
   XtVaGetValues(list,XmNitemCount,&i,NULL);
   if(i>MAX_VISIBLE_ITEMS)i=MAX_VISIBLE_ITEMS;
-  XtVaSetValues(combo,DtNvisibleItemCount,i>0?i:1,NULL);
+  XtVaSetValues(combo,XmNvisibleItemCount,i>0?i:1,NULL);
   XtVaSetValues(list,XmNvisibleItemCount,i>0?i:1,NULL);
 
 }
@@ -427,3 +424,4 @@ static void init_session_dialog(Widget dialog){
   empty_session_data(top);
   put_session_data(dialog,top,TRUE);
   destroy_session_data(top);
+}

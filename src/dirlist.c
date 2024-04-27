@@ -1,21 +1,21 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include<stdlib.h>
-#include<stdio.h>
-#include<time.h>
-#include<string.h>
-#include"axyftp.h"
-#include"utils.h"
-#include"functions.h"
-#include"little_dialogs.h"
-#include"dirinfo.h"
-#include"dirlist.h"
-#include"pixmaps.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <string.h>
+#include "axyftp.h"
+#include "utils.h"
+#include "functions.h"
+#include "little_dialogs.h"
+#include "dirinfo.h"
+#include "dirlist.h"
+#include "pixmaps.h"
 
 #define NUMFIELDS 5
 
-#include<Xm/Xm.h>
-#include<Xm/TextF.h>
-#include<XmAxy/List.h>
+#include <Xm/Xm.h>
+#include <Xm/TextF.h>
+#include <XmAxy/List.h>
 
 
 static void doubleclick_cb(Widget,XtPointer,XtPointer);

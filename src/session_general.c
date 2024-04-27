@@ -1,22 +1,22 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
 #include<string.h>
 
-#include"session_general.h"
-#include"session_dialog.h"
-#include"axyftp.h"
-#include"utils.h"
-#include"read_init.h"
+#include "session_general.h"
+#include "session_dialog.h"
+#include "axyftp.h"
+#include "utils.h"
+#include "read_init.h"
 
 #define MAXPASS 40
 
-#include<Xm/Xm.h>
-#include<Xm/Form.h>
-#include<Xm/PushB.h>
-#include<Xm/ToggleB.h>
-#include<Xm/TextF.h>
-#include<Xm/ComboBox.h>
-#include<Xm/Label.h>
-#include<Xm/List.h>
+#include <Xm/Xm.h>
+#include <Xm/Form.h>
+#include <Xm/PushB.h>
+#include <Xm/ToggleB.h>
+#include <Xm/TextF.h>
+#include <Xm/ComboBox.h>
+#include <Xm/Label.h>
+#include <Xm/List.h>
 
 static void password_cb(Widget,XtPointer,XtPointer);
 static void anon_cb(Widget,XtPointer,XtPointer);
@@ -24,12 +24,12 @@ static void listaction_cb(Widget,XtPointer,XtPointer);
 static void listselect_cb(Widget,XtPointer,XtPointer);
 
 static void listselect_cb(Widget w,XtPointer app,XtPointer call){
-  DtComboBoxCallbackStruct *cbs;
+  XmComboBoxCallbackStruct *cbs;
   int* pos;
   int num;
   Widget list;
 
-  cbs=(DtComboBoxCallbackStruct*)call;
+  cbs=(XmComboBoxCallbackStruct*)call;
   list=XtNameToWidget(w,"*List");
 
   if(XmListGetSelectedPos(list,&pos,&num)){
@@ -56,7 +56,7 @@ static void listaction_cb(Widget w,XtPointer app,XtPointer call){
       /*
       XmListGetSelectedPos(list,&poslist,&poscount);
       combo=XtNameToWidget(appdata.session,"*profile");
-      XtVaGetValues(combo,DtNselectedPosition,&i,NULL);
+      XtVaGetValues(combo,XmNselectedPosition,&i,NULL);
       printf("Selected positions after deselect: %d %d\n",poscount,i);
       */
       sd=create_session_data(NULL);
@@ -76,10 +76,10 @@ static void listaction_cb(Widget w,XtPointer app,XtPointer call){
 	set_profile_strings(combo);
 	/*
 	XtVaGetValues(list,XmNitemCount,&i,NULL);
-	DtComboBoxDeletePos(list,poslist[0]);
+	XmComboBoxDeletePos(list,poslist[0]);
 	i--;
 	if(i<=MAX_VISIBLE_ITEMS){
-	  XtVaSetValues(combo,DtNvisibleItemCount,i>0?i:1,NULL);
+	  XtVaSetValues(combo,XmNvisibleItemCount,i>0?i:1,NULL);
 	  XtVaSetValues(list,XmNvisibleItemCount,i>0?i:1,NULL);
 	}
 	*/
@@ -228,7 +228,7 @@ Widget create_session_general(Widget parent){
   XtVaSetValues(child,XmNbackground,white_pixel,NULL);
   */
   n=0;
-  XtSetArg(args[n],DtNcomboBoxType,DtDROP_DOWN_COMBO_BOX);n++;
+  XtSetArg(args[n],XmNcomboBoxType,XmDROP_DOWN_COMBO_BOX);n++;
   XtSetArg(args[n],XmNtopAttachment,XmATTACH_NONE);n++;
   XtSetArg(args[n],XmNbottomAttachment,XmATTACH_POSITION);n++;
   XtSetArg(args[n],XmNbottomPosition,100*1/XtNumber(label));n++;
@@ -237,9 +237,9 @@ Widget create_session_general(Widget parent){
   XtSetArg(args[n],XmNleftOffset,8);n++;
   XtSetArg(args[n],XmNleftAttachment,XmATTACH_POSITION);n++;
   XtSetArg(args[n],XmNleftPosition,30);n++;
-  current=DtCreateComboBox(general,"profile",args,n);
+  current=XmCreateComboBox(general,"profile",args,n);
   XtManageChild(current);
-  XtAddCallback(current,DtNselectionCallback,listselect_cb,NULL);
+  XtAddCallback(current,XmNselectionCallback,listselect_cb,NULL);
 
   child=XtNameToWidget(current,"*Text");
   n=0;

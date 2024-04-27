@@ -8,8 +8,8 @@
 #include <X11/Xlib.h>
 #include <X11/cursorfont.h>
 
-#include<XmAxy/ListP.h>
-#include<XmAxy/Util.h>
+#include "ListP.h"
+#include "Util.h"
 
 #include <Xm/XmP.h>
 #include <Xm/DrawP.h>

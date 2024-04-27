@@ -1,4 +1,4 @@
-#include<XmAxy/Util.h>
+#include "Util.h"
 
 void axyRectanglesIntersection(XRectangle* r1,XRectangle* r2,XRectangle* r){
   XRectangle t;

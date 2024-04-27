@@ -1,20 +1,20 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include<stdio.h>
-#include<signal.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <signal.h>
+#include <stdlib.h>
 
-#include"axyftp.h"
-#include"utils.h"
-#include"read_init.h"
-#include"functions.h"
-#include"pixmaps.h"
-#include"dialogs.h"
-#include"main_frame.h"
+#include "main_frame.h"
+#include "axyftp.h"
+#include "utils.h"
+#include "read_init.h"
+#include "functions.h"
+#include "pixmaps.h"
+#include "dialogs.h"
 
 struct _appstate appdata;
 
-#include<Xm/Xm.h>
-#include<Xm/TextF.h>
+#include <Xm/Xm.h>
+#include <Xm/TextF.h>
 
 void xtmesg(String name,String type,String class, String default_s, 
     String* param,Cardinal* num){

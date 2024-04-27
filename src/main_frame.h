@@ -4,9 +4,6 @@
 
 #include"axyftp.h"
 WXwidget create_main_frame(WXwidget);
-
-#ifdef BUILD_MOTIF
 int adjust_main_frame(WXwidget);
-#endif
 
 #endif /* MAIN_FRAME_H */

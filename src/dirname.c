@@ -1,17 +1,17 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include"axyftp.h"
-#include"utils.h"
-#include"functions.h"
-#include"little_dialogs.h"
-#include"dirname.h"
+#include "axyftp.h"
+#include "utils.h"
+#include "functions.h"
+#include "little_dialogs.h"
+#include "dirname.h"
 
 #define MAX_VISIBLE_ITEMS 10
 
-#include<Xm/Xm.h>
-#include<Xm/RowColumn.h>
-#include<Xm/ComboBox.h>
-#include<Xm/TextF.h>
-#include<Xm/List.h>
+#include <Xm/Xm.h>
+#include <Xm/RowColumn.h>
+#include <Xm/ComboBox.h>
+#include <Xm/TextF.h>
+#include <Xm/List.h>
 
 void clear_dirname(Widget w){
   Widget list,text;
@@ -48,7 +48,7 @@ void dirfield_cb(Widget w,XtPointer app,XtPointer call){
   text=w;
   do {
     combo=XtParent(w);
-  } while(!XtIsSubclass(combo,dtComboBoxWidgetClass));
+  } while(!XtIsSubclass(combo,xmComboBoxWidgetClass));
   list=XtNameToWidget(combo,"*List");
   /*XtVaGetValues(w,DtNlist,&list,DtNtextField,&text,NULL);*/
 
@@ -117,12 +117,12 @@ void dirfield_cb(Widget w,XtPointer app,XtPointer call){
 }
   
 void dirname_cb(Widget w,XtPointer app,XtPointer call){
-  DtComboBoxCallbackStruct *cbs;
+  XmComboBoxCallbackStruct *cbs;
   int which,ret;
   String s,mask;
   Widget text,list;
   /*XmString xms;*/
-  cbs=(DtComboBoxCallbackStruct*)call;
+  cbs=(XmComboBoxCallbackStruct*)call;
   which=(int)app;
   
 
@@ -213,11 +213,11 @@ void update_dirname(Widget combo,dirinfo *di){
     if(XmStringByteCompare(xmt[i],item))break;
   }
   if(i==count){
-    DtComboBoxAddItem(combo,item,1,FALSE);
+    XmComboBoxAddItem(combo,item,1,FALSE);
     /*XmListAddItemUnselected(list,item,1);*/
     count++;
     if(count<=MAX_VISIBLE_ITEMS){
-      XtVaSetValues(combo,DtNvisibleItemCount,count,NULL);
+      XtVaSetValues(combo,XmNvisibleItemCount,count,NULL);
       XtVaSetValues(list,XmNvisibleItemCount,count,NULL);
     }
   }
@@ -241,10 +241,10 @@ Widget create_dirname(Widget parent,int which){
   black_pixel=BlackPixelOfScreen(XtScreen(parent));
 
   n=0;
-  XtSetArg(args[n],DtNcomboBoxType,DtDROP_DOWN_COMBO_BOX);n++;
-  dirname=DtCreateComboBox(parent,"dirname",args,n);
+  XtSetArg(args[n],XmNcomboBoxType,XmDROP_DOWN_COMBO_BOX);n++;
+  dirname=XmCreateComboBox(parent,"dirname",args,n);
   XtManageChild(dirname);
-  XtAddCallback(dirname,DtNselectionCallback,dirname_cb,(XtPointer)which);
+  XtAddCallback(dirname,XmNselectionCallback,dirname_cb,(XtPointer)which);
 
   list=XtNameToWidget(dirname,"*List");
   text=XtNameToWidget(dirname,"*Text");

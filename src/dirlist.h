@@ -7,7 +7,7 @@
 
 WXwidget create_dirlist(WXwidget,int);
 void clear_dirlist(WXwidget);
-void update_dirlist(WXwidget,dirinfo*);
+void update_dirlist(Widget,dirinfo*);
 
 int* get_selected_rows(WXwidget);
 int get_selected_row(WXwidget);

@@ -1,73 +1,51 @@
 #MALLOC = -u malloc -lefence
 
-BUILD_TARGET = BUILD_GTK
-#BUILD_TARGET = BUILD_MOTIF
-
-AXYFTP_HELP_DIR = /ms/user/y/yalex/local/share/axyftp/help/
+AXYFTP_HELP_DIR = /usr/local/share/axyftp/help/
 
 MAKEDEPEND = gcc -M
 
-CC = gcc -Wall
-#CC= gcc  -Wimplicit-function-declaration -Wunused -Wswitch -Wcomment \
+CC = gcc -Wimplicit-function-declaration -Wunused -Wswitch -Wcomment \
          -Wtrigraphs -Wformat -Wchar-subscripts -Wparentheses 
 
 
-ifeq ($(BUILD_TARGET),BUILD_GTK)
-
-CFLAGS := -g -D$(BUILD_TARGET) -DAXYFTP_HELP_DIR=\"$(AXYFTP_HELP_DIR)\" \
-           `./old-new-gtk.sh` `gtk-config --cflags`
-LFLAGS := `gtk-config --libs` 
-
-else
 
 XMAXY_INCLUDE = -I../xmaxy
 XMAXY_LIB = ../xmaxy/XmAxy/libXmAxy.a
 
-DT_INCLUDE = -I../dtwidget
-#DT_INCLUDE = -I/usr/dt
+#DT_INCLUDE = -I../dtwidget
+DT_INCLUDE = -I/usr/dt
 
 #DT_LIB = ../dtwidget/Dt/libDtWidget.a
 DT_LIB = -L/usr/dt/lib -lDtWidget
 
-XPM_INCLUDE = -I/usr/X11R6/include
-#XPM_INCLUDE = -I/usr/include
-#XPM_INCLUDE = -I/ms/dist/aurora/PROJ/xpm/3.4j/include
+#XPM_INCLUDE = -I/usr/X11R6/include
+XPM_INCLUDE = -I/usr/include
 
-XPM_LIB = -L/usr/X11R6/lib -lXpm
-#XPM_LIB = -lXpm
-#XPM_LIB = -L/ms/dist/aurora/PROJ/xpm/3.4j/lib -lXpm
+#XPM_LIB = -L/usr/X11R6/lib -lXpm
+XPM_LIB = -lXpm
 
 OTHER_LIB = 
 #OTHER_LIB = -lsocket
 #OTHER_LIB = -lsocket -lnsl
 
-MOTIF_INCLUDE=-I/opt/motif12/include
-#MOTIF_INCLUDE=-I/opt/lesstif/include
-#MOTIF_INCLUDE=-I/usr/include
+MOTIF_INCLUDE=-I/usr/include/Xm
 #MOTIF_INCLUDE=-I/usr/dt/include
 
-MOTIF_LIB=-L/opt/motif12/lib -lXm
-#MOTIF_LIB=-L/opt/lesstif/lib -lXm
-#MOTIF_LIB=-L/usr/lib -lXm
+MOTIF_LIB= -lXm
 #MOTIF_LIB=-L/usr/dt/lib -lXm
 
 #MOTIF_LIB_STATIC = -L/opt/motif12/lib -Wl,-Bstatic -lXm -Wl,-Bdynamic
 #MOTIF_LIB_STATIC = -L/usr/dt/lib -Wl,-Bstatic -lXm -Wl,-Bdynamic
 
-X_INCLUDE=-I/usr/X11R6/include
-#X_INCLUDE=-I/usr/include
-#X_INCLUDE=-I/usr/openwin/include
+X_INCLUDE=-I/usr/include/X11
 
-X_LIB=-L/usr/X11R6/lib -lXt -lX11
-#X_LIB=-L/usr/lib -lXt -lX11 
-#X_LIB=-L/usr/openwin/lib -lXt -lX11 
+X_LIB=-L/usr/lib/x86_64-linux-gnu -lXt -lX11
 
 
-CFLAGS = -g -D$(BUILD_TARGET) $(XMAXY_INCLUDE) $(DT_INCLUDE) \
+CFLAGS = -O2 -g -D$(BUILD_TARGET) $(XMAXY_INCLUDE) $(DT_INCLUDE) \
          $(MOTIF_INCLUDE) $(X_INCLUDE) $(XPM_INCLUDE) \
 	 -DAXYFTP_HELP_DIR=\"$(AXYFTP_HELP_DIR)\"
 
-endif
 
 OBJECTS = axyftp.o main_frame.o buttonbar.o arrows.o status.o proto.o panel.o \
           buttons.o dirname.o dirlist.o session_data.o ftp.o utils.o \
@@ -98,28 +76,12 @@ HEADERS = axyftp.h main_frame.h buttonbar.h arrows.h status.h proto.h proto.h \
 	  options_display.h options_sound.h options_data.h multi.h \
 	  options_advanced.h
 
-ifeq ($(BUILD_TARGET),BUILD_GTK)
 
-all:		gtk-axyftp
-
-else
-
-all:		dmotif-axyftp
-
-endif
-
-gtk-axyftp:	$(OBJECTS)
-		$(CC) -o gtk-axyftp $(OBJECTS) $(LFLAGS) $(MALLOC)
-
-dmotif-axyftp:	$(OBJECTS) 
-		$(CC) -o dmotif-axyftp $(OBJECTS) $(XMAXY_LIB) $(DT_LIB) \
+all:	$(OBJECTS) 
+		$(CC) -o axyftp $(OBJECTS) $(XMAXY_LIB) $(DT_LIB) \
 		$(MOTIF_LIB) $(X_LIB) $(XPM_LIB) \
 		$(OTHER_LIB) $(MALLOC)
 
-smotif-axyftp:	$(OBJECTS)
-		$(CC) -o smotif-axyftp $(OBJECTS) $(XMAXY_LIB) $(DT_LIB) \
-		$(MOTIF_LIB_STATIC) $(X_LIB) $(XPM_LIB) \
-		$(OTHER_LIB) $(MALLOC)
 
 depend:		$(SOURCES) $(HEADERS)
 		$(MAKEDEPEND) $(CFLAGS) $(SOURCES) >depend.rules
@@ -129,7 +91,7 @@ clean:
 		rm -f *~ *.o *.bak core
 
 distclean:	clean 
-		rm -f depend.rules gtk-axyftp dmotif-axyftp smotif-axyftp
+		rm -f depend.rules axyftp
 		touch depend.rules
 
 include depend.rules

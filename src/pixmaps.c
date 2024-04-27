@@ -1,13 +1,12 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include"axyftp.h"
-#include"pixmaps.h"
+#include "axyftp.h"
+#include "pixmaps.h"
 
-#include<photo16.xpm>
-
-#include<up.xpm>
-#include<folder.xpm>
-#include<doc.xpm>
-#include<link.xpm>
+#include "xpms/photo16.xpm"
+#include "xpms/up.xpm"
+#include "xpms/folder.xpm"
+#include "xpms/doc.xpm"
+#include "xpms/link.xpm"
 
 Pixmap pixmap[NUMTYPES];
 Pixmap mask[NUMTYPES];
