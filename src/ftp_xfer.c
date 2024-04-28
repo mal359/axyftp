@@ -15,14 +15,10 @@
 
 
 static volatile sig_atomic_t interrupt;
-static pthread_mutex_t interrupt_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t buffer_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 static void handler(int sig) {
     (void)sig;
-    pthread_mutex_lock(&interrupt_mutex);
     interrupt = 1;
-    pthread_mutex_unlock(&interrupt_mutex);
 }
 
 static int remove_cr(char* buf,int len){
@@ -59,14 +55,10 @@ int ftp_xfer_get(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
     seltime.tv_sec=0;
     seltime.tv_usec=100000;
     
-    pthread_mutex_lock(&interrupt_mutex);
     int intr = interrupt;
-    pthread_mutex_unlock(&interrupt_mutex);
     
     if (intr) {
-      pthread_mutex_lock(&buffer_mutex);
       free(buf);
-      pthread_mutex_unlock(&buffer_mutex);
       return 1;
       
     }
@@ -82,9 +74,7 @@ int ftp_xfer_get(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
 	return -1;
       }
     } else {
-        pthread_mutex_lock(&buffer_mutex);
         retval = read(remote, buf, 1024);
-        pthread_mutex_unlock(&buffer_mutex); 
 	
 	if (retval < 0) {
           free(buf);
@@ -96,9 +86,7 @@ int ftp_xfer_get(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
         }
 	
         if(mode=='A' || mode=='a' || mode=='T' || mode=='t'){
-          pthread_mutex_lock(&buffer_mutex);
 	  retval=remove_cr(buf,retval);
-	  pthread_mutex_unlock(&buffer_mutex);
       }
       
       if(write(local,buf,retval)<0){
@@ -110,9 +98,7 @@ int ftp_xfer_get(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
 	return -1;
       }
       
-      pthread_mutex_lock(&interrupt_mutex);
       int intr = interrupt;
-      pthread_mutex_unlock(&interrupt_mutex);
       if (intr) {
         free(buf);
         return 1;
@@ -128,16 +114,12 @@ int ftp_xfer_put(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
   int retval,len;
 
   signal(SIGPIPE,handler);
-  pthread_mutex_lock(&interrupt_mutex);
   interrupt=0;
-  pthread_mutex_unlock(&interrupt_mutex);
 
   for(;;){
     if((len=read(local,buf,
 	(mode=='A' || mode=='a' || mode=='T' || mode=='t')?512:1024))<0){
-	pthread_mutex_lock(&interrupt_mutex);
 	int intr = interrupt;
-        pthread_mutex_unlock(&interrupt_mutex);
         free(buf);
 	if (intr) return 1;
         return -1;
@@ -157,26 +139,20 @@ int ftp_xfer_put(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
       seltime.tv_usec=100000;
       retval=select(remote+1,NULL,&selset,NULL,&seltime);
       if(retval<0){
-	pthread_mutex_lock(&interrupt_mutex);
         int intr = interrupt;
-        pthread_mutex_unlock(&interrupt_mutex);
         free(buf);
 	if (intr) return 1;
         return -1;
       }
       if(retval==0){
-	pthread_mutex_lock(&interrupt_mutex);
         int intr = interrupt;
-        pthread_mutex_unlock(&interrupt_mutex);
         if (proc && (*proc)(0, arg)) {
 	  free(buf);
 	  return -1;
 	}
       } else {
 	if(write(remote,buf,len)<0){
-	  pthread_mutex_lock(&interrupt_mutex);
           int intr = interrupt;
-          pthread_mutex_unlock(&interrupt_mutex);
 	  free(buf);
           if (intr) return 1;
           return -1;
@@ -185,9 +161,7 @@ int ftp_xfer_put(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
 	  free(buf);
 	  return -1;
 	}
-        pthread_mutex_lock(&interrupt_mutex);
         int intr = interrupt;
-        pthread_mutex_unlock(&interrupt_mutex);
         if (intr) {
 	  free(buf);
 	  return 1;

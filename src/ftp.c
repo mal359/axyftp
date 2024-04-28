@@ -355,18 +355,13 @@ int ftp_read_response(connect_data* cd,FILE* log,ftp_check_proc proc){
   for(;;){
     r=ftp_read_line(&p,cd,proc);
     cd->lastline=p;
-    
-    pthread_mutex_lock(&ftp_mutex);
-    
+        
     if(log) {
       if (fputs(p, log) == EOF || fputc('\n', log) == EOF) {
-        pthread_mutex_unlock(&ftp_mutex);
 	return EOF;
       }
     }
-    
-    pthread_mutex_unlock(&ftp_mutex);
-    
+        
     if(r){
       return r;
     }
@@ -461,6 +456,7 @@ struct in_addr* ftp_gethosts(char* host,ftp_check_proc proc){
 	pt=buf=(struct in_addr*)malloc((num+1)*sizeof(struct in_addr));
 	while(num){
 	  if(read(fd[0],pt,sizeof(struct in_addr))<=0 || interrupt){
+	    free(buf);
 	    close(fd[0]);
 	    signal(SIGPIPE,SIG_IGN);
 	    kill(child,SIGKILL);

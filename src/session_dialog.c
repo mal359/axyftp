@@ -31,9 +31,6 @@ static void time_to_retry(int sig){
 #include <Xm/Label.h>
 #include <Xm/List.h>
 #include <Xm/Notebook.h>
-/* #else
-#include<XmAxy/Notebook.h>
-#endif */
 
 static void init_session_dialog(Widget);
 static void action_cb(Widget,XtPointer,XtPointer);
@@ -57,7 +54,7 @@ static void request_connection(){
     start_session(appdata.sdata,mask);
     if(appdata.connected){
       XmString l;
-      l=XmStringCreateLocalized("disconnect");
+      l=XmStringCreateLocalized("Disconnect");
       XtVaSetValues(appdata.conbutton,XmNlabelString,l,NULL);
       XmStringFree(l);
       signal(SIGALRM,SIG_IGN);

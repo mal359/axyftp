@@ -58,7 +58,7 @@ static void reconnect_cb(Widget w,XtPointer app,XtPointer call){
       start_session(appdata.sdata,mask);
       if(appdata.connected){
 	XmString l;
-	l=XmStringCreateLocalized("disconnect");
+	l=XmStringCreateLocalized("Disconnect");
 	XtVaSetValues(appdata.conbutton,XmNlabelString,l,NULL);
 	XmStringFree(l);
 	signal(SIGALRM,SIG_IGN);
