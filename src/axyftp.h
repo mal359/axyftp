@@ -6,6 +6,9 @@
 #define AXYFTP_MINOR 5
 #define AXYFTP_MICRO 1
 
+##Going to eventually move to a config.h ##
+#define USE_JEMALLOC 1
+
 #define LOCAL 1
 #define REMOTE 2
 

@@ -3,6 +3,9 @@
 #include <string.h>
 #include <signal.h>
 #include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>

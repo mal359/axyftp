@@ -1,6 +1,9 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
 #include <unistd.h>
 #include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 
 #include "axyftp.h"
 #include "utils.h"

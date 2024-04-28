@@ -1,6 +1,9 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
 #include <stdio.h>
 #include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 
 #include "axyftp.h"
 #include "utils.h"
@@ -88,7 +91,7 @@ void download_cb(Widget w,XtPointer app,XtPointer call){
       ret=download_file(selrow,get_proto_state(appdata.proto));
       mask=XmTextFieldGetString(appdata.local.text);
       if(!ret)update_local(mask);
-      XtFree(mask);
+      free(mask);
       busy_cursor(False);
       appdata.job=0;
       return;

@@ -1,6 +1,9 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
 #include<string.h>
 #include<stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 #include<unistd.h>
 #include<stdio.h>
 #include<ctype.h>

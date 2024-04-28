@@ -1,10 +1,14 @@
 /* Copyright (c) 1998,1999   Alexander Yukhimets. All rights reserved. */
-#include <stdio.h>
+#include <stdio.h> 
 #include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 #include <unistd.h>
 #include <errno.h>
 #include <sys/stat.h>
 #include <setjmp.h>
+
 
 #include "multi.h"
 

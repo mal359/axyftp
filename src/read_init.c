@@ -3,6 +3,9 @@
 
 #include<stdio.h>
 #include<stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 #include<unistd.h>
 #include<fcntl.h>
 #include<sys/stat.h>
