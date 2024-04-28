@@ -1,16 +1,17 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include<stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include"axyftp.h"
-#include"multi.h"
-#include"utils.h"
-#include"pixmaps.h"
-#include"functions.h"
+#include "axyftp.h"
+#include "multi.h"
+#include "utils.h"
+#include "pixmaps.h"
+#include "functions.h"
 
-#include<Xm/Xm.h>
-#include<Xm/TextF.h>
-#include<Xm/SelectioB.h>
-#include<Xm/MessageB.h>
+#include <Xm/Xm.h>
+#include <Xm/TextF.h>
+#include <Xm/SelectioB.h>
+#include <Xm/MessageB.h>
 
 static void help_cb(Widget w,XtPointer app,XtPointer call){
   show_help((int)app);

@@ -1,20 +1,21 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include<unistd.h>
+#include <unistd.h>
+#include <stdlib.h>
 
-#include"axyftp.h"
-#include"utils.h"
-#include"multi.h"
-#include"buttons.h"
-#include"dirlist.h"
-#include"functions.h"
-#include"little_dialogs.h"
-#include"prompt_dialogs.h"
+#include "axyftp.h"
+#include "utils.h"
+#include "multi.h"
+#include "buttons.h"
+#include "dirlist.h"
+#include "functions.h"
+#include "little_dialogs.h"
+#include "prompt_dialogs.h"
 
-#include<Xm/Screen.h>
-#include<Xm/Xm.h>
-#include<Xm/PushB.h>
-#include<Xm/Form.h>
-#include<Xm/TextF.h>
+#include <Xm/Screen.h>
+#include <Xm/Xm.h>
+#include <Xm/PushB.h>
+#include <Xm/Form.h>
+#include <Xm/TextF.h>
 
 
 static void chgdir_cb(Widget,XtPointer,XtPointer);

@@ -1,19 +1,20 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include<stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-#include"axyftp.h"
-#include"utils.h"
-#include"multi.h"
-#include"functions.h"
-#include"dirlist.h"
-#include"arrows.h"
-#include"proto.h"
-#include"little_dialogs.h"
+#include "axyftp.h"
+#include "utils.h"
+#include "multi.h"
+#include "functions.h"
+#include "dirlist.h"
+#include "arrows.h"
+#include "proto.h"
+#include "little_dialogs.h"
 
-#include<Xm/Xm.h>
-#include<Xm/Form.h>
-#include<Xm/PushB.h>
-#include<Xm/TextF.h>
+#include <Xm/Xm.h>
+#include <Xm/Form.h>
+#include <Xm/PushB.h>
+#include <Xm/TextF.h>
 
 void download_cb(Widget,XtPointer,XtPointer);
 void upload_cb(Widget,XtPointer,XtPointer);
