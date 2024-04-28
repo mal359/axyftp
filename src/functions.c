@@ -1,29 +1,35 @@
 /* Copyright (c) 1998,1999   Alexander Yukhimets. All rights reserved. */
-#include<stdio.h>
-#include<string.h>
-#include<stdlib.h>
-#include<unistd.h>
-#include<time.h>
-#include<ctype.h>
-#include<sys/types.h>
-#include<sys/stat.h>
-#include<fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <time.h>
+#include <ctype.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <pthread.h>
 
-#include"utils.h"
-#include"multi.h"
-#include"ftp.h"
-#include"ftp_xfer.h"
-#include"axyftp.h"
-#include"status.h"
-#include"read_init.h"
-#include"dirinfo.h"
-#include"dirlist.h"
-#include"dirname.h"
-#include"progress_dialog.h"
-#include"little_dialogs.h"
-#include"viewer.h"
-#include"prompt_dialogs.h"
-#include"functions.h"
+#include "utils.h"
+#include "multi.h"
+#include "ftp.h"
+#include "ftp_xfer.h"
+#include "axyftp.h"
+#include "status.h"
+#include "read_init.h"
+#include "dirinfo.h"
+#include "dirlist.h"
+#include "dirname.h"
+#include "progress_dialog.h"
+#include "little_dialogs.h"
+#include "viewer.h"
+#include "prompt_dialogs.h"
+#include "functions.h"
+
+pthread_mutex_t appdata_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t appdata.progress_mutex = PTHREAD_MUTEX_INITIALIZER
+pthread_mutex_t download_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t rename_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 int show_help(int num){
 #ifdef AXYFTP_HELP_DIR
@@ -130,8 +136,16 @@ int rename_local(char* from,char* to){
 }
 
 int rename_remote(char* from,char* to){
+  pthread_mutex_lock(&rename_mutex);
+  
   int ret;
+  
+  pthread_mutex_lock(&appdata_mutex);
+  
   ret=ftp_rename(from,to,&appdata.connect,logfile,check_for_interrupt);
+  
+  pthread_mutex_unlock(&appdata_mutex);
+  
   if(ret==10){
     append_status("CONNECTION LOST\n");
     appdata.connected=0;
@@ -139,6 +153,8 @@ int rename_remote(char* from,char* to){
   } else {
     append_status(appdata.connect.lastline);
   }
+  
+  pthread_mutex_unlock(&rename_mutex);
   return ret;
 }
 
@@ -483,25 +499,34 @@ int upload_file(fileinfo* fi,char type){
 }
 
 int download_file(fileinfo* volatile fi,char volatile type){
-  volatile int ret;
-  volatile int lfd;
-  volatile struct _file_progress_data fpd;
+  pthread_mutex_t download_mutex = PTHREAD_MUTEX_INITIALIZER;
+  
+  int ret;
+  int lfd;
+  struct _file_progress_data fpd;
   struct stat statbuf;
   long size;
   int show_progress;
 
   if(!type)type='I';
+  
+  pthread_mutex_lock(&appdata_mutex);
 
   ftp_size(&size,type,fi->name,&appdata.connect,logfile,
       check_for_small_interrupt);
   if(size<=0){
     size=fi->size;
   }
+  
+  pthread_mutex_unlock(&appdata_mutex);
 
   ret=1;
   if(!stat(fi->name,&statbuf)){
     volatile long save_size=size;
-    if(S_ISDIR(statbuf.st_mode))return 1;
+    if(S_ISDIR(statbuf.st_mode)) {
+      pthread_mutex_unlock(&download_mutex);
+      return 1;
+    }
     if(!(ret=sigsetjmp(jmp_down_env,1))){
       (void)init_xfer_dialog(appdata.xfer_dialog,fi->name);
       LOOP();
@@ -517,6 +542,7 @@ int download_file(fileinfo* volatile fi,char volatile type){
       sprintf(b,"Cannot open local file %s\n",fi->name);
       append_status(b);
       WXfree(b);
+      pthread_mutex_unlock(&download_mutex);
       return 2;
     }
     ret=ftp_get(type,fi->name,&appdata.connect,logfile,
@@ -529,6 +555,7 @@ int download_file(fileinfo* volatile fi,char volatile type){
       sprintf(b,"Cannot open local file %s\n",fi->name);
       append_status(b);
       WXfree(b);
+      pthread_mutex_unlock(&download_mutex);
       return 2;
     }
     ret=ftp_resume(type,statbuf.st_size,fi->name,&appdata.connect,logfile,
@@ -536,16 +563,24 @@ int download_file(fileinfo* volatile fi,char volatile type){
     fpd.totalsize=size-statbuf.st_size;
     if(fpd.totalsize<0)fpd.totalsize=0;
   } else if(ret==3){
+    pthread_mutex_unlock(&download_mutex);
     return 0;
   }
 
   if(ret==10){
+    pthread_mutex_unlock(&download_mutex);
     return 10;
   } else {
     append_status(appdata.connect.lastline);
   }
-  if(ret)return 4;
-  if(appdata.connect.lastline[0]!='1')return 5;
+  if(ret) {
+    pthread_mutex_unlock(&download_mutex);
+    return 4;
+  }
+  if(appdata.connect.lastline[0]!='1') {
+    pthread_mutex_unlock(&download_mutex);
+    return 5;
+  }
 
   show_progress=0;
   if(appdata.odata->show_progress){
@@ -553,13 +588,17 @@ int download_file(fileinfo* volatile fi,char volatile type){
     tres=atoi(appdata.odata->progress_treshold);
     if(tres<0)tres=0;
     if(size/1024>=tres || (fi->perms[0] == 'l' && size==fi->size)){
-
+      
+      pthread_mutex_lock(&appdata.progress_mutex);
+      
       /*progress=create_progress_dialog(toplevel);*/
       if(!appdata.progress_shown){
 	show_progress_dialog(appdata.progress);
 	appdata.progress_shown=1;
       }
       init_progress_dialog(appdata.progress,fi->name,size);
+      
+      pthread_mutex_unlock(&appdata.progress_mutex);
 
       process_events();
 
@@ -583,7 +622,9 @@ int download_file(fileinfo* volatile fi,char volatile type){
 
   close(lfd);
   if(show_progress){
+    pthread_mutex_lock(&appdata.progress_mutex);
     init_progress_dialog(appdata.progress,"",0);
+    pthread_mutex_unlock(&appdata.progress_mutex);
   }
   if(appdata.odata->xferbeep)beep();
   if(ret==-1){
@@ -601,6 +642,8 @@ int download_file(fileinfo* volatile fi,char volatile type){
       append_status(appdata.connect.lastline);
     }
   }
+  
+  pthread_mutex_unlock(&download_mutex);
   return 0;
 }
 
@@ -656,6 +699,8 @@ void start_session(session_data* sd,char* mask){
   int good;
   char* p;
   char* cmd;
+  
+  pthread_mutex_lock(&appdata_mutex);
 
   if(check_for_interrupt())return;
 
@@ -714,18 +759,29 @@ void start_session(session_data* sd,char* mask){
     }
   }
   update_remote(mask);
+  
+  pthread_mutex_unlock(&appdata_mutex);
 }
 
 int update_remote(char* mask){
   dirinfo *di;
+  
+  pthread_mutex_lock(&appdata_mutex);
 
   di=create_remote_dirinfo(mask);
   
-  if(di==NULL)return 1;
+  if(di==NULL) {
+    pthread_mutex_lock(&appdata_mutex);
+    return 1;
+  }
+  
   destroy_dirinfo(appdata.remote.list);
   appdata.remote.list=di;
   update_dirname(appdata.remote.combo,appdata.remote.list);
   update_dirlist(appdata.remote.table,appdata.remote.list);
+  
+  pthread_mutex_unlock(&appdata_mutex);
+
   return 0;
 }
 
@@ -739,7 +795,6 @@ int update_local(char* mask){
 
   update_dirname(appdata.local.combo,appdata.local.list);
   update_dirlist(appdata.local.table,appdata.local.list);
-
 
   return 0;
 }

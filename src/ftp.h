@@ -2,10 +2,14 @@
 #ifndef FTP_H
 #define FTP_H
 
-#include<stdio.h>
-#include<sys/types.h>
-#include<sys/socket.h>
-#include<netinet/in.h>
+#include <stdio.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <pthread.h>
+
+#define FTP_LOCK pthread_mutex_lock(&ftp_mutex)
+#define FTP_UNLOCK pthread_mutex_unlock(&ftp_mutex)
 
 typedef struct _connect_data {
   /* control connection */

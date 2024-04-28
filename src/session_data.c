@@ -2,14 +2,18 @@
 #include"utils.h"
 #include"read_init.h"
 
-#include<stdio.h>
-#include<string.h>
-#include<unistd.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <pthread.h>
 
+static pthread_mutex_t global_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t sd_ver_list_mutex = PTHREAD_MUTEX_INITIALIZER;
+static pthread_mutex_t file_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #include"session_data.h"
 #define SD_BUFSIZ 256
@@ -34,11 +38,13 @@ static int read_session_data_entry_0(int,session_data*);
 static int read_session_data_entry_1(int,session_data*);
 
 static void init_ver_list(){
+  pthread_mutex_lock(&sd_ver_list_mutex);
   sd_ver_list[0].readfunc=read_session_data_entry_0;
   sd_ver_list[1].readfunc=read_session_data_entry_1;
 
   last_ver=1;
   init_done=1;
+  pthread_mutex_unlock(&sd_ver_list_mutex);
 }
 
 static char rotate(char in){
@@ -328,14 +334,15 @@ static int read_session_data_entry_1(int fd,session_data* top){
 
 static int find_ver_index(char* buf,char* file){
   int index;
-
+  
+  pthread_mutex_lock(&sd_ver_list_mutex);
   if(!init_done)init_ver_list();
 
   for(index=0;sd_ver_list[index].ver!=NULL;index++){
     if(memcmp(buf,sd_ver_list[index].ver,SESSION_DATA_VERSION_LENGTH+1)==0)
       break;
   }
-  
+  pthread_mutex_unlock(&sd_ver_list_mutex);
 
   if(index!=last_ver){
     char* command;
@@ -355,9 +362,11 @@ int read_session_data(char* file,session_data* top){
   int fd,len;
   char buf[4];
   int index=-1;
-
+  
+  pthread_mutex_lock(&file_mutex);
   if((fd=open(file,O_RDONLY))<0){
     fprintf(stderr,"Cannot open session data file %s for reading\n",file);
+    pthread_mutex_unlock(&file_mutex);
     return 1;
   }
 
@@ -365,8 +374,13 @@ int read_session_data(char* file,session_data* top){
       < SESSION_DATA_VERSION_LENGTH+1){
     fprintf(stderr,"Cannot read the version of session data file %s\n",file);
     close(fd);
+    pthread_mutex_unlock(&file_mutex);
     return 2;
   }
+  
+  pthread_mutex_unlock(&file_mutex);
+  index = find_ver_index(buf, file);
+  pthread_mutex_lock(&file_mutex);
 
   if((index=find_ver_index(buf,file))==-1){
     fprintf(stderr,"Unknown version of session data file %s\n",file);
@@ -382,9 +396,11 @@ int read_session_data(char* file,session_data* top){
 
 int write_session_data(char* file,session_data* top){
   int fd;
-
+  
+  pthread_mutex_lock(&file_mutex);
   if((fd=open(file,O_WRONLY|O_CREAT|O_TRUNC,0600))<0){
     fprintf(stderr,"Cannot open session data file %s for writing\n",file);
+    pthread_mutex_unlock(&file_mutex);
     return 1;
   }
 
@@ -392,8 +408,11 @@ int write_session_data(char* file,session_data* top){
   if(write(fd,sd_ver_list[last_ver].ver,SESSION_DATA_VERSION_LENGTH+1)<0){
     fprintf(stderr,"Cannot write to session data file %s\n",file);
     close(fd);
+    pthread_mutex_unlock(&file_mutex);
     return 2;
   }
+  
+  pthread_mutex_unlock(&file_mutex);
 
   while(top->next!=NULL){
     top=top->next;

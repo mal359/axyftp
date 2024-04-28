@@ -1,24 +1,25 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
 #include"utils.h"
 
-#include<string.h>
-#include<signal.h>
-#include<ctype.h>
-#include<stdio.h>
-#include<unistd.h>
-#include<stdlib.h>
-#include<fcntl.h>
-#include<errno.h>
+#include <string.h>
+#include <signal.h>
+#include <ctype.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <errno.h>
+#include <pthread.h>
 
-#include<netdb.h>
-#include<sys/types.h>
-#include<sys/time.h>
-#include<sys/stat.h>
-#include<sys/socket.h>
-#include<netinet/in.h>
-#include<arpa/inet.h>
-#include<arpa/ftp.h>
-#include<arpa/telnet.h>
+#include <netdb.h>
+#include <sys/types.h>
+#include <sys/time.h>
+#include <sys/stat.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <arpa/ftp.h>
+#include <arpa/telnet.h>
 
 extern int h_errno;
 
@@ -26,6 +27,8 @@ extern int h_errno;
 
 #define FTP_MIN_BUF 256
 static int interrupt;
+
+pthread_mutex_t ftp_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void handler(int sig){
   interrupt=sig;
@@ -212,31 +215,39 @@ int ftp_disconnect(connect_data* cd,FILE* log,ftp_check_proc proc){
 
 int ftp_command(char* cmd,connect_data* cd,FILE* log,ftp_check_proc proc){
   signal(SIGPIPE,handler);
+  pthread_mutex_lock(&ftp_mutex);
+  
   if(log)fputs(cmd,log);
+  
+  int ret = 0;
   if(write(cd->ctrl,cmd,strlen(cmd))<=0 || interrupt){
-    signal(SIGPIPE,SIG_IGN);
-    interrupt=0;
-    return 10;
+    ret = 10;
+    signal(SIGPIPE, SIG_IGN);
+    interrupt = 0;
   }
-  if(proc && (*proc)()){
-    signal(SIGPIPE,SIG_IGN);
-    interrupt=0;
-    return -1;
+  else if(proc && (*proc)()){
+    ret = -1;
+    signal(SIGPIPE, SIG_IGN);
+    interrupt = 0;
   }
-  return ftp_read_response(cd,log,proc);
+  else ret = ftp_read_response(cd, log, proc);
+  
+  pthread_mutex_unlock(&ftp_mutex);
+  
+  return ret;
 }
 
 int ftp_read_line(char** retbuf,connect_data* cd,ftp_check_proc proc){
-  static char* buf=NULL;
-  static int allocated=0;
-  int total;
+  char* buf=NULL;
+  int allocated=FTP_MIN_BUF;
+  int total = 0;
   char iac[4];
   fd_set selset;
   struct timeval seltime;
   int retval;
   int gotI,gotW,gotD;
   
-  if(buf==NULL)buf=WXmalloc(allocated=FTP_MIN_BUF);
+  buf = (char*)malloc(allocated * sizeof(char));
   
   signal(SIGPIPE,handler);
   interrupt=0;
@@ -320,7 +331,7 @@ NORMAL_CHAR:
           default:
 	    total++;
 	    if(allocated-total<3){
-	      *retbuf=buf=WXrealloc(buf,allocated+=FTP_MIN_BUF);
+	      *retbuf=buf=WXrealloc(buf,allocated+FTP_MIN_BUF);
 	    }
 	    break;
 	}
@@ -328,9 +339,6 @@ NORMAL_CHAR:
     }
   }
 }
-
-
-  
 
 int ftp_read_response(connect_data* cd,FILE* log,ftp_check_proc proc){
   int r,len;
@@ -343,17 +351,31 @@ int ftp_read_response(connect_data* cd,FILE* log,ftp_check_proc proc){
   for(;;){
     r=ftp_read_line(&p,cd,proc);
     cd->lastline=p;
-    if(log)fputs(p,log);
+    
+    pthread_mutex_lock(&ftp_mutex);
+    
+    if(log) {
+      if (fputs(p, log) == EOF || fputc('\n', log) == EOF) {
+        pthread_mutex_unlock(&ftp_mutex);
+	return EOF;
+      }
+    }
+    
+    pthread_mutex_unlock(&ftp_mutex);
+    
     if(r){
-      if(log)fputc('\n',log);
       return r;
     }
     len=strlen(p);
+    
     if(first){
-      if(len<4)return 2;
+      if(len<4) {
+        return 2;
+      }
       if(p[3]=='-'){
 	strncpy(code,p,3);
 	code[3]=' ';
+	code[4] = '\0';
 	first=0;
       } else {
 	return 0;
@@ -831,13 +853,17 @@ int ftp_sendport_connect(connect_data* cd,FILE* log,ftp_check_proc proc){
   int on,fd;
 
   on=sizeof(struct sockaddr); 
+  
+  pthread_mutex_lock(&ftp_mutex);
 
   if((fd=accept(cd->data,(struct sockaddr*)&cd->daddr,&on))<0){ 
-      fprintf(log,"%s\n",strerror(errno));
+      pthread_mutex_unlock(&data_mutex);
+      if(log) fprintf(log,"%s\n",strerror(errno));
     return 1;
   }
   close(cd->data);
   cd->data=fd;
+  pthread_mutex_unlock(&data_mutex);
   return 0;
 }
 
