@@ -41,49 +41,49 @@ int read_init(){
     return 1;
   }
 
-  initdir=WXmalloc(strlen(home)+strlen(INIT_DIR)+2);
+  initdir=malloc(strlen(home)+strlen(INIT_DIR)+2);
   sprintf(initdir,"%s/%s",home,INIT_DIR);
 
-  oldinitdir=WXmalloc(strlen(home)+strlen(INIT_DIR)+2);
+  oldinitdir=malloc(strlen(home)+strlen(INIT_DIR)+2);
   sprintf(oldinitdir,"%s/%s",home,OLD_INIT_DIR);
 
   if(!stat(oldinitdir,&statbuf) && stat(initdir,&statbuf)){
     rename(oldinitdir,initdir);
   }
-  WXfree(oldinitdir);
+  free(oldinitdir);
 
   if(stat(initdir,&statbuf)){
     if(mkdir(initdir,0755)){
       fprintf(stderr,"Cannot create init directory %s\n",initdir);
-      WXfree(initdir);
+      free(initdir);
       session_file=NULL;
       return 2;
     }
   } else {
     if(!S_ISDIR(statbuf.st_mode)){
       fprintf(stderr,"%s is not a directory! Please fix it.\n",initdir);
-      WXfree(initdir);
+      free(initdir);
       session_file=NULL;
       return 3;
     }
   }
 
-  log_file=WXmalloc(strlen(initdir)+strlen(LOG_FILE)+2);
+  log_file=malloc(strlen(initdir)+strlen(LOG_FILE)+2);
   sprintf(log_file,"%s/%s",initdir,LOG_FILE);
   if(!stat(log_file,&statbuf) && statbuf.st_size){
-    buf=WXmalloc(strlen(log_file)+6);
+    buf=malloc(strlen(log_file)+6);
     sprintf(buf,"%s.last",log_file);
     (void)rename(log_file,buf);
-    WXfree(buf);
+    free(buf);
   }
   if((logfile=fopen(log_file,"w"))==NULL){
     fprintf(stderr,"Cannot open log file %s for writing\n",log_file);
   }
 
-  session_file=WXmalloc(strlen(initdir)+strlen(SESSION_FILE)+2);
+  session_file=malloc(strlen(initdir)+strlen(SESSION_FILE)+2);
   sprintf(session_file,"%s/%s",initdir,SESSION_FILE);
   appdata.sdata=create_session_data(NULL);
-  options_file=WXmalloc(strlen(initdir)+strlen(OPTIONS_FILE)+2);
+  options_file=malloc(strlen(initdir)+strlen(OPTIONS_FILE)+2);
   sprintf(options_file,"%s/%s",initdir,OPTIONS_FILE);
   
   switch(read_options_data(options_file,&appdata.odata)){
@@ -92,10 +92,10 @@ int read_init(){
     case 3:
       appdata.odata=create_options_data(NULL);
       empty_options_data(appdata.odata);
-      buf=WXmalloc(strlen(options_file)+10);
+      buf=malloc(strlen(options_file)+10);
       sprintf(buf,"%s.bak",options_file);
       rename(options_file,buf);
-      WXfree(buf);
+      free(buf);
       write_options_data(options_file,appdata.odata);
       break;
     case 0:
@@ -109,10 +109,10 @@ int read_init(){
     case 1:
     case 2:
     case 3:
-      buf=WXmalloc(strlen(session_file)+10);
+      buf=malloc(strlen(session_file)+10);
       sprintf(buf,"%s.bak",session_file);
       rename(session_file,buf);
-      WXfree(buf);
+      free(buf);
       ret=write_session_data(session_file,appdata.sdata);
       break;
     case 0:

@@ -69,35 +69,35 @@ static int read_field(int fd,char** bp){
   char* ptr;
 
   alloc=SD_BUFSIZ;
-  buf=WXmalloc(alloc);
+  buf=malloc(alloc);
   ptr=buf;
 
   while((len=read(fd,ptr,1))>0){
     if(*ptr++=='\0'){
-      *bp=WXrealloc(buf,ptr-buf);
+      *bp=realloc(buf,ptr-buf);
       return 0;
     }
     if((ptr-buf)>=alloc){
-      buf=WXrealloc(buf,alloc+=SD_BUFSIZ);
+      buf=realloc(buf,alloc+=SD_BUFSIZ);
     }
   }
-  WXfree(buf);
+  free(buf);
   return 7;
 }
 
 void empty_session_data(session_data *sd){
   if(sd==NULL)return;
-  WXfree(sd->profile);
-  WXfree(sd->host);
-  WXfree(sd->user);
-  WXfree(sd->pass);
-  WXfree(sd->account);
-  WXfree(sd->comment);
-  WXfree(sd->remdir);
-  WXfree(sd->locdir);
-  WXfree(sd->initcom);
-  WXfree(sd->locmask);
-  WXfree(sd->remmask);
+  free(sd->profile);
+  free(sd->host);
+  free(sd->user);
+  free(sd->pass);
+  free(sd->account);
+  free(sd->comment);
+  free(sd->remdir);
+  free(sd->locdir);
+  free(sd->initcom);
+  free(sd->locmask);
+  free(sd->remmask);
 
   sd->profile=strdup("");
   sd->host=strdup("");
@@ -119,26 +119,26 @@ void empty_session_data(session_data *sd){
 
 void destroy_session_data(session_data *sd){
   if(sd==NULL)return;
-  WXfree(sd->profile);
-  WXfree(sd->host);
-  WXfree(sd->user);
-  WXfree(sd->pass);
-  WXfree(sd->account);
-  WXfree(sd->comment);
-  WXfree(sd->remdir);
-  WXfree(sd->locdir);
-  WXfree(sd->initcom);
-  WXfree(sd->locmask);
-  WXfree(sd->remmask);
-  WXfree(sd->port);
+  free(sd->profile);
+  free(sd->host);
+  free(sd->user);
+  free(sd->pass);
+  free(sd->account);
+  free(sd->comment);
+  free(sd->remdir);
+  free(sd->locdir);
+  free(sd->initcom);
+  free(sd->locmask);
+  free(sd->remmask);
+  free(sd->port);
 
   destroy_session_data(sd->next);
-  WXfree((char*)sd);
+  free((char*)sd);
 }
 
 session_data* create_session_data(session_data* next){
   session_data* sd;
-  sd=(session_data*)WXmalloc(sizeof(session_data));
+  sd=(session_data*)malloc(sizeof(session_data));
   sd->profile=NULL;
   sd->host=NULL;
   sd->user=NULL;
@@ -236,7 +236,7 @@ static int read_session_data_entry_0(int fd,session_data* top){
   sd->port=strdup("21");
 
   if((!sd->save) && sd->anon){
-    WXfree(sd->pass);
+    free(sd->pass);
     sd->pass=WXnewstring(anonymous_password);
   }
   return 0;
@@ -322,7 +322,7 @@ static int read_session_data_entry_1(int fd,session_data* top){
     return len-1;
   }
   if((!sd->save) && sd->anon){
-    WXfree(sd->pass);
+    free(sd->pass);
     sd->pass=WXnewstring(anonymous_password);
   }
   return 0;
@@ -339,10 +339,10 @@ static int find_ver_index(char* buf,char* file){
   }
   
   if(index!=last_ver){
-    char* command=WXmalloc(2*strlen(file)+20);
+    char* command=malloc(2*strlen(file)+20);
     sprintf(command,"/bin/cp -f %s %s.old",file,file);
     (void)system(command);
-    WXfree(command);
+    free(command);
   }
   
   if(last_ver<index)return -1;

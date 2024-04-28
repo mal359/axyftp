@@ -12,7 +12,7 @@ char* get_fileinfo_string(fileinfo* fi){
   char *buf;
   if(!fi)return NULL;
   if(fi->link){
-    buf=WXmalloc(strlen(fi->name)+strlen(fi->link)+100);
+    buf=malloc(strlen(fi->name)+strlen(fi->link)+100);
     sprintf(buf,"%10.10s %3d %8.8s %8.8s %10ld %3.3s %2d %5.5s %s -> %s\n",
 	fi->perms,
 	fi->inode,
@@ -25,7 +25,7 @@ char* get_fileinfo_string(fileinfo* fi){
 	fi->name,
 	fi->link);
   } else {
-    buf=WXmalloc(strlen(fi->name)+100);
+    buf=malloc(strlen(fi->name)+100);
     sprintf(buf,"%10.10s %3d %8.8s %8.8s %10ld %3.3s %2d %5.5s %s\n",
 	fi->perms,
 	fi->inode,
@@ -43,7 +43,7 @@ char* get_fileinfo_string(fileinfo* fi){
 fileinfo* create_dummy_dir(char* name,fileinfo* next){
   fileinfo* fi;
   
-  fi=(fileinfo*)WXmalloc(sizeof(fileinfo));
+  fi=(fileinfo*)malloc(sizeof(fileinfo));
   strcpy(fi->perms,"d?????????");
   fi->inode=0;
   fi->user=WXnewstring("unknown");
@@ -63,7 +63,7 @@ fileinfo* create_dummy_dir(char* name,fileinfo* next){
 fileinfo* copy_fileinfo(fileinfo* orig){
   fileinfo *fi;
 
-  fi=(fileinfo*)WXmalloc(sizeof(fileinfo));
+  fi=(fileinfo*)malloc(sizeof(fileinfo));
   strncpy(fi->perms,orig->perms,11);
   fi->inode=orig->inode;
   fi->user=WXnewstring(orig->user);

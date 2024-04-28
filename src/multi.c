@@ -27,16 +27,16 @@ static struct _dirs {
 
 void destroy_dirs(struct _dirs* d){
   if(d==NULL)return;
-  WXfree(d->dir);
+  free(d->dir);
   destroy_dirs(d->next);
-  WXfree((char*)d);
+  free((char*)d);
 }
 
 static int append_dirs(char* dir){
   struct _dirs *d;
 
   if(dirs==NULL){
-    dirs=(struct _dirs*)WXmalloc(sizeof(struct _dirs));
+    dirs=(struct _dirs*)malloc(sizeof(struct _dirs));
     dirs->dir=NULL;
     dirs->next=NULL;
   }
@@ -47,7 +47,7 @@ static int append_dirs(char* dir){
     }
   }
 
-  d->next=(struct _dirs*)WXmalloc(sizeof(struct _dirs));
+  d->next=(struct _dirs*)malloc(sizeof(struct _dirs));
   d=d->next;
   d->next=NULL;
   d->dir=WXnewstring(dir);
@@ -80,13 +80,13 @@ static int process_down_directory(fileinfo* fi,char type){
 
   size=SIZE;
   while(1) {
-    buf=WXmalloc(size);
+    buf=malloc(size);
     if(getcwd(buf,size)==NULL){
       if(errno==ERANGE){
-        WXfree(buf);
+        free(buf);
         size*=2;
       } else {
-        WXfree(buf);
+        free(buf);
         return 3;
       }
     } else {
@@ -96,7 +96,7 @@ static int process_down_directory(fileinfo* fi,char type){
 
 
   if(chdir(fi->name)==-1){
-    WXfree(buf);
+    free(buf);
     return 4;
   }
 
@@ -110,7 +110,7 @@ static int process_down_directory(fileinfo* fi,char type){
   if(!append_dirs(di->dir))get_dir_files(di,type);
   destroy_dirinfo(di);
   chdir(buf);
-  WXfree(buf);
+  free(buf);
   return 0;
 }
 
@@ -130,7 +130,7 @@ void get_dir_files(dirinfo* di, char type){
         char* p;
 	p=get_fileinfo_string(fi);
 	printf("%d: %s",ret,p);
-	WXfree(p);
+	free(p);
       }*/
       if(appdata.interrupt) return;
     }
@@ -163,7 +163,7 @@ void get_dir_files(dirinfo* di, char type){
 	  char* p;
 	  p=get_fileinfo_string(fi);
 	  printf("%d: %s",ret,p);
-	  WXfree(p);
+	  free(p);
 	}*/
 	if(appdata.interrupt) return;
       }
@@ -187,7 +187,7 @@ int get_files(int* list,char type){
     char* p;
     p=get_fileinfo_string(di->files[i+1]);
     printf("%s",p);
-    WXfree(p);
+    free(p);
   }
   printf("\n");
   */
@@ -236,7 +236,7 @@ static int process_up_directory(fileinfo* fi,char type){
   put_dir_files(di,type);
   destroy_dirinfo(di);
   ftp_chdir(buf,&appdata.connect,logfile,check_for_small_interrupt);
-  WXfree(buf);
+  free(buf);
 
   return 0;
 }
@@ -256,7 +256,7 @@ void put_dir_files(dirinfo* di, char type){
         char* p;
 	p=get_fileinfo_string(fi);
 	printf("%d: %s",ret,p);
-	WXfree(p);
+	free(p);
       }*/
       if(appdata.interrupt) return;
     }
@@ -288,7 +288,7 @@ void put_dir_files(dirinfo* di, char type){
 	  char* p;
 	  p=get_fileinfo_string(fi);
 	  printf("%d: %s",ret,p);
-	  WXfree(p);
+	  free(p);
 	}*/
 	if(appdata.interrupt) return;
       }

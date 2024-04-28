@@ -219,7 +219,7 @@ void delete_cb(Widget w,XtPointer app,XtPointer call){
       if(!delete_local_files(selrow)){
 	char* mask=XmTextFieldGetString(appdata.local.text);
 	update_local(mask);
-	WXfree(mask);
+	free(mask);
       }
       if(!appdata.job)busy_cursor(FALSE);
       break;
@@ -239,7 +239,7 @@ void delete_cb(Widget w,XtPointer app,XtPointer call){
       if(!delete_remote_files(selrow)){
 	char* mask=XmTextFieldGetString(appdata.remote.text);
 	update_remote(mask);
-	WXfree(mask);
+	free(mask);
       }
       busy_cursor(FALSE);
       appdata.job=0;

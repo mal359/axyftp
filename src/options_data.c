@@ -67,29 +67,29 @@ static int read_field(int fd,char** bp){
   char* ptr;
 
   alloc=OPT_BUFSIZ;
-  buf=WXmalloc(alloc);
+  buf=malloc(alloc);
   ptr=buf;
 
   while((len=read(fd,ptr,1))>0){
     if(*ptr++=='\0'){
-      *bp=WXrealloc(buf,ptr-buf);
+      *bp=realloc(buf,ptr-buf);
       return 0;
     }
     if((ptr-buf)>=alloc){
-      buf=WXrealloc(buf,alloc+=OPT_BUFSIZ);
+      buf=realloc(buf,alloc+=OPT_BUFSIZ);
     }
   }
-  WXfree(buf);
+  free(buf);
   return 7;
 }
 
 void empty_options_data(options_data *opt){
   if(opt==NULL)return;
-  WXfree(opt->anonpass);
-  WXfree(opt->maxwidth);
-  WXfree(opt->progress_treshold);
-  WXfree(opt->redial);
-  WXfree(opt->delay);
+  free(opt->anonpass);
+  free(opt->maxwidth);
+  free(opt->progress_treshold);
+  free(opt->redial);
+  free(opt->delay);
 
   opt->anonpass=strdup(anonymous_password);
   opt->deletions='\1';
@@ -109,17 +109,17 @@ void empty_options_data(options_data *opt){
 
 void destroy_options_data(options_data *opt){
   if(opt==NULL)return;
-  WXfree(opt->anonpass);
-  WXfree(opt->maxwidth);
-  WXfree(opt->progress_treshold);
-  WXfree(opt->redial);
-  WXfree(opt->delay);
-  WXfree((char*)opt);
+  free(opt->anonpass);
+  free(opt->maxwidth);
+  free(opt->progress_treshold);
+  free(opt->redial);
+  free(opt->delay);
+  free((char*)opt);
 }
 
 options_data* create_options_data(options_data* orig){
   options_data* opt;
-  opt=(options_data*)WXmalloc(sizeof(options_data));
+  opt=(options_data*)malloc(sizeof(options_data));
   opt->anonpass=NULL;
   opt->deletions='\0';
   opt->recurse_del='\0';
@@ -277,11 +277,11 @@ static int find_ver_index(char* buf,char* file){
   if(index!=last_ver){
     char* command;
 
-    command=WXmalloc(2*strlen(file)+20);
+    command=malloc(2*strlen(file)+20);
     sprintf(command,"/bin/cp -f %s %s.old",file,file);
 
     (void)system(command);
-    WXfree(command);
+    free(command);
   }
   if(last_ver<index)return -1;
   else return index;

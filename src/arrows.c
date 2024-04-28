@@ -66,9 +66,9 @@ void download_cb(Widget w,XtPointer app,XtPointer call){
   if(!get_files(selrow,get_proto_state(appdata.proto))){
     mask=XmTextFieldGetString(appdata.local.text);
     update_local(mask);
-    WXfree(mask);
+    free(mask);
   }
-  WXfree((char*)selrow);
+  free((char*)selrow);
   busy_cursor(FALSE);
   appdata.job=0;
   return;

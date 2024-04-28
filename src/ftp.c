@@ -47,26 +47,26 @@ int ftp_size(long* size,char type,char* name,connect_data* cd,FILE* log,
     return 0;
   }
 
-  cmd=WXmalloc(strlen(name)+9);
+  cmd=malloc(strlen(name)+9);
   sprintf(cmd,"TYPE %c\r\n",type);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     *size=-1;
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
   if(cd->lastline[0]!='2'){
     *size=-1;
-    WXfree(cmd);
+    free(cmd);
     return 1;
   }
 
   sprintf(cmd,"SIZE %s\r\n",name);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     *size=-1;
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
   if(cd->lastline[0]!='2' || strlen(cd->lastline)<5){
     *size=-1;
     return 2;
@@ -82,23 +82,23 @@ int ftp_rename(char* from,char* to,connect_data* cd,FILE* log,
 
   if(from==NULL || to==NULL)return 0;
 
-  cmd=WXmalloc(strlen(from)+8);
+  cmd=malloc(strlen(from)+8);
   sprintf(cmd,"RNFR %s\r\n",from);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
   if(cd->lastline[0]!='3'){
     return 2;
   }
-  cmd=WXmalloc(strlen(to)+8);
+  cmd=malloc(strlen(to)+8);
   sprintf(cmd,"RNTO %s\r\n",to);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
   if(cd->lastline[0]!='2'){
     return 2;
   }
@@ -111,14 +111,14 @@ int ftp_site(char* name,connect_data* cd,FILE* log,ftp_check_proc proc){
 
   if(name==NULL)return 0;
 
-  cmd=WXmalloc(strlen(name)+8);
+  cmd=malloc(strlen(name)+8);
 
   sprintf(cmd,"SITE %s\r\n",name);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
 
   if(cd->lastline[0]!='2'){
     return 2;
@@ -132,14 +132,14 @@ int ftp_mkdir(char* name,connect_data* cd,FILE* log,ftp_check_proc proc){
 
   if(name==NULL)return 0;
 
-  cmd=WXmalloc(strlen(name)+8);
+  cmd=malloc(strlen(name)+8);
 
   sprintf(cmd,"MKD %s\r\n",name);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
 
   if(cd->lastline[0]!='2'){
     return 2;
@@ -165,14 +165,14 @@ int ftp_rmdir(char* name,connect_data* cd,FILE* log,ftp_check_proc proc){
 
   if(name==NULL)return 0;
 
-  cmd=WXmalloc(strlen(name)+8);
+  cmd=malloc(strlen(name)+8);
 
   sprintf(cmd,"RMD %s\r\n",name);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
 
   if(cd->lastline[0]!='2'){
     return 2;
@@ -186,14 +186,14 @@ int ftp_delete(char* name,connect_data* cd,FILE* log,ftp_check_proc proc){
 
   if(name==NULL)return 0;
 
-  cmd=WXmalloc(strlen(name)+8);
+  cmd=malloc(strlen(name)+8);
 
   sprintf(cmd,"DELE %s\r\n",name);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
 
   if(cd->lastline[0]!='2'){
     return 2;
@@ -332,7 +332,7 @@ NORMAL_CHAR:
           default:
 	    total++;
 	    if(allocated-total<3){
-	      *retbuf=buf=WXrealloc(buf,allocated+FTP_MIN_BUF);
+	      *retbuf=buf=realloc(buf,allocated+FTP_MIN_BUF);
 	    }
 	    break;
 	}
@@ -455,7 +455,7 @@ struct in_addr* ftp_gethosts(char* host,ftp_check_proc proc){
 	  interrupt=0;
 	  return NULL;
 	}
-	pt=buf=(struct in_addr*)WXmalloc((num+1)*sizeof(struct in_addr));
+	pt=buf=(struct in_addr*)malloc((num+1)*sizeof(struct in_addr));
 	while(num){
 	  if(read(fd[0],pt,sizeof(struct in_addr))<=0 || interrupt){
 	    close(fd[0]);
@@ -564,7 +564,7 @@ int ftp_connect(char* host,int port,connect_data* cd,
 
   if((cd->ctrl=socket(AF_INET,SOCK_STREAM,IPPROTO_TCP))<0 || 
       (proc && (*proc)())){
-    WXfree((char*)ht);
+    free((char*)ht);
     shutdown(cd->ctrl,2);
     interrupt=0;
     return -1;
@@ -593,19 +593,19 @@ int ftp_connect(char* host,int port,connect_data* cd,
          goto CONNECTED;
       }
       if(proc && (*proc)()){
-	WXfree((char*)ht);
+	free((char*)ht);
 	interrupt=0;
 	return -1;
       }
       pt++;
     }
     close(cd->ctrl);
-    WXfree((char*)ht);
+    free((char*)ht);
     interrupt=0;
     return 1;
   }
 CONNECTED:
-  WXfree((char*)ht);
+  free((char*)ht);
   setsockopt(cd->ctrl,SOL_SOCKET,SO_OOBINLINE,(void*)&on,sizeof(on));
   setsockopt(cd->ctrl,SOL_SOCKET,SO_KEEPALIVE,(void*)&on,sizeof(on));
   
@@ -650,36 +650,36 @@ int ftp_login(char* user,char* pass,char* account,connect_data* cd,FILE* log,
   if(proc && (*proc)())return -1;
 
   if(user==NULL)user="";
-  buf=WXmalloc(strlen(user)+8);
+  buf=malloc(strlen(user)+8);
   sprintf(buf,"USER %s\r\n",user);
   if((ret=ftp_command(buf,cd,log,proc))!=0 || (proc && (*proc)())){
-    WXfree(buf);
+    free(buf);
     return ret;
   }
 
-  WXfree(buf);
+  free(buf);
   if(cd->lastline[0]=='2')return 0;
   if(cd->lastline[0]!='3') return 1;
 
   if(pass==NULL)pass="";
-  buf=WXmalloc(strlen(pass)+8);
+  buf=malloc(strlen(pass)+8);
   sprintf(buf,"PASS %s\r\n",pass);
   if((ret=ftp_command(buf,cd,log,proc))!=0 || (proc && (*proc)())){
-    WXfree(buf);
+    free(buf);
     return ret;
   }
-  WXfree(buf);
+  free(buf);
   if(cd->lastline[0]=='2')return 0;
   if(cd->lastline[0]!='3') return 1;
 
   if(account==NULL)account="";
-  buf=WXmalloc(strlen(account)+8);
+  buf=malloc(strlen(account)+8);
   sprintf(buf,"ACCT %s\r\n",account);
   if((ret=ftp_command(buf,cd,log,proc))!=0 || (proc && (*proc)())){
-    WXfree(buf);
+    free(buf);
     return ret;
   }
-  WXfree(buf);
+  free(buf);
   if(cd->lastline[0]=='2')return 0;
   return 1;
 }
@@ -702,7 +702,7 @@ int ftp_pwd(char** retval,connect_data *cd,FILE* log,ftp_check_proc proc){
     return 1;
   }
   len=(int)(end-start);
-  *retval=WXmalloc(len);
+  *retval=malloc(len);
   strncpy(*retval,++start,len-1);
   (*retval)[len-1]='\0';
   return 0;
@@ -893,7 +893,7 @@ int ftp_list(char* opt,char* mask,connect_data* cd,FILE* log,
   if(opt==NULL)opt="";
   if(mask==NULL)mask="";
 
-  cmd=WXmalloc(strlen(opt)+strlen(mask)+9);
+  cmd=malloc(strlen(opt)+strlen(mask)+9);
 
   if(strlen(opt)==0){
     if(strlen(mask)==0){
@@ -910,10 +910,10 @@ int ftp_list(char* opt,char* mask,connect_data* cd,FILE* log,
   }
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
 
   if(cd->lastline[0]!='1'){
     return 1;
@@ -936,27 +936,27 @@ int ftp_put(char type,char* local,connect_data* cd,FILE* log,
   }
   ret=4;
 
-  cmd=WXmalloc(strlen(local)+9);
+  cmd=malloc(strlen(local)+9);
 
   sprintf(cmd,"TYPE %c\r\n",type);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
 
   if(cd->lastline[0]!='2'){
-    WXfree(cmd);
+    free(cmd);
     return 1;
   }
 
   sprintf(cmd,"STOR %s\r\n",local);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
 
   if(cd->lastline[0]!='1'){
     return 1;
@@ -978,27 +978,27 @@ int ftp_get(char type,char* remote,connect_data* cd,FILE* log,
     return ret;
   }
 
-  cmd=WXmalloc(strlen(remote)+9);
+  cmd=malloc(strlen(remote)+9);
 
   sprintf(cmd,"TYPE %c\r\n",type);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
 
   if(cd->lastline[0]!='2'){
-    WXfree(cmd);
+    free(cmd);
     return 1;
   }
 
   sprintf(cmd,"RETR %s\r\n",remote);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
 
   if(cd->lastline[0]!='1'){
     return 1;
@@ -1020,24 +1020,24 @@ int ftp_resume(char type,long size,char* remote,connect_data* cd,FILE* log,
     return ret;
   }
 
-  cmd=WXmalloc(strlen(remote)+40);
+  cmd=malloc(strlen(remote)+40);
 
   sprintf(cmd,"TYPE %c\r\n",type);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
 
   if(cd->lastline[0]!='2'){
-    WXfree(cmd);
+    free(cmd);
     return 1;
   }
 
   sprintf(cmd,"REST %ld\r\n",size);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
 
@@ -1048,10 +1048,10 @@ int ftp_resume(char type,long size,char* remote,connect_data* cd,FILE* log,
   sprintf(cmd,"RETR %s\r\n",remote);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
 
   if(cd->lastline[0]!='1'){
     return 1;
@@ -1106,14 +1106,14 @@ int ftp_chdir(char* dir,connect_data* cd,FILE* log,ftp_check_proc proc){
 
   if(dir==NULL)return 0;
 
-  cmd=WXmalloc(strlen(dir)+7);
+  cmd=malloc(strlen(dir)+7);
 
   sprintf(cmd,"CWD %s\r\n",dir);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
-    WXfree(cmd);
+    free(cmd);
     return ret;
   }
-  WXfree(cmd);
+  free(cmd);
 
   if(cd->lastline[0]!='2'){
     return 2;

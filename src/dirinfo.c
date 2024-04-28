@@ -30,9 +30,9 @@ dirinfo* select_dirinfo(dirinfo* orig,int* sel){
   fileinfo *top,*fi;
   int i;
   
-  di=(dirinfo*)WXmalloc(sizeof(dirinfo));
+  di=(dirinfo*)malloc(sizeof(dirinfo));
   di->dir=WXnewstring(orig->dir);
-  top=fi=(fileinfo*)WXmalloc(sizeof(fileinfo));
+  top=fi=(fileinfo*)malloc(sizeof(fileinfo));
   fi->next=NULL;
   fi->name=NULL;
   fi->user=NULL;
@@ -43,7 +43,7 @@ dirinfo* select_dirinfo(dirinfo* orig,int* sel){
     fi=fi->next;
     fi->next=NULL;
   }
-  di->files=(fileinfo**)WXmalloc(sizeof(dirinfo*)*(di->total+1));
+  di->files=(fileinfo**)malloc(sizeof(dirinfo*)*(di->total+1));
   fi=top;
   for(i=0;i<=di->total;i++){
     di->files[i]=fi;
@@ -56,8 +56,8 @@ dirinfo* select_dirinfo(dirinfo* orig,int* sel){
 void destroy_dirinfo(dirinfo* di){
   if(di==NULL)return;
   destroy_fileinfo(di->files[0]);
-  WXfree((char*)di->dir);
-  WXfree((char*)di);
+  free((char*)di->dir);
+  free((char*)di);
 }
 
 struct _list_progress_data {
@@ -101,10 +101,10 @@ dirinfo* create_remote_dirinfo(char* mask){
   fileinfo* f;
   int result;
   
-  current=(dirinfo*)WXmalloc(sizeof(dirinfo));
+  current=(dirinfo*)malloc(sizeof(dirinfo));
 
   if((result=ftp_pwd(&current->dir,&appdata.connect,logfile,check_for_interrupt))!=0){
-    WXfree((char*)current);
+    free((char*)current);
     if(result==10){
       append_status("CONNECTION LOST\n");
       appdata.connected=0;
@@ -129,7 +129,7 @@ dirinfo* create_remote_dirinfo(char* mask){
   }
 
   if(result){
-    WXfree((char*)current);
+    free((char*)current);
     return NULL;
   }
 
@@ -177,32 +177,32 @@ dirinfo* create_local_dirinfo(char* mask){
   int size;
   int len;
   
-  current=(dirinfo*)WXmalloc(sizeof(dirinfo));
+  current=(dirinfo*)malloc(sizeof(dirinfo));
 
   size=SIZE;
   while(1) {
-    buf=WXmalloc(size);
+    buf=malloc(size);
     if(getcwd(buf,size)==NULL) 
       if(errno==ERANGE){
-	WXfree(buf);
+	free(buf);
 	size*=2;
        } else {
-	 WXfree(buf);
-	 WXfree((char*)current);
+	 free(buf);
+	 free((char*)current);
 	 return NULL;
        }
     else break;
   }
-  current->dir=WXmalloc(strlen(buf)+1);
+  current->dir=malloc(strlen(buf)+1);
   strcpy(current->dir,buf);
-  WXfree(buf);
+  free(buf);
   
   if(!mask)mask="";
   len=strlen(mask);
   if(len==0){
     buf=WXnewstring("LANG=C /bin/ls -al");
   } else {
-    buf=WXmalloc(strlen(mask)+strlen(command)+1);
+    buf=malloc(strlen(mask)+strlen(command)+1);
     strcpy(buf,command);
     strcat(buf,mask);
   }
@@ -210,7 +210,7 @@ dirinfo* create_local_dirinfo(char* mask){
     perror("create_local_dirinfo");
     exit(1);
   }
-  WXfree(buf);
+  free(buf);
   
   current->files=create_file_table(ls);
   pclose(ls);
@@ -312,7 +312,7 @@ fileinfo** create_file_table(FILE *ls){
   char *line, *s,*result;
   int len,num,i;
   
-  current=top=(fileinfo*)WXmalloc(sizeof(fileinfo));
+  current=top=(fileinfo*)malloc(sizeof(fileinfo));
   current->next=NULL;
   current->name=NULL;
   current->user=NULL;
@@ -322,15 +322,15 @@ fileinfo** create_file_table(FILE *ls){
 
   
   do {
-    line=WXmalloc(1);
+    line=malloc(1);
     line[0]='\0';
     do {
       if((result=fgets(buf,SIZE,ls))==NULL) break;
       len=strlen(buf);
-      s=WXmalloc(strlen(line)+len+1);
+      s=malloc(strlen(line)+len+1);
       strcpy(s,line);
       strcat(s,buf); 
-      WXfree(line);
+      free(line);
       line=s;
     } while(len==SIZE-1 && buf[SIZE-2]!='\n');
     current->next=create_fileinfo(line);
@@ -339,7 +339,7 @@ fileinfo** create_file_table(FILE *ls){
       current=current->next;
       num++;
     }
-    WXfree(line);
+    free(line);
   } while(result!=NULL);
 
   if(!check_presence("..",top)){
@@ -352,7 +352,7 @@ fileinfo** create_file_table(FILE *ls){
     num++;
   }
   
-  retval=(fileinfo**)WXmalloc(num*sizeof(fileinfo*));
+  retval=(fileinfo**)malloc(num*sizeof(fileinfo*));
   current=top;
   for(i=0;i<num;i++){
     retval[i]=current;

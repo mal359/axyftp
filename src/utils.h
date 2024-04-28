@@ -10,9 +10,6 @@ void process_events();
 char* WXnewstring(char*);
 
 #include<Xm/Xm.h>
-#define WXmalloc(x) XtMalloc(x)
-#define WXfree(x) XtFree((char*)(x));
-#define WXrealloc(x,y) XtRealloc(x,y)
 #define LOOP() XtAppMainLoop(appcontext)
 
 #endif /* UTILS_H */
