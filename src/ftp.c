@@ -29,6 +29,7 @@ extern int h_errno;
 static int interrupt;
 
 pthread_mutex_t ftp_mutex = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t data_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void handler(int sig){
   interrupt=sig;

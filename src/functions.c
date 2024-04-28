@@ -27,7 +27,7 @@
 #include "functions.h"
 
 pthread_mutex_t appdata_mutex = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t appdata.progress_mutex = PTHREAD_MUTEX_INITIALIZER
+pthread_mutex_t appdataprogress_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t download_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t rename_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -589,7 +589,7 @@ int download_file(fileinfo* volatile fi,char volatile type){
     if(tres<0)tres=0;
     if(size/1024>=tres || (fi->perms[0] == 'l' && size==fi->size)){
       
-      pthread_mutex_lock(&appdata.progress_mutex);
+      pthread_mutex_lock(&appdataprogress_mutex);
       
       /*progress=create_progress_dialog(toplevel);*/
       if(!appdata.progress_shown){
@@ -598,7 +598,7 @@ int download_file(fileinfo* volatile fi,char volatile type){
       }
       init_progress_dialog(appdata.progress,fi->name,size);
       
-      pthread_mutex_unlock(&appdata.progress_mutex);
+      pthread_mutex_unlock(&appdataprogress_mutex);
 
       process_events();
 
@@ -622,9 +622,9 @@ int download_file(fileinfo* volatile fi,char volatile type){
 
   close(lfd);
   if(show_progress){
-    pthread_mutex_lock(&appdata.progress_mutex);
+    pthread_mutex_lock(&appdataprogress_mutex);
     init_progress_dialog(appdata.progress,"",0);
-    pthread_mutex_unlock(&appdata.progress_mutex);
+    pthread_mutex_unlock(&appdataprogress_mutex);
   }
   if(appdata.odata->xferbeep)beep();
   if(ret==-1){

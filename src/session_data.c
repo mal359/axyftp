@@ -11,8 +11,6 @@
 #include <fcntl.h>
 #include <pthread.h>
 
-static pthread_mutex_t global_mutex = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t sd_ver_list_mutex = PTHREAD_MUTEX_INITIALIZER;
 static pthread_mutex_t file_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 #include"session_data.h"
@@ -38,13 +36,11 @@ static int read_session_data_entry_0(int,session_data*);
 static int read_session_data_entry_1(int,session_data*);
 
 static void init_ver_list(){
-  pthread_mutex_lock(&sd_ver_list_mutex);
   sd_ver_list[0].readfunc=read_session_data_entry_0;
   sd_ver_list[1].readfunc=read_session_data_entry_1;
 
   last_ver=1;
   init_done=1;
-  pthread_mutex_unlock(&sd_ver_list_mutex);
 }
 
 static char rotate(char in){
@@ -333,26 +329,22 @@ static int read_session_data_entry_1(int fd,session_data* top){
 }
 
 static int find_ver_index(char* buf,char* file){
-  int index;
+  int index = -1;
   
-  pthread_mutex_lock(&sd_ver_list_mutex);
   if(!init_done)init_ver_list();
 
   for(index=0;sd_ver_list[index].ver!=NULL;index++){
     if(memcmp(buf,sd_ver_list[index].ver,SESSION_DATA_VERSION_LENGTH+1)==0)
       break;
   }
-  pthread_mutex_unlock(&sd_ver_list_mutex);
-
+  
   if(index!=last_ver){
-    char* command;
-
-    command=WXmalloc(2*strlen(file)+20);
+    char* command=WXmalloc(2*strlen(file)+20);
     sprintf(command,"/bin/cp -f %s %s.old",file,file);
-
     (void)system(command);
     WXfree(command);
   }
+  
   if(last_ver<index)return -1;
   else return index;
 }
@@ -364,6 +356,7 @@ int read_session_data(char* file,session_data* top){
   int index=-1;
   
   pthread_mutex_lock(&file_mutex);
+  
   if((fd=open(file,O_RDONLY))<0){
     fprintf(stderr,"Cannot open session data file %s for reading\n",file);
     pthread_mutex_unlock(&file_mutex);
@@ -379,9 +372,10 @@ int read_session_data(char* file,session_data* top){
   }
   
   pthread_mutex_unlock(&file_mutex);
+  
   index = find_ver_index(buf, file);
-  pthread_mutex_lock(&file_mutex);
 
+  pthread_mutex_lock(&file_mutex);
   if((index=find_ver_index(buf,file))==-1){
     fprintf(stderr,"Unknown version of session data file %s\n",file);
     close(fd);
@@ -391,6 +385,8 @@ int read_session_data(char* file,session_data* top){
   while((len=(*sd_ver_list[index].readfunc)(fd,top))==0){
     top=top->next;
   }
+  pthread_mutex_unlock(&file_mutex);
+  
   return len-1;
 }
 

@@ -29,17 +29,17 @@ void activate_cb(Widget w,XtPointer app,XtPointer call){
   if(XmStringGetLtoR(xmlabel,XmFONTLIST_DEFAULT_TAG,&strlabel)){
     if(strcmp(strlabel,"connect")==0){
       XtManageChild(appdata.session);
-    } else if(strcmp(strlabel,"help")==0){
+    } else if(strcmp(strlabel,"Help")==0){
       show_help(1);
-    } else if(strcmp(strlabel,"logWnd")==0){
+    } else if(strcmp(strlabel,"Log")==0){
       show_log();
-    } else if(strcmp(strlabel,"about")==0){
+    } else if(strcmp(strlabel,"About")==0){
       XtManageChild(appdata.about);
-    } else if(strcmp(strlabel,"exit")==0){
+    } else if(strcmp(strlabel,"Exit")==0){
       exit(0);
-    } else if(strcmp(strlabel,"options")==0){
+    } else if(strcmp(strlabel,"Options")==0){
       XtManageChild(appdata.options);
-    } else if(strcmp(strlabel,"disconnect")==0){
+    } else if(strcmp(strlabel,"Disconnect")==0){
       XmString l;
       if(!appdata.job){
 	busy_cursor(True);
@@ -55,7 +55,7 @@ void activate_cb(Widget w,XtPointer app,XtPointer call){
 	busy_cursor(False);
 	appdata.job=0;
       }
-    } else if(strcmp(strlabel,"cancel")==0){
+    } else if(strcmp(strlabel,"Cancel")==0){
       if(appdata.job)appdata.interrupt=1;
       if(appdata.jump_on_cancel){
 	siglongjmp(jmp_down_env,1);
@@ -80,7 +80,7 @@ Widget create_buttonbar(Widget parent){
   XtManageChild(buttonbar);
 
   n=0;
-  label=XmStringCreateLocalized("connect");
+  label=XmStringCreateLocalized("Connect");
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtSetArg(args[n],XmNfillOnArm,False);n++;
   XtSetArg(args[n],XmNlabelString,label);n++;
@@ -89,7 +89,7 @@ Widget create_buttonbar(Widget parent){
   XtSetArg(args[n],XmNleftAttachment,XmATTACH_FORM);n++;
   XtSetArg(args[n],XmNrightAttachment,XmATTACH_POSITION);n++;
   XtSetArg(args[n],XmNrightPosition,1);n++;
-  connect=XmCreatePushButton(buttonbar,"connect",args,n);
+  connect=XmCreatePushButton(buttonbar,"Connect",args,n);
   XtManageChild(connect);XmStringFree(label);
   XtAddCallback(connect,XmNactivateCallback,activate_cb,NULL);
   
@@ -98,7 +98,7 @@ Widget create_buttonbar(Widget parent){
   XtVaSetValues(connect,XmNheight,height,NULL);
   
   n=0;
-  label=XmStringCreateLocalized("cancel");
+  label=XmStringCreateLocalized("Cancel");
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtSetArg(args[n],XmNfillOnArm,False);n++;
   XtSetArg(args[n],XmNheight,height);n++;
@@ -109,12 +109,12 @@ Widget create_buttonbar(Widget parent){
   XtSetArg(args[n],XmNleftWidget,connect);n++;
   XtSetArg(args[n],XmNrightAttachment,XmATTACH_POSITION);n++;
   XtSetArg(args[n],XmNrightPosition,2);n++;
-  cancel=XmCreatePushButton(buttonbar,"cancel",args,n);
+  cancel=XmCreatePushButton(buttonbar,"Cancel",args,n);
   XtManageChild(cancel);XmStringFree(label);
   XtAddCallback(cancel,XmNactivateCallback,activate_cb,NULL);
   
   n=0;
-  label=XmStringCreateLocalized("logWnd");
+  label=XmStringCreateLocalized("Log");
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtSetArg(args[n],XmNfillOnArm,False);n++;
   XtSetArg(args[n],XmNheight,height);n++;
@@ -125,12 +125,12 @@ Widget create_buttonbar(Widget parent){
   XtSetArg(args[n],XmNleftWidget,cancel);n++;
   XtSetArg(args[n],XmNrightAttachment,XmATTACH_POSITION);n++;
   XtSetArg(args[n],XmNrightPosition,3);n++;
-  logwnd=XmCreatePushButton(buttonbar,"logWnd",args,n);
+  logwnd=XmCreatePushButton(buttonbar,"Log",args,n);
   XtManageChild(logwnd);XmStringFree(label);
   XtAddCallback(logwnd,XmNactivateCallback,activate_cb,NULL);
   
   n=0;
-  label=XmStringCreateLocalized("help");
+  label=XmStringCreateLocalized("Help");
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtSetArg(args[n],XmNfillOnArm,False);n++;
   XtSetArg(args[n],XmNheight,height);n++;
@@ -141,12 +141,12 @@ Widget create_buttonbar(Widget parent){
   XtSetArg(args[n],XmNleftWidget,logwnd);n++;
   XtSetArg(args[n],XmNrightAttachment,XmATTACH_POSITION);n++;
   XtSetArg(args[n],XmNrightPosition,4);n++;
-  help=XmCreatePushButton(buttonbar,"help",args,n);
+  help=XmCreatePushButton(buttonbar,"Help",args,n);
   XtManageChild(help);XmStringFree(label);
   XtAddCallback(help,XmNactivateCallback,activate_cb,NULL);
   
   n=0;
-  label=XmStringCreateLocalized("options");
+  label=XmStringCreateLocalized("Options");
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtSetArg(args[n],XmNfillOnArm,False);n++;
   XtSetArg(args[n],XmNheight,height);n++;
@@ -162,7 +162,7 @@ Widget create_buttonbar(Widget parent){
   XtAddCallback(options,XmNactivateCallback,activate_cb,NULL);
   
   n=0;
-  label=XmStringCreateLocalized("about");
+  label=XmStringCreateLocalized("About");
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtSetArg(args[n],XmNfillOnArm,False);n++;
   XtSetArg(args[n],XmNheight,height);n++;
@@ -173,12 +173,12 @@ Widget create_buttonbar(Widget parent){
   XtSetArg(args[n],XmNleftWidget,options);n++;
   XtSetArg(args[n],XmNrightAttachment,XmATTACH_POSITION);n++;
   XtSetArg(args[n],XmNrightPosition,6);n++;
-  about=XmCreatePushButton(buttonbar,"about",args,n);
+  about=XmCreatePushButton(buttonbar,"About",args,n);
   XtManageChild(about);XmStringFree(label);
   XtAddCallback(about,XmNactivateCallback,activate_cb,NULL);
   
   n=0;
-  label=XmStringCreateLocalized("exit");
+  label=XmStringCreateLocalized("Exit");
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtSetArg(args[n],XmNfillOnArm,False);n++;
   XtSetArg(args[n],XmNheight,height);n++;
@@ -188,7 +188,7 @@ Widget create_buttonbar(Widget parent){
   XtSetArg(args[n],XmNleftAttachment,XmATTACH_WIDGET);n++;
   XtSetArg(args[n],XmNleftWidget,about);n++;
   XtSetArg(args[n],XmNrightAttachment,XmATTACH_FORM);n++;
-  exit=XmCreatePushButton(buttonbar,"cancel",args,n);
+  exit=XmCreatePushButton(buttonbar,"Cancel",args,n);
   XtManageChild(exit);XmStringFree(label);
   XtAddCallback(exit,XmNactivateCallback,activate_cb,NULL);
  

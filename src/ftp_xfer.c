@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <signal.h>
+#include <stdlib.h>
 #include <unistd.h>
 #include <sys/time.h>
 #include <sys/types.h>
@@ -74,7 +75,7 @@ int ftp_xfer_get(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
     }
     if(retval==0){
       if(proc && (*proc)(0,arg)) {
-        free buf;
+        free(buf);
 	return -1;
       }
     } else {
