@@ -1,6 +1,10 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 
 #include "axyftp.h"
 #include "options_data.h"
@@ -129,7 +133,7 @@ void action_cb(Widget w,XtPointer app,XtPointer call){
       fetch_options_data(appdata.options,appdata.odata);
       write_options_data(options_file,appdata.odata);
     }
-    XtFree(s);
+    free(s);
   }
   XmStringFree(xms);
 }

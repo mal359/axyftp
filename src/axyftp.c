@@ -2,6 +2,10 @@
 #include <stdio.h>
 #include <signal.h>
 #include <stdlib.h>
+#include <unistd.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 
 #include "main_frame.h"
 #include "axyftp.h"
@@ -49,22 +53,26 @@ int main(int argc, char* argv[]){
   
   mask=XmTextFieldGetString(appdata.local.text);
   update_local(mask);
-  XtFree(mask);
+  free(mask);
   appdata.job=0;
   appdata.jump_on_cancel=0;
   appdata.connected=0;
   appdata.interrupt=0;
-
-  signal(SIGALRM,SIG_IGN);
-  signal(SIGCHLD,SIG_IGN);
-  signal(SIGPIPE,SIG_IGN);
-/*printf("SHM=%d\n",XShmQueryExtension(XtDisplay(toplevel)));*/
-/*  XSynchronize(XtDisplay(toplevel),1);*/
+  
+  struct sigaction sa;
+  sa.sa_handler = SIG_IGN;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  
+  sigaction(SIGALRM, &sa, NULL);
+  sigaction(SIGCHLD, &sa, NULL);
+  sigaction(SIGPIPE, &sa, NULL);
+  
   mask=DisplayString(XtDisplay(toplevel));
-  env=XtMalloc(strlen(mask)+12);
+  env=malloc(strlen(mask)+12);
   sprintf(env,"DISPLAY = %s",mask);
   putenv(env);
-  XtFree(env);
+  free(env);
 
   if(appdata.odata->show_session){
     XtManageChild(appdata.session);

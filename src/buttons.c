@@ -186,7 +186,7 @@ void refresh_cb(Widget w,XtPointer app,XtPointer call){
       XmUpdateDisplay(toplevel);
       mask=XmTextFieldGetString(appdata.local.text);
       update_local(mask);
-      XtFree(mask);
+      free(mask);
       if(!appdata.job)busy_cursor(False);
       break;
     case REMOTE:
@@ -200,7 +200,7 @@ void refresh_cb(Widget w,XtPointer app,XtPointer call){
       XmUpdateDisplay(toplevel);
       mask=XmTextFieldGetString(appdata.remote.text);
       update_remote(mask);
-      XtFree(mask);
+      free(mask);
       busy_cursor(False);
       appdata.job=0;
       break;
@@ -275,7 +275,7 @@ void chgdir_cb(Widget w,XtPointer app,XtPointer cbs){
 	  ret=chg_local_dir(selrow);
 	  mask=XmTextFieldGetString(appdata.local.text);
 	  if(!ret)update_local(mask);
-	  XtFree(mask);
+	  free(mask);
 	  if(!appdata.job)busy_cursor(False);
 	  break;
       }
@@ -300,7 +300,7 @@ void chgdir_cb(Widget w,XtPointer app,XtPointer cbs){
 	  ret=chg_remote_dir(selrow);
 	  mask=XmTextFieldGetString(appdata.remote.text);
 	  if(!ret)update_remote(mask);
-	  XtFree(mask);
+	  free(mask);
 	  busy_cursor(False);
 	  appdata.job=0;
 	  break;

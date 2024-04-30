@@ -1,6 +1,10 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
 #include <stdio.h>
+#include <stdlib.h>
 #include <pthread.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 
 #include "axyftp.h"
 #include "utils.h"
@@ -95,12 +99,12 @@ void init_progress_dialog(Widget w,char* name,long size){
   XmString xms;
   
   child=XtNameToWidget(w,"*toptext");
-  buf=XtMalloc(strlen(name)+30);
+  buf=malloc(strlen(name)+30);
   sprintf(buf,"%s (%ld bytes)",name,size);
   xms=XmStringCreateLocalized(buf);
   XtVaSetValues(child,XmNlabelString,xms,NULL);
   XmStringFree(xms);
-  XtFree(buf);
+  free(buf);
 
   child=XtNameToWidget(w,"*percent");
   xms=XmStringCreateLocalized("0 %");

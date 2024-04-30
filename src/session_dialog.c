@@ -5,6 +5,9 @@
 #include <signal.h>
 #include <unistd.h>
 #include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 
 #include "axyftp.h"
 #include "utils.h"
@@ -84,7 +87,7 @@ static void request_connection(){
       append_status(t);
     }
   }
-  XtFree(mask);
+  free(mask);
 }
 
 void update_session_dialog(int pos,char set_profile){
@@ -238,7 +241,7 @@ static void action_cb(Widget w,XtPointer app,XtPointer call){
 	XmListUpdateSelectedList(list);
 	XmListSelectPos(list,poslist[0],False);
 	XmStringFree(item);
-	XtFree((char*)poslist);
+	free((char*)poslist);
         write_session_data(session_file,appdata.sdata);
       } else {
 	appdata.sdata->next=create_session_data(appdata.sdata->next);
@@ -256,7 +259,7 @@ static void action_cb(Widget w,XtPointer app,XtPointer call){
         write_session_data(session_file,appdata.sdata);
       }
     } 
-    XtFree(s);
+    free(s);
   }
   XmStringFree(xms);
 }

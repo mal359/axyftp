@@ -1,6 +1,9 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
 
 #include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 
 #include"axyftp.h"
 #include"utils.h"
@@ -61,7 +64,7 @@ void activate_cb(Widget w,XtPointer app,XtPointer call){
 	siglongjmp(jmp_down_env,1);
       }
     }
-    XtFree(strlabel);
+    free(strlabel);
   } 
 }
 

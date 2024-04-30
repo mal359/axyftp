@@ -1,18 +1,21 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include<stdio.h>
-#include<string.h>
-#include<signal.h>
-#include<unistd.h>
-#include<stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <signal.h>
+#include <unistd.h>
+#include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 
-#include"axyftp.h"
-#include"multi.h"
-#include"utils.h"
-#include"pixmaps.h"
-#include"dirinfo.h"
-#include"functions.h"
-#include"status.h"
-#include"little_dialogs.h"
+#include "axyftp.h"
+#include "multi.h"
+#include "utils.h"
+#include "pixmaps.h"
+#include "dirinfo.h"
+#include "functions.h"
+#include "status.h"
+#include "little_dialogs.h"
 
 static void time_to_retry(int sig){
   siglongjmp(jmp_down_env,2);
@@ -41,7 +44,7 @@ static void reconnect_cb(Widget w,XtPointer app,XtPointer call){
     appdata.job=1;
     busy_cursor(True);
     appdata.sdata->locdir[0]='\0';
-    XtFree(appdata.sdata->remdir);
+    free(appdata.sdata->remdir);
 
     appdata.sdata->remdir=XtNewString(appdata.remote.list->dir);
 
@@ -89,7 +92,7 @@ static void reconnect_cb(Widget w,XtPointer app,XtPointer call){
       }
     }
    
-    XtFree(mask);
+    free(mask);
     busy_cursor(False);
     appdata.job=0;
   }

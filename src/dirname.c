@@ -7,6 +7,11 @@
 
 #define MAX_VISIBLE_ITEMS 10
 
+#include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
+
 #include <Xm/Xm.h>
 #include <Xm/RowColumn.h>
 #include <Xm/ComboBox.h>
@@ -74,7 +79,7 @@ void dirfield_cb(Widget w,XtPointer app,XtPointer call){
       if(!ret){
 	mask=XmTextFieldGetString(appdata.local.text);
 	update_local(mask);
-	XtFree(mask);
+	free(mask);
       }
       if(!appdata.job)busy_cursor(False);
       break;
@@ -104,7 +109,7 @@ void dirfield_cb(Widget w,XtPointer app,XtPointer call){
 	if(!ret){
 	  mask=XmTextFieldGetString(appdata.remote.text);
 	  update_remote(mask);
-	  XtFree(mask);
+	  free(mask);
 	}
 	busy_cursor(False);
 	appdata.job=0;
@@ -113,7 +118,7 @@ void dirfield_cb(Widget w,XtPointer app,XtPointer call){
     default:
       break;
   }
-  XtFree(s);
+  free(s);
 }
   
 void dirname_cb(Widget w,XtPointer app,XtPointer call){
@@ -153,7 +158,7 @@ void dirname_cb(Widget w,XtPointer app,XtPointer call){
         if(!ret){
 	  mask=XmTextFieldGetString(appdata.local.text);
           update_local(mask);
-	  XtFree(mask);
+	  free(mask);
 	}
 	if(!appdata.job)busy_cursor(False);
 	break;
@@ -183,7 +188,7 @@ void dirname_cb(Widget w,XtPointer app,XtPointer call){
 	  if(!ret){
 	    mask=XmTextFieldGetString(appdata.remote.text);
 	    update_remote(mask);
-	    XtFree(mask);
+	    free(mask);
 	  }
 	  busy_cursor(False);
 	  appdata.job=0;
@@ -192,7 +197,7 @@ void dirname_cb(Widget w,XtPointer app,XtPointer call){
       default:
 	break;
     }
-    XtFree(s);
+    free(s);
     return;
   }
 }

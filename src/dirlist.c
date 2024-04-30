@@ -3,6 +3,10 @@
 #include <stdio.h>
 #include <time.h>
 #include <string.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
+
 #include "axyftp.h"
 #include "utils.h"
 #include "functions.h"
@@ -35,7 +39,7 @@ void doubleclick_cb(Widget w,XtPointer app,XtPointer call){
       if(!ret){
          char* mask=XmTextFieldGetString(appdata.local.text);
 	 update_local(mask);
-	 XtFree(mask);
+	 free(mask);
       }
       if(!appdata.job)busy_cursor(False);
       break;
@@ -51,7 +55,7 @@ void doubleclick_cb(Widget w,XtPointer app,XtPointer call){
       if(!ret){
          char* mask=XmTextFieldGetString(appdata.remote.text);
 	 update_remote(mask);
-	 XtFree(mask);
+	 free(mask);
       }
       busy_cursor(False);
       appdata.job=0;
@@ -80,7 +84,7 @@ int* get_selected_rows(Widget w){
     return NULL;
   }
 
-  retval=(int*)XtRealloc((char*)list,sizeof(int)*(num+1));
+  retval=(int*)realloc((char*)list,sizeof(int)*(num+1));
   retval[num]=-1;
   return retval;
 }
@@ -93,7 +97,7 @@ int get_selected_row(Widget w){
   }
   if(num>1) retval=MANY;
   else retval=list[0];
-  XtFree((char*)list);
+  free((char*)list);
   return retval;
 }
 
@@ -116,9 +120,9 @@ void update_dirlist(Widget table,dirinfo* di){
   rw[0].closure=di;
   
   white_pixel=WhitePixelOfScreen(XtScreen(table));
-  colors=(Pixel**)XtMalloc(di->total*sizeof(Pixel*));
+  colors=(Pixel**)malloc(di->total*sizeof(Pixel*));
   for(i=0;i<di->total;i++){
-    colors[i]=(Pixel*)XtMalloc(NUMFIELDS*sizeof(Pixel));
+    colors[i]=(Pixel*)malloc(NUMFIELDS*sizeof(Pixel));
     for(temp=0;temp<NUMFIELDS;temp++)colors[i][temp]=white_pixel;
   }
 
@@ -143,8 +147,8 @@ void update_dirlist(Widget table,dirinfo* di){
   }
 
   /*XbaeMatrixDeselectAll(table);*/
-  for(i=0;i<di->total;i++) XtFree((char*)colors[i]);
-  XtFree((char*)colors);
+  for(i=0;i<di->total;i++) free((char*)colors[i]);
+  free((char*)colors);
 
   return;
 }

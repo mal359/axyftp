@@ -1,18 +1,22 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include<string.h>
-#include<unistd.h>
-#include<stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 
-#include"axyftp.h"
-#include"utils.h"
-#include"dirinfo.h"
-#include"viewer.h"
+#include "axyftp.h"
+#include "utils.h"
+#include "dirinfo.h"
+#include "viewer.h"
 
-#include<Xm/Xm.h>
-#include<Xm/Form.h>
-#include<Xm/Text.h>
-#include<Xm/Label.h>
-#include<Xm/PushB.h>
+#include <Xm/Xm.h>
+#include <Xm/Form.h>
+#include <Xm/Text.h>
+#include <Xm/Label.h>
+#include <Xm/PushB.h>
 
 void fill_dirinfo(Widget text,dirinfo* di){
   int i;
@@ -21,7 +25,7 @@ void fill_dirinfo(Widget text,dirinfo* di){
     line=get_fileinfo_string(di->files[i]);
     if(line){
       XmTextInsert(text,XmTextGetLastPosition(text),line);
-      XtFree(line);
+      free(line);
     }
   }
   XmTextShowPosition(text,0);
@@ -57,7 +61,7 @@ Widget create_viewer(Widget parent,char* name){
 
   white_pixel=WhitePixelOfScreen(XtScreen(parent));
   black_pixel=BlackPixelOfScreen(XtScreen(parent));
-  title=XtMalloc(strlen(name)+20);
+  title=malloc(strlen(name)+20);
   sprintf(title,"AxY FTP viewer - %s",name);
 
   n=0;
@@ -65,7 +69,7 @@ Widget create_viewer(Widget parent,char* name){
   XtSetArg(args[n],XmNtransient,False);n++;
   XtSetArg(args[n],XmNverticalSpacing,8);n++;
   viewer=XmCreateFormDialog(parent,"viewer",args,n);
-  XtFree(title);
+  free(title);
 /*
   n=0;
   XtSetArg(args[n],XmNhighlightThickness,0);n++;

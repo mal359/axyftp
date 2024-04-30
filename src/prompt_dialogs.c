@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef USE_JEMALLOC
-#include <jemalloc/jemalloc.h>Free
+#include <jemalloc/jemalloc.h>
 #endif
 
 #include "axyftp.h"
@@ -180,7 +180,7 @@ static void rename_cb(Widget w,XtPointer app,XtPointer call){
 	  if(!rename_local(orig,text)){
 	    char* mask=XmTextFieldGetString(appdata.local.text);
 	    update_local(mask);
-	    XtFree(mask);
+	    free(mask);
 	  }
 	  if(!appdata.job)busy_cursor(False);
 	  break;
@@ -190,7 +190,7 @@ static void rename_cb(Widget w,XtPointer app,XtPointer call){
 	  if(!rename_remote(orig,text)){
 	    char* mask=XmTextFieldGetString(appdata.remote.text);
 	    update_remote(mask);
-	    XtFree(mask);
+	    free(mask);
 	  }
 	  busy_cursor(False);
 	  appdata.job=0;
@@ -199,7 +199,7 @@ static void rename_cb(Widget w,XtPointer app,XtPointer call){
 	  break;
       }
     }
-    XtFree(text);
+    free(text);
   } else {
     XtUnmanageChild(w);
   }
@@ -275,7 +275,7 @@ static void exec_cb(Widget w,XtPointer app,XtPointer call){
      default:
 	break;
     }
-    XtFree(text);
+    free(text);
   }
   return;
 }
@@ -341,7 +341,7 @@ static void mkdir_cb(Widget w,XtPointer app,XtPointer call){
 	if(!mkdir_local(text)){
           mask=XmTextFieldGetString(appdata.local.text);
 	  update_local(mask);
-	  XtFree(mask);
+	  free(mask);
 	}
 	if(!appdata.job)busy_cursor(False);
 	break;
@@ -351,7 +351,7 @@ static void mkdir_cb(Widget w,XtPointer app,XtPointer call){
 	if(!mkdir_remote(text)){
           mask=XmTextFieldGetString(appdata.remote.text);
 	  update_remote(mask);
-	  XtFree(mask);
+	  free(mask);
 	}
 	busy_cursor(False);
 	appdata.job=0;
@@ -359,7 +359,7 @@ static void mkdir_cb(Widget w,XtPointer app,XtPointer call){
      default:
 	break;
     }
-    XtFree(text);
+    free(text);
   }
   return;
 }

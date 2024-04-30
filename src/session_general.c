@@ -1,5 +1,9 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include<string.h>
+#include <string.h>
+#include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
 
 #include "session_general.h"
 #include "session_dialog.h"
@@ -91,7 +95,7 @@ static void listaction_cb(Widget w,XtPointer app,XtPointer call){
 	write_session_data(session_file,appdata.sdata);
       }
     }
-    XtFree(s);
+    free(s);
   }
   XmStringFree(xms);
 }
@@ -111,7 +115,7 @@ static void anon_cb(Widget w,XtPointer app,XtPointer call){
     passfield=XtNameToWidget(appdata.session,"*user");
     XmTextFieldSetString(passfield,"anonymous");
   } else {
-    stars=XtMalloc(strlen(pass)+1);
+    stars=malloc(strlen(pass)+1);
     memset(stars,'*',strlen(pass));
     stars[strlen(pass)]='\0';
     save=XtNewString(pass);
@@ -119,9 +123,9 @@ static void anon_cb(Widget w,XtPointer app,XtPointer call){
     strcpy(pass,anon);
     XmTextFieldSetString(passfield,stars);
     strcpy(pass,save);
-    XtFree(anon);
-    XtFree(save);
-    XtFree(stars);
+    free(anon);
+    free(save);
+    free(stars);
   }
 
 }
@@ -291,7 +295,7 @@ Widget create_session_general(Widget parent){
   current=XmCreateTextField(general,"user",args,n);
   XtManageChild(current);
 
-  passbuf=XtMalloc(MAXPASS+1);
+  passbuf=malloc(MAXPASS+1);
   passbuf[0]='\0';
   n=0;
   XtSetArg(args[n],XmNbackground,white_pixel);n++;

@@ -44,7 +44,7 @@ void upload_cb(Widget w,XtPointer app,XtPointer call){
   ret=put_files(selrow,get_proto_state(appdata.proto));
   mask=XmTextFieldGetString(appdata.remote.text);
   if(!ret)update_remote(mask);
-  XtFree(mask);
+  free(mask);
   busy_cursor(False);
   appdata.job=0;
   return;
