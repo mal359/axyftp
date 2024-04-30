@@ -496,16 +496,12 @@ struct in_addr* ftp_gethosts(char* host,ftp_check_proc proc){
   return NULL;
 }
 
-/*#define NOFORK*/
-
 static int myconnect(int sock,struct sockaddr *serv_addr,int addrlen,
     ftp_check_proc proc){
   
   int p[2];
   int child;
-#ifdef NOFORK
-  return connect(sock,serv_addr,addrlen)<0;
-#else
+  
   struct sigaction sa;
   sa.sa_handler = handler;
   sigemptyset(&sa.sa_mask);
@@ -555,10 +551,7 @@ static int myconnect(int sock,struct sockaddr *serv_addr,int addrlen,
     }
   }
   return 1;
-#endif /* NOFORK */
 }
-
-  
 
 int ftp_connect(char* host,int port,connect_data* cd,
     FILE* log,ftp_check_proc proc){
