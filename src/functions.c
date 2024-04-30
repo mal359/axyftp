@@ -708,13 +708,16 @@ void start_session(session_data* sd,char* mask){
   for(;;){
     while(*p && isspace(*p))p++;
     if(*p=='\0')break;
-    good=0;while(p[good]!='\0' && p[good]!=';')good++;
+    good=0;
+    while(p[good]!='\0' && p[good]!=';')good++;
+    
     cmd=malloc(good+3);
-    strncpy(cmd,p,good);
-    strcpy(&cmd[good],"\r\n");
+    snprintf(cmd, good + 3, "%.*s\r\n", good, p);
+    
     if(ftp_command(cmd,&appdata.connect,logfile,check_for_interrupt)==10){
       appdata.connected=0;
       append_status("CONNECTION LOST\n");
+      free(cmd);
       return;
     }
     if(*(p=&p[good])=='\0')break;

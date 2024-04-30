@@ -44,17 +44,17 @@ char* get_fileinfo_string(fileinfo* fi){
 }
 
 fileinfo* create_dummy_dir(char* name,fileinfo* next){
-  fileinfo* fi;
+  fileinfo* fi = (fileinfo*)malloc(sizeof(fileinfo));
   
-  fi=(fileinfo*)malloc(sizeof(fileinfo));
-  strcpy(fi->perms,"d?????????");
+  memmove(fi->perms, "d?????????", sizeof(fi->perms) - 1);
+  fi->perms[sizeof(fi->perms) - 1] = '\0'; 
   fi->inode=0;
   fi->user=WXnewstring("unknown");
   fi->group=WXnewstring("unknown");
-  fi->month[0]='\0';
+  strncpy(fi->month, "", sizeof(fi->month));
   fi->day=0;
-  fi->time_year[0]='\0';
-  fi->date[0]='\0';
+  strncpy(fi->time_year, "", sizeof(fi->time_year));
+  strncpy(fi->date, "", sizeof(fi->date)); 
   fi->size=0;
   fi->name=WXnewstring(name);
   fi->link=NULL;
@@ -67,19 +67,19 @@ fileinfo* copy_fileinfo(fileinfo* orig){
   fileinfo *fi;
 
   fi=(fileinfo*)malloc(sizeof(fileinfo));
-  strncpy(fi->perms,orig->perms,11);
+  memmove(fi->perms,orig->perms,11);
   fi->inode=orig->inode;
   fi->user=WXnewstring(orig->user);
   fi->group=WXnewstring(orig->group);
   fi->size=orig->size;
-  strncpy(fi->month,orig->month,4);
+  memmove(fi->month,orig->month,4);
   fi->day=orig->day;
-  strncpy(fi->time_year,orig->time_year,6);
+  memmove(fi->time_year,orig->time_year,6);
   fi->name=WXnewstring(orig->name);
   fi->link=WXnewstring(orig->link);
-  strncpy(fi->date,orig->date,9);
-  strncpy(fi->size_str,orig->size_str,20);
-  strncpy(fi->time,orig->time,6);
+  memmove(fi->date,orig->date,9);
+  memmove(fi->size_str,orig->size_str,20);
+  memmove(fi->time,orig->time,6);
   fi->next=NULL;
 
   return fi;
@@ -136,7 +136,7 @@ fileinfo* create_nt_fileinfo(char* head){
   fi->link=NULL;
   fi->name=NULL;
   fi->next=NULL;
-  fi->time_year[0]='\0';
+  strncpy(fi->time_year, "", sizeof(fi->time_year));
   end=head+strlen(head);
   tail=head;
 
@@ -146,26 +146,26 @@ fileinfo* create_nt_fileinfo(char* head){
   if(len<8)return error_out(fi);
   if(isdigit(head[0]) && isdigit(head[1]) && head[2]=='-'){
     if((i=nt_month_index(head))<0) return error_out(fi);
-    strcpy(fi->month,nt_month[i]);
-    strncpy(&fi->date[4],head,2);
+    memmove(fi->month, nt_month[i], strlen(nt_month[i]) + 1);
+    memmove(&fi->date[4], head, 2);
   } else return error_out(fi);
   head+=3;
   if(isdigit(head[0]) && isdigit(head[1]) && head[2]=='-'){
     fi->day=atoi(head);
-    strncpy(&fi->date[6],head,2);
+    memmove(&fi->date[6], head, 2);
   } else return error_out(fi);
   head+=3;
   if(isdigit(head[0]) && isdigit(head[1])){
     len-=8;
     if(len==0){
-      strncpy(&fi->date[2],head,2);
+      memmove(&fi->date[2],head,2);
       if(atoi(head)<50){/*2050 incompliance*/
-        strncpy(fi->date,"20",2);
+        memmove(fi->date,"20",2);
       } else {
-	strncpy(fi->date,"19",2);
+	memmove(fi->date,"19",2);
       }
     } else if(len==2){
-      strncpy(fi->date,head,4);
+      memmove(fi->date,head,4);
     } else return error_out(fi);
   } else return error_out(fi);
   fi->date[8]='\0';
@@ -179,23 +179,24 @@ fileinfo* create_nt_fileinfo(char* head){
   if(head[5]=='p' || head[5]=='P'){
     sprintf(fi->time,"%2d",atoi(head)+12);
   } else if(head[5]=='a' || head[5]=='A'){
-    strncpy(fi->time,head,2);
+    memmove(fi->time, head, 2);
   } else return error_out(fi);
   head+=2;
-  strncpy(&fi->time[2],head,3);
+  memmove(&fi->time[2],head,3);
   fi->time[5]='\0';
 
   head=eatwhite(tail,end);
   tail=getnext(head,end);
   len=tail-head;
   if(len==5 && (strncmp(head,"<DIR>",5)==0 || strncmp(head,"<dir>",5)==0)){
-    strcpy(fi->perms,"d?????????");
+    memmove(fi->perms, "d?????????", sizeof(fi->perms));
     fi->size=0;
   } else {
     for(i=0;i<len;i++){
-      if(!isdigit(head[i]))return error_out(fi);
+      if(!isdigit(head[i]))
+        return error_out(fi);
     }
-    strcpy(fi->perms,"-?????????");
+    memmove(fi->perms, "-?????????", sizeof(fi->perms));
     fi->size=atoi(head);
   }
 
@@ -209,7 +210,8 @@ fileinfo* create_nt_fileinfo(char* head){
     perror("create_fileinfo");
     exit(1);
   }
-  strncpy(fi->name,head,len);fi->name[len]='\0';
+  memmove(fi->name,head,len);
+  fi->name[len]='\0';
 
   return fi;
 }
@@ -238,7 +240,8 @@ fileinfo* create_fileinfo(char* head){
   tail=getnext(head,end);
   len=tail-head;
   if(len!=10) return error_out(fi);
-  strncpy(fi->perms,head,10);fi->perms[10]='\0';
+  memmove(fi->perms,head,10);
+  fi->perms[10]='\0';
 
   head=eatwhite(tail,end);
   tail=getnext(head,end);
@@ -277,7 +280,8 @@ fileinfo* create_fileinfo(char* head){
     perror("create_fileinfo");
     exit(1);
   }
-  strncpy(fi->user,head,len);fi->user[len]='\0';
+  memmove(fi->user,head,len);
+  fi->user[len]='\0';
 
   head=eatwhite(tail,end);
   tail=getnext(head,end);
@@ -287,7 +291,8 @@ fileinfo* create_fileinfo(char* head){
     perror("create_fileinfo");
     exit(1);
   }
-  strncpy(fi->group,head,len);fi->group[len]='\0';
+  memmove(fi->group,head,len);
+  fi->group[len]='\0';
 
   head=eatwhite(tail,end);
   tail=getnext(head,end);
@@ -310,10 +315,11 @@ fileinfo* create_fileinfo(char* head){
   if(isdigit(*head)){
     int i=nt_month_index(head);
     if(i<0) return error_out(fi);
-    strcpy(fi->month,nt_month[i]);
+      memmove(fi->month, nt_month[i], strlen(nt_month[i]) + 1);
   } else {
     if(len!=3) return error_out(fi);
-    strncpy(fi->month,head,3);fi->month[3]='\0';
+    memmove(fi->month, head, 3);
+    fi->month[3]='\0';
   }
 
   head=eatwhite(tail,end);
@@ -326,7 +332,8 @@ fileinfo* create_fileinfo(char* head){
   tail=getnext(head,end);
   len=tail-head;
   if(len==0 || len>5) return error_out(fi);
-  strncpy(fi->time_year,head,len);fi->time_year[len]='\0';
+  memmove(fi->time_year,head,len);
+  fi->time_year[len]='\0';
 
   head=tail+1;
   if(len<=4 && isspace(*head))head++;
@@ -340,7 +347,8 @@ fileinfo* create_fileinfo(char* head){
       perror("create_fileinfo");
       exit(1);
     }
-    strncpy(fi->name,head,len);fi->name[len]='\0';
+    memmove(fi->name,head,len);
+    fi->name[len]='\0';
   } else {
 
     if(fi->size==0){
@@ -356,12 +364,14 @@ fileinfo* create_fileinfo(char* head){
       perror("create_fileinfo");
       exit(1);
     }
-    strncpy(fi->link,end-fi->size,fi->size);fi->link[fi->size]='\0';
+    memmove(fi->link,end-fi->size,fi->size);
+    fi->link[fi->size]='\0';
     if((fi->name=malloc(len-fi->size-3))==NULL){
       perror("create_fileinfo");
       exit(1);
     }
-    strncpy(fi->name,head,len-fi->size-4);fi->name[len-fi->size-4]='\0';
+    memmove(fi->name,head,len-fi->size-4);
+    fi->name[len-fi->size-4]='\0';
   }
 
   return fi;

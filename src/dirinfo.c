@@ -197,7 +197,7 @@ dirinfo* create_local_dirinfo(char* mask){
     else break;
   }
   current->dir=malloc(strlen(buf)+1);
-  strcpy(current->dir,buf);
+  memmove(current->dir, buf, strlen(buf) + 1);
   free(buf);
   
   if(!mask)mask="";
@@ -206,8 +206,8 @@ dirinfo* create_local_dirinfo(char* mask){
     buf=WXnewstring("LANG=C /bin/ls -al");
   } else {
     buf=malloc(strlen(mask)+strlen(command)+1);
-    strcpy(buf,command);
-    strcat(buf,mask);
+    memmove(buf, command, strlen(command) + 1);
+    memcpy(buf + strlen(command), mask, strlen(mask) + 1);
   }
   if((ls=popen(buf,"r"))==NULL){
     perror("create_local_dirinfo");
@@ -280,7 +280,7 @@ void set_fields(fileinfo** retval,int total){
 		t->tm_year+1900,month,retval[i]->day);
 	  } 
 	  if(strlen(retval[i]->time_year)>=5)
-	    strcpy(retval[i]->time,retval[i]->time_year);
+	    memmove(retval[i]->time, retval[i]->time_year, strlen(retval[i]->time_year) + 1);
 	  else 
 	    sprintf(retval[i]->time,"0%s",retval[i]->time_year);
 	} else {
@@ -291,9 +291,9 @@ void set_fields(fileinfo** retval,int total){
       }
     } else {
       if(strncmp(year,retval[i]->date,4)==0){
-	strcpy(retval[i]->time_year,retval[i]->time);
+	memmove(retval[i]->time_year, retval[i]->time, strlen(retval[i]->time) + 1);
       } else {
-	strncpy(retval[i]->time_year,retval[i]->date,4);
+	memmove(retval[i]->time_year,retval[i]->date,4);
 	retval[i]->time_year[4]='\0';
       }
     }
@@ -331,8 +331,7 @@ fileinfo** create_file_table(FILE *ls){
       if((result=fgets(buf,SIZE,ls))==NULL) break;
       len=strlen(buf);
       s=malloc(strlen(line)+len+1);
-      strcpy(s,line);
-      strcat(s,buf); 
+      memmove(s, line, strlen(line) + 1), memmove(s + strlen(line), buf, len + 1);
       free(line);
       line=s;
     } while(len==SIZE-1 && buf[SIZE-2]!='\n');

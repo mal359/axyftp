@@ -120,9 +120,9 @@ static void anon_cb(Widget w,XtPointer app,XtPointer call){
     stars[strlen(pass)]='\0';
     save=XtNewString(pass);
     anon=XmTextFieldGetString(passfield);
-    strcpy(pass,anon);
+    memmove(pass, anon, strlen(pass) + 1);
     XmTextFieldSetString(passfield,stars);
-    strcpy(pass,save);
+    memmove(pass, save, strlen(pass) + 1);
     free(anon);
     free(save);
     free(stars);
