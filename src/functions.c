@@ -31,17 +31,20 @@
 
 int show_help(int num){
 #ifdef AXYFTP_HELP_DIR
-  static char* help_loc=AXYFTP_HELP_DIR "/axyftp.html";
+  static const char* help_loc=AXYFTP_HELP_DIR "/axyftp.html";
 #else
-  static char* help_loc="/usr/local/share/axyftp/help/axyftp.html";
+  static const char* help_loc="/usr/local/share/axyftp/help/axyftp.html";
 #endif /*AXYFTP_HELP_DIR*/
-  char* buf;
-  buf=malloc(strlen(help_loc)*3+80);
-  snprintf(buf, sizeof(buf),
+  size_t buf_size = strlen(help_loc) * 3 + 80;
+  char* buf = malloc(buf_size);
+  
+  snprintf(buf, buf_size,
       "netscape -remote \'OpenURL(%s)\' || firefox %s || xterm -e lynx %s &",
       help_loc,help_loc,help_loc);
   system(buf);
+  
   free(buf);
+  
   return 0;
 }
 
@@ -188,26 +191,40 @@ int show_log(){
 
   fflush(logfile);
   if((lfd=open(log_file,O_RDONLY))<0){
-    char* text=malloc(strlen(log_file)+25);
-    snprintf(text, sizeof(text), "Cannot open log file %s",log_file);
+    size_t text_size = strlen(log_file) + 25;
+    char* text=malloc(text_size);
+    snprintf(text, text_size, "Cannot open log file %s",log_file);
+    
     (void)popup_warning_dialog(toplevel,text);
+    
     free(text);
+    
     return 1;
   }
+  
   viewer=create_viewer(toplevel,"Log Window");
+  
+  int result = fill_viewer(viewer, lfd);
+  
+  close(lfd);
 
-  return fill_viewer(viewer,lfd);
+  return result;
 }
 
 int view_local_num(int num){
   char* cmd;
+  
+  size_t cmd_length = 2 * strlen(appdata.local.list->files[num + 1]->name)+100;
 
-  cmd=malloc(2*strlen(appdata.local.list->files[num+1]->name)+100);
-  snprintf(cmd, sizeof(cmd), "${XEDITOR-gvim} %s || xterm -e ${EDITOR-vi} %s &",
+  cmd=malloc(cmd_length);
+  snprintf(cmd, cmd_length, "${XEDITOR-gvim} %s || xterm -e ${EDITOR-vi} %s &",
       appdata.local.list->files[num+1]->name,
       appdata.local.list->files[num+1]->name);
+  
   system(cmd);
+  
   free(cmd);
+  
   return 0;
 }
 
@@ -237,8 +254,14 @@ int view_remote_num(int num){
   } else {
     append_status(appdata.connect.lastline);
   }
-  if(ret)return 2;
-  if(appdata.connect.lastline[0]!='1')return 3;
+  if(ret) {
+    fclose(tmp);
+    return 2;
+  }
+  if(appdata.connect.lastline[0]!='1') {
+    fclose(tmp);
+    return 3;
+  }
 
   init_progress_dialog(appdata.progress,
                 appdata.remote.list->files[num+1]->name,
@@ -276,36 +299,46 @@ int view_remote_num(int num){
   }
   lseek(fileno(tmp),0,SEEK_SET);
 
-  text=malloc(strlen(appdata.remote.list->files[num+1]->name)+10);
-  snprintf(text, sizeof(text), "%s (remote)",appdata.remote.list->files[num+1]->name);
+  size_t text_length = strlen(appdata.remote.list->files[num+1]->name)+11;
+  text=malloc(text_length);
+  snprintf(text, text_length, "%s (remote)",
+    appdata.remote.list->files[num+1]->name);
+  
   viewer=create_viewer(toplevel,text);
   free(text);
 
   return fill_viewer(viewer,fileno(tmp));
-
 }
 
 int show_local_dirinfo(){
   char* text;
   WXwidget viewer;
+  
+  size_t text_length = strlen(appdata.local.list->dir) + strlen("/ (local DirInfo)") + 1;
 
-  text=malloc(strlen(appdata.local.list->dir)+20);
-  snprintf(text, sizeof(text), "%s/ (local DirInfo)",appdata.local.list->dir);
+  text=malloc(text_length);
+  snprintf(text, text_length, "%s/ (local DirInfo)",appdata.local.list->dir);
   viewer=create_viewer(toplevel,text);
   free(text);
+  
   fill_dirinfo(viewer,appdata.local.list);
+  
   return 0;
 }
 
 int show_remote_dirinfo(){
   char* text;
   WXwidget viewer;
+  
+  size_t text_length = strlen(appdata.remote.list->dir) + strlen("/ (remote DirInfo)") + 1;
 
-  text=malloc(strlen(appdata.remote.list->dir)+20);
-  snprintf(text, sizeof(text), "%s/ (remote DirInfo)",appdata.remote.list->dir);
+  text=malloc(text_length);
+  snprintf(text, text_length, "%s/ (remote DirInfo)", appdata.remote.list->dir);
   viewer=create_viewer(toplevel,text);
   free(text);
+  
   fill_dirinfo(viewer,appdata.remote.list);
+  
   return 0;
 }
 

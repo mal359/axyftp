@@ -382,10 +382,7 @@ Widget create_session_dialog(Widget parent){
       XmNrightAttachment,XmATTACH_FORM,
       XmNtopAttachment,XmATTACH_FORM,
       XmNleftAttachment,XmATTACH_FORM,NULL);
-
-/* #if !XM_NOTEBOOK
-  XmAxyNotebookSetCurrentPage(notebook,1,FALSE);
-#endif */
+      
   init_session_dialog(session);
   
   return session;
