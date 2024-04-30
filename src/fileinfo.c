@@ -16,7 +16,8 @@ char* get_fileinfo_string(fileinfo* fi){
   if(!fi)return NULL;
   if(fi->link){
     buf=malloc(strlen(fi->name)+strlen(fi->link)+100);
-    sprintf(buf,"%10.10s %3d %8.8s %8.8s %10ld %3.3s %2d %5.5s %s -> %s\n",
+    snprintf(buf, sizeof(buf), 
+      "%10.10s %3d %8.8s %8.8s %10ld %3.3s %2d %5.5s %s -> %s\n",
 	fi->perms,
 	fi->inode,
 	fi->user,
@@ -29,7 +30,8 @@ char* get_fileinfo_string(fileinfo* fi){
 	fi->link);
   } else {
     buf=malloc(strlen(fi->name)+100);
-    sprintf(buf,"%10.10s %3d %8.8s %8.8s %10ld %3.3s %2d %5.5s %s\n",
+    snprintf(buf, sizeof(buf), 
+      "%10.10s %3d %8.8s %8.8s %10ld %3.3s %2d %5.5s %s\n",
 	fi->perms,
 	fi->inode,
 	fi->user,
@@ -177,7 +179,7 @@ fileinfo* create_nt_fileinfo(char* head){
   if(len!=7 || head[2]!=':' || (head[6]!='m' && head[6]!='M'))
       return error_out(fi);
   if(head[5]=='p' || head[5]=='P'){
-    sprintf(fi->time,"%2d",atoi(head)+12);
+    snprintf(fi->time, sizeof(fi->time), "%2d",atoi(head)+12);
   } else if(head[5]=='a' || head[5]=='A'){
     memmove(fi->time, head, 2);
   } else return error_out(fi);

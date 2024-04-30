@@ -74,7 +74,7 @@ static void reconnect_cb(Widget w,XtPointer app,XtPointer call){
 	XmStringFree(l);
 	break;
       } else {
-	sprintf(t,"Attempt %d failed\n",count++);
+	snprintf(t, sizeof(t), "Attempt %d failed\n",count++);
 	append_status(t);
 	if(count>total){
 	  break;
@@ -91,7 +91,7 @@ static void reconnect_cb(Widget w,XtPointer app,XtPointer call){
 	  appdata.interrupt=0;
 	  break;
 	}
-	sprintf(t,"Attempt %d ...\n",count);
+	snprintf(t, sizeof(t), "Attempt %d ...\n",count);
 	append_status(t);
       }
     }

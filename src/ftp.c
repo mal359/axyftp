@@ -50,7 +50,7 @@ int ftp_size(long* size,char type,char* name,connect_data* cd,FILE* log,
   }
 
   cmd=malloc(strlen(name)+9);
-  sprintf(cmd,"TYPE %c\r\n",type);
+  snprintf(cmd, sizeof(cmd), "TYPE %c\r\n",type);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     *size=-1;
     free(cmd);
@@ -62,7 +62,7 @@ int ftp_size(long* size,char type,char* name,connect_data* cd,FILE* log,
     return 1;
   }
 
-  sprintf(cmd,"SIZE %s\r\n",name);
+  snprintf(cmd, sizeof(cmd), "SIZE %s\r\n",name);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     *size=-1;
     free(cmd);
@@ -85,7 +85,7 @@ int ftp_rename(char* from,char* to,connect_data* cd,FILE* log,
   if(from==NULL || to==NULL)return 0;
 
   cmd=malloc(strlen(from)+8);
-  sprintf(cmd,"RNFR %s\r\n",from);
+  snprintf(cmd, sizeof(cmd), "RNFR %s\r\n",from);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
     return ret;
@@ -95,7 +95,7 @@ int ftp_rename(char* from,char* to,connect_data* cd,FILE* log,
     return 2;
   }
   cmd=malloc(strlen(to)+8);
-  sprintf(cmd,"RNTO %s\r\n",to);
+  snprintf(cmd, sizeof(cmd), "RNTO %s\r\n",to);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
     return ret;
@@ -115,7 +115,7 @@ int ftp_site(char* name,connect_data* cd,FILE* log,ftp_check_proc proc){
 
   cmd=malloc(strlen(name)+8);
 
-  sprintf(cmd,"SITE %s\r\n",name);
+  snprintf(cmd, sizeof(cmd), "SITE %s\r\n",name);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
     return ret;
@@ -136,7 +136,7 @@ int ftp_mkdir(char* name,connect_data* cd,FILE* log,ftp_check_proc proc){
 
   cmd=malloc(strlen(name)+8);
 
-  sprintf(cmd,"MKD %s\r\n",name);
+  snprintf(cmd, sizeof(cmd), "MKD %s\r\n",name);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
     return ret;
@@ -169,7 +169,7 @@ int ftp_rmdir(char* name,connect_data* cd,FILE* log,ftp_check_proc proc){
 
   cmd=malloc(strlen(name)+8);
 
-  sprintf(cmd,"RMD %s\r\n",name);
+  snprintf(cmd, sizeof(cmd), "RMD %s\r\n",name);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
     return ret;
@@ -190,7 +190,7 @@ int ftp_delete(char* name,connect_data* cd,FILE* log,ftp_check_proc proc){
 
   cmd=malloc(strlen(name)+8);
 
-  sprintf(cmd,"DELE %s\r\n",name);
+  snprintf(cmd, sizeof(cmd), "DELE %s\r\n",name);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
     return ret;
@@ -335,7 +335,7 @@ INT_EXIT:
 	  goto NORMAL_CHAR;
 	}
       } else if(gotW || gotD){
-        sprintf(iac,"%c%c%c",IAC,gotW?DONT:WONT,buf[total]);
+        snprintf(iac, sizeof(iac), "%c%c%c",IAC,gotW?DONT:WONT,buf[total]);
 	write(cd->ctrl,iac,3);
 	if(interrupt)goto INT_EXIT;
 	gotW=0;gotD=0;
@@ -673,7 +673,7 @@ int ftp_login(char* user,char* pass,char* account,connect_data* cd,FILE* log,
 
   if(user==NULL)user="";
   buf=malloc(strlen(user)+8);
-  sprintf(buf,"USER %s\r\n",user);
+  snprintf(buf, sizeof(buf), "USER %s\r\n",user);
   if((ret=ftp_command(buf,cd,log,proc))!=0 || (proc && (*proc)())){
     free(buf);
     return ret;
@@ -685,7 +685,7 @@ int ftp_login(char* user,char* pass,char* account,connect_data* cd,FILE* log,
 
   if(pass==NULL)pass="";
   buf=malloc(strlen(pass)+8);
-  sprintf(buf,"PASS %s\r\n",pass);
+  snprintf(buf, sizeof(buf), "PASS %s\r\n",pass);
   if((ret=ftp_command(buf,cd,log,proc))!=0 || (proc && (*proc)())){
     free(buf);
     return ret;
@@ -696,7 +696,7 @@ int ftp_login(char* user,char* pass,char* account,connect_data* cd,FILE* log,
 
   if(account==NULL)account="";
   buf=malloc(strlen(account)+8);
-  sprintf(buf,"ACCT %s\r\n",account);
+  snprintf(buf, sizeof(buf), "ACCT %s\r\n",account);
   if((ret=ftp_command(buf,cd,log,proc))!=0 || (proc && (*proc)())){
     free(buf);
     return ret;
@@ -773,7 +773,7 @@ int ftp_sendport_init(connect_data* cd,FILE* log,ftp_check_proc proc){
     return 1;
   }
 
-  sprintf(cmd,"PORT %d,%d,%d,%d,%d,%d\r\n",
+  snprintf(cmd, sizeof(cmd), "PORT %d,%d,%d,%d,%d,%d\r\n",
       (int)((char*)&cd->daddr.sin_addr)[0] & 0xFF,
       (int)((char*)&cd->daddr.sin_addr)[1] & 0xFF,
       (int)((char*)&cd->daddr.sin_addr)[2] & 0xFF,
@@ -919,15 +919,15 @@ int ftp_list(char* opt,char* mask,connect_data* cd,FILE* log,
 
   if(strlen(opt)==0){
     if(strlen(mask)==0){
-      sprintf(cmd,"LIST\r\n");
+      snprintf(cmd, sizeof(cmd), "LIST\r\n");
     } else {
-      sprintf(cmd,"LIST %s\r\n",mask);
+      snprintf(cmd, sizeof(cmd), "LIST %s\r\n",mask);
     }
   } else {
     if(strlen(mask)==0){
-      sprintf(cmd,"LIST %s\r\n",opt);
+      snprintf(cmd, sizeof(cmd), "LIST %s\r\n",opt);
     } else {
-      sprintf(cmd,"LIST %s %s\r\n",opt,mask);
+      snprintf(cmd, sizeof(cmd), "LIST %s %s\r\n",opt,mask);
     }
   }
 
@@ -960,7 +960,7 @@ int ftp_put(char type,char* local,connect_data* cd,FILE* log,
 
   cmd=malloc(strlen(local)+9);
 
-  sprintf(cmd,"TYPE %c\r\n",type);
+  snprintf(cmd, sizeof(cmd), "TYPE %c\r\n",type);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
@@ -972,7 +972,7 @@ int ftp_put(char type,char* local,connect_data* cd,FILE* log,
     return 1;
   }
 
-  sprintf(cmd,"STOR %s\r\n",local);
+  snprintf(cmd, sizeof(cmd), "STOR %s\r\n",local);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
@@ -1002,7 +1002,7 @@ int ftp_get(char type,char* remote,connect_data* cd,FILE* log,
 
   cmd=malloc(strlen(remote)+9);
 
-  sprintf(cmd,"TYPE %c\r\n",type);
+  snprintf(cmd, sizeof(cmd), "TYPE %c\r\n",type);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
@@ -1014,7 +1014,7 @@ int ftp_get(char type,char* remote,connect_data* cd,FILE* log,
     return 1;
   }
 
-  sprintf(cmd,"RETR %s\r\n",remote);
+  snprintf(cmd, sizeof(cmd), "RETR %s\r\n",remote);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
@@ -1044,7 +1044,7 @@ int ftp_resume(char type,long size,char* remote,connect_data* cd,FILE* log,
 
   cmd=malloc(strlen(remote)+40);
 
-  sprintf(cmd,"TYPE %c\r\n",type);
+  snprintf(cmd, sizeof(cmd), "TYPE %c\r\n",type);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
@@ -1056,7 +1056,7 @@ int ftp_resume(char type,long size,char* remote,connect_data* cd,FILE* log,
     return 1;
   }
 
-  sprintf(cmd,"REST %ld\r\n",size);
+  snprintf(cmd, sizeof(cmd), "REST %ld\r\n",size);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
@@ -1067,7 +1067,7 @@ int ftp_resume(char type,long size,char* remote,connect_data* cd,FILE* log,
     return 1;
   }
 
-  sprintf(cmd,"RETR %s\r\n",remote);
+  snprintf(cmd, sizeof(cmd), "RETR %s\r\n",remote);
 
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
@@ -1094,7 +1094,7 @@ int ftp_abort_data(connect_data* cd,FILE* log,ftp_check_proc proc){
   sigaction(SIGPIPE, &sa_ignore, NULL);
   sigaction(SIGALRM, &sa_ignore, NULL);
 
-  sprintf(buf,"%c%c",IAC,IP);
+  snprintf(buf, sizeof(buf), "%c%c",IAC,IP);
   if(write(cd->ctrl,buf,2)<=0 || interrupt){
     shutdown(cd->data,2);
     sigaction(SIGPIPE, &sa_ignore, NULL);
@@ -1103,7 +1103,7 @@ int ftp_abort_data(connect_data* cd,FILE* log,ftp_check_proc proc){
     return 10;
   }
 
-  sprintf(buf,"%c%c",IAC,DM);
+  snprintf(buf, sizeof(buf), "%c%c",IAC,DM);
   if(send(cd->ctrl,buf,2,MSG_OOB)<=0 || interrupt){
     shutdown(cd->data,2);
     sigaction(SIGPIPE, &sa_ignore, NULL);
@@ -1135,7 +1135,7 @@ int ftp_chdir(char* dir,connect_data* cd,FILE* log,ftp_check_proc proc){
 
   cmd=malloc(strlen(dir)+7);
 
-  sprintf(cmd,"CWD %s\r\n",dir);
+  snprintf(cmd, sizeof(cmd), "CWD %s\r\n",dir);
   if((ret=ftp_command(cmd,cd,log,proc))!=0){
     free(cmd);
     return ret;

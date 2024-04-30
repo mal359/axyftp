@@ -23,9 +23,9 @@ static void translate_time(char* buf,long tot){
   secs=tot;
 
   if(hours){
-    sprintf(buf,"%ld:%.2ld:%.2ld",hours,mins,secs);
+    snprintf(buf, sizeof(buf), "%ld:%.2ld:%.2ld",hours,mins,secs);
   } else {
-    sprintf(buf,"%ld:%.2ld",mins,secs);
+    snprintf(buf, sizeof(buf), "%ld:%.2ld",mins,secs);
   }
 }
 
@@ -53,7 +53,7 @@ void update_progress_dialog(Widget w,
     XtVaSetValues(child,XmNvalue,0,XmNsliderSize,(value==0)?1:value,NULL);
 
     child=XtNameToWidget(w,"*percent");
-    sprintf(buf,"%d %%",value);
+    snprintf(buf, sizeof(buf), "%d %%",value);
     xms=XmStringCreateLocalized(buf);
     XtVaSetValues(child,XmNlabelString,xms,NULL);
     XmStringFree(xms);
@@ -62,7 +62,7 @@ void update_progress_dialog(Widget w,
   
   if(size>=0){
     child=XtNameToWidget(w,"*size");
-    sprintf(buf,"%ld",size);
+    snprintf(buf, sizeof(buf), "%ld",size);
     xms=XmStringCreateLocalized(buf);
     XtVaSetValues(child,XmNlabelString,xms,NULL);
     XmStringFree(xms);
@@ -70,7 +70,7 @@ void update_progress_dialog(Widget w,
   
   if(rate>=0){
     child=XtNameToWidget(w,"*rate");
-    sprintf(buf,"%.3f kBps",rate);
+    snprintf(buf, sizeof(buf), "%.3f kBps",rate);
     xms=XmStringCreateLocalized(buf);
     XtVaSetValues(child,XmNlabelString,xms,NULL);
     XmStringFree(xms);
@@ -100,7 +100,7 @@ void init_progress_dialog(Widget w,char* name,long size){
   
   child=XtNameToWidget(w,"*toptext");
   buf=malloc(strlen(name)+30);
-  sprintf(buf,"%s (%ld bytes)",name,size);
+  snprintf(buf, sizeof(buf), "%s (%ld bytes)",name,size);
   xms=XmStringCreateLocalized(buf);
   XtVaSetValues(child,XmNlabelString,xms,NULL);
   XmStringFree(xms);

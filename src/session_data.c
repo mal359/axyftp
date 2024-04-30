@@ -343,7 +343,7 @@ static int find_ver_index(char* buf,char* file){
   
   if(index!=last_ver){
     char* command=malloc(2*strlen(file)+20);
-    sprintf(command,"/bin/cp -f %s %s.old",file,file);
+    snprintf(command, sizeof(command), "cp -f %s %s.old",file,file);
     (void)system(command);
     free(command);
   }

@@ -70,7 +70,7 @@ int main(int argc, char* argv[]){
   
   mask=DisplayString(XtDisplay(toplevel));
   env=malloc(strlen(mask)+12);
-  sprintf(env,"DISPLAY = %s",mask);
+  snprintf(env, sizeof(env), "DISPLAY = %s",mask);
   putenv(env);
   free(env);
 

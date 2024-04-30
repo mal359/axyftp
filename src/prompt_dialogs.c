@@ -39,7 +39,7 @@ void init_xfer_dialog(Widget dialog,char* file){
   XmString xms;
 
   p=malloc(strlen(file)+50);
-  sprintf(p,"%s\nalready exists",file);
+  snprintf(p, sizeof(p), "%s\nalready exists",file);
   xms=XmStringCreateLocalized(p);
 
   XtVaSetValues(dialog,XmNmessageString,xms,NULL);
@@ -106,7 +106,7 @@ void init_delete_dialog(Widget dialog,char* file){
   XmString xms;
 
   p=malloc(strlen(file)+50);
-  sprintf(p,"Delete\n%s",file);
+  snprintf(p, sizeof(p), "Delete\n%s",file);
   xms=XmStringCreateLocalized(p);
 
   XtVaSetValues(dialog,XmNmessageString,xms,NULL);

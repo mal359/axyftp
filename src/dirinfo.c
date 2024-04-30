@@ -1,29 +1,29 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
-#include<string.h>
-#include<time.h>
-#include<stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <stdlib.h>
 #ifdef USE_JEMALLOC
 #include <jemalloc/jemalloc.h>
 #endif
-#include<unistd.h>
-#include<stdio.h>
-#include<ctype.h>
-#include<errno.h>
+#include <unistd.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <errno.h>
 
 extern int errno;
 
 #define SIZE 1024
 
-#include"status.h"
+#include "status.h"
 
-#include"utils.h"
-#include"ftp.h"
-#include"ftp_xfer.h"
-#include"dirinfo.h"
-#include"functions.h"
-#include"read_init.h"
-#include"little_dialogs.h"
-#include"axyftp.h"
+#include "utils.h"
+#include "ftp.h"
+#include "ftp_xfer.h"
+#include "dirinfo.h"
+#include "functions.h"
+#include "read_init.h"
+#include "little_dialogs.h"
+#include "axyftp.h"
 
 extern void print_fileinfo(fileinfo*);
 fileinfo** create_file_table(FILE*);
@@ -75,7 +75,7 @@ static int update_list_progress(int len,void* arg){
   data=(struct _list_progress_data*)arg;
 
   if(len){
-    sprintf(buf,"%ld ",data->got+=(long)len);
+    snprintf(buf, sizeof(buf), "%ld ",data->got+=(long)len);
     WXsetLabel(data->label,buf);
   }
   return check_for_interrupt();
@@ -259,11 +259,12 @@ void set_fields(fileinfo** retval,int total){
 
   bigseconds=time(NULL);
   t=localtime(&bigseconds);
-  sprintf(year,"%.4d",1900+t->tm_year);
+  snprintf(year, sizeof(year), "%.4d",1900+t->tm_year);
 
   for(i=1;i<=total;i++){
     /* SIZE */ 
-    sprintf(retval[i]->size_str,"%ld",retval[i]->size);
+    snprintf(retval[i]->size_str, sizeof(retval[i]->size_str), 
+      "%ld",retval[i]->size);
     /* DATE */
     if(retval[i]->date[0]=='\0'){
       month=convert_month(retval[i]->month);   
@@ -273,20 +274,21 @@ void set_fields(fileinfo** retval,int total){
       } else {
 	if(strchr(retval[i]->time_year,':')!=NULL){
 	  if(inthefuture(t,month,retval[i])){
-	    sprintf(retval[i]->date,"%.4d%.2d%.2d",
+	    snprintf(retval[i]->date, sizeof(retval[i]->date), "%.4d%.2d%.2d",
 		t->tm_year+1899,month,retval[i]->day);
 	  } else {
-	    sprintf(retval[i]->date,"%.4d%.2d%.2d",
+	    snprintf(retval[i]->date, sizeof(retval[i]->date), "%.4d%.2d%.2d",
 		t->tm_year+1900,month,retval[i]->day);
 	  } 
 	  if(strlen(retval[i]->time_year)>=5)
 	    memmove(retval[i]->time, retval[i]->time_year, strlen(retval[i]->time_year) + 1);
 	  else 
-	    sprintf(retval[i]->time,"0%s",retval[i]->time_year);
+	    snprintf(retval[i]->time, sizeof(retval[i]->time), 
+	      "0%s",retval[i]->time_year);
 	} else {
-	  sprintf(retval[i]->date,"%s%.2d%.2d",
+	  snprintf(retval[i]->date, sizeof(retval[i]->date), "%s%.2d%.2d",
 	      retval[i]->time_year,month,retval[i]->day);
-	  sprintf(retval[i]->time,"00:00");
+	  snprintf(retval[i]->time, sizeof(retval[i]->date), "00:00");
 	}
       }
     } else {

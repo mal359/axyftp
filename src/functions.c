@@ -37,7 +37,7 @@ int show_help(int num){
 #endif /*AXYFTP_HELP_DIR*/
   char* buf;
   buf=malloc(strlen(help_loc)*3+80);
-  sprintf(buf,
+  snprintf(buf, sizeof(buf),
       "netscape -remote \'OpenURL(%s)\' || firefox %s || xterm -e lynx %s &",
       help_loc,help_loc,help_loc);
   system(buf);
@@ -112,7 +112,7 @@ int rename_local_num(int num){
   char* orig;
   orig=appdata.local.list->files[num+1]->name;
   text=malloc(strlen(orig)+35);
-  sprintf(text,"Enter new name for \"%s\" (local):",orig);
+  snprintf(text, sizeof(text), "Enter new name for \"%s\" (local):",orig);
   init_rename_dialog(appdata.rename_local,text,orig);
   free(text);
   return 0;
@@ -123,7 +123,7 @@ int rename_remote_num(int num){
   char* orig;
   orig=appdata.remote.list->files[num+1]->name;
   text=malloc(strlen(orig)+35);
-  sprintf(text,"Enter new name for \"%s\" (remote):",orig);
+  snprintf(text, sizeof(text), "Enter new name for \"%s\" (remote):",orig);
   init_rename_dialog(appdata.rename_remote,text,orig);
   free(text);
   return 0;
@@ -189,7 +189,7 @@ int show_log(){
   fflush(logfile);
   if((lfd=open(log_file,O_RDONLY))<0){
     char* text=malloc(strlen(log_file)+25);
-    sprintf(text,"Cannot open log file %s",log_file);
+    snprintf(text, sizeof(text), "Cannot open log file %s",log_file);
     (void)popup_warning_dialog(toplevel,text);
     free(text);
     return 1;
@@ -203,30 +203,12 @@ int view_local_num(int num){
   char* cmd;
 
   cmd=malloc(2*strlen(appdata.local.list->files[num+1]->name)+100);
-  sprintf(cmd,"${XEDITOR-gvim} %s || xterm -e ${EDITOR-vi} %s &",
+  snprintf(cmd, sizeof(cmd), "${XEDITOR-gvim} %s || xterm -e ${EDITOR-vi} %s &",
       appdata.local.list->files[num+1]->name,
       appdata.local.list->files[num+1]->name);
   system(cmd);
   free(cmd);
   return 0;
-/*  int lfd;
-  GtkWidget* viewer;
-  char* text;
-
-  if((lfd=open(appdata.local.list->files[num+1]->name,O_RDONLY))<0){
-    char* text=malloc(strlen(appdata.local.list->files[num+1]->name)+14);
-    sprintf(text,"Cannot open %s",appdata.local.list->files[num+1]->name);
-    (void)popup_warning_dialog(toplevel,text);
-    free(text);
-    return 1;
-  }
-  text=malloc(strlen(appdata.local.list->files[num+1]->name)+8);
-  sprintf(text,"Local: %s",appdata.local.list->files[num+1]->name);
-  viewer=create_viewer(toplevel,text);
-  free(text);
-
-  return fill_viewer(viewer,lfd);
-  */
 }
 
 int view_remote_num(int num){
@@ -258,7 +240,6 @@ int view_remote_num(int num){
   if(ret)return 2;
   if(appdata.connect.lastline[0]!='1')return 3;
 
-/*  progress=create_progress_dialog(toplevel);*/
   init_progress_dialog(appdata.progress,
                 appdata.remote.list->files[num+1]->name,
                 appdata.remote.list->files[num+1]->size);
@@ -296,7 +277,7 @@ int view_remote_num(int num){
   lseek(fileno(tmp),0,SEEK_SET);
 
   text=malloc(strlen(appdata.remote.list->files[num+1]->name)+10);
-  sprintf(text,"%s (remote)",appdata.remote.list->files[num+1]->name);
+  snprintf(text, sizeof(text), "%s (remote)",appdata.remote.list->files[num+1]->name);
   viewer=create_viewer(toplevel,text);
   free(text);
 
@@ -309,7 +290,7 @@ int show_local_dirinfo(){
   WXwidget viewer;
 
   text=malloc(strlen(appdata.local.list->dir)+20);
-  sprintf(text,"%s/ (local DirInfo)",appdata.local.list->dir);
+  snprintf(text, sizeof(text), "%s/ (local DirInfo)",appdata.local.list->dir);
   viewer=create_viewer(toplevel,text);
   free(text);
   fill_dirinfo(viewer,appdata.local.list);
@@ -321,7 +302,7 @@ int show_remote_dirinfo(){
   WXwidget viewer;
 
   text=malloc(strlen(appdata.remote.list->dir)+20);
-  sprintf(text,"%s/ (remote DirInfo)",appdata.remote.list->dir);
+  snprintf(text, sizeof(text), "%s/ (remote DirInfo)",appdata.remote.list->dir);
   viewer=create_viewer(toplevel,text);
   free(text);
   fill_dirinfo(viewer,appdata.remote.list);
@@ -397,7 +378,7 @@ int upload_file(fileinfo* fi,char type){
   if((lfd=open(fi->name,O_RDONLY))<0){
     char* b;
     b=malloc(strlen(fi->name)+40);
-    sprintf(b,"Cannot open local file %s\n",fi->name);
+    snprintf(b, sizeof(b), "Cannot open local file %s\n",fi->name);
     append_status(b);
     free(b);
     return 2;
@@ -405,7 +386,7 @@ int upload_file(fileinfo* fi,char type){
   if(fstat(lfd,&statbuf)){
     char* b;
     b=malloc(strlen(fi->name)+40);
-    sprintf(b,"Cannot get size info for %s\n",fi->name);
+    snprintf(b, sizeof(b), "Cannot get size info for %s\n",fi->name);
     append_status(b);
     free(b);
     return 2;
@@ -524,7 +505,7 @@ int download_file(fileinfo* volatile fi,char volatile type){
     if((lfd=open(fi->name,O_WRONLY|O_CREAT|O_TRUNC,0755))<0){
       char* b;
       b=malloc(strlen(fi->name)+40);
-      sprintf(b,"Cannot open local file %s\n",fi->name);
+      snprintf(b, sizeof(b), "Cannot open local file %s\n",fi->name);
       append_status(b);
       free(b);
       return 2;
@@ -536,7 +517,7 @@ int download_file(fileinfo* volatile fi,char volatile type){
     if((lfd=open(fi->name,O_WRONLY|O_APPEND,0755))<0){
       char* b;
       b=malloc(strlen(fi->name)+40);
-      sprintf(b,"Cannot open local file %s\n",fi->name);
+      snprintf(b, sizeof(b), "Cannot open local file %s\n",fi->name);
       append_status(b);
       free(b);
       return 2;

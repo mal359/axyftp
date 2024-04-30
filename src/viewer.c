@@ -62,7 +62,7 @@ Widget create_viewer(Widget parent,char* name){
   white_pixel=WhitePixelOfScreen(XtScreen(parent));
   black_pixel=BlackPixelOfScreen(XtScreen(parent));
   title=malloc(strlen(name)+20);
-  sprintf(title,"AxY FTP viewer - %s",name);
+  snprintf(title, sizeof(title), "AxY FTP viewer - %s",name);
 
   n=0;
   XtSetArg(args[n],XmNtitle,title);n++;

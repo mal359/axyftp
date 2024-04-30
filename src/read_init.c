@@ -45,10 +45,10 @@ int read_init(){
   }
 
   initdir=malloc(strlen(home)+strlen(INIT_DIR)+2);
-  sprintf(initdir,"%s/%s",home,INIT_DIR);
+  snprintf(initdir, sizeof(initdir), "%s/%s", home, INIT_DIR);
 
   oldinitdir=malloc(strlen(home)+strlen(INIT_DIR)+2);
-  sprintf(oldinitdir,"%s/%s",home,OLD_INIT_DIR);
+  snprintf(oldinitdir, sizeof(oldinitdir),"%s/%s",home,OLD_INIT_DIR);
 
   if(!stat(oldinitdir,&statbuf) && stat(initdir,&statbuf)){
     rename(oldinitdir,initdir);
@@ -72,10 +72,10 @@ int read_init(){
   }
 
   log_file=malloc(strlen(initdir)+strlen(LOG_FILE)+2);
-  sprintf(log_file,"%s/%s",initdir,LOG_FILE);
+  snprintf(log_file, sizeof(logfile), "%s/%s",initdir,LOG_FILE);
   if(!stat(log_file,&statbuf) && statbuf.st_size){
     buf=malloc(strlen(log_file)+6);
-    sprintf(buf,"%s.last",log_file);
+    snprintf(buf, sizeof(buf), "%s.last",log_file);
     (void)rename(log_file,buf);
     free(buf);
   }
@@ -84,10 +84,10 @@ int read_init(){
   }
 
   session_file=malloc(strlen(initdir)+strlen(SESSION_FILE)+2);
-  sprintf(session_file,"%s/%s",initdir,SESSION_FILE);
+  snprintf(session_file, sizeof(session_file), "%s/%s",initdir,SESSION_FILE);
   appdata.sdata=create_session_data(NULL);
   options_file=malloc(strlen(initdir)+strlen(OPTIONS_FILE)+2);
-  sprintf(options_file,"%s/%s",initdir,OPTIONS_FILE);
+  snprintf(options_file, sizeof(options_file), "%s/%s",initdir,OPTIONS_FILE);
   
   switch(read_options_data(options_file,&appdata.odata)){
     case 1:
@@ -96,7 +96,7 @@ int read_init(){
       appdata.odata=create_options_data(NULL);
       empty_options_data(appdata.odata);
       buf=malloc(strlen(options_file)+10);
-      sprintf(buf,"%s.bak",options_file);
+      snprintf(buf, sizeof(buf), "%s.bak",options_file);
       rename(options_file,buf);
       free(buf);
       write_options_data(options_file,appdata.odata);
@@ -113,7 +113,7 @@ int read_init(){
     case 2:
     case 3:
       buf=malloc(strlen(session_file)+10);
-      sprintf(buf,"%s.bak",session_file);
+      snprintf(buf, sizeof(buf), "%s.bak",session_file);
       rename(session_file,buf);
       free(buf);
       ret=write_session_data(session_file,appdata.sdata);
