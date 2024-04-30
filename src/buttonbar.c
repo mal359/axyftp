@@ -27,7 +27,7 @@ void activate_cb(Widget w,XtPointer app,XtPointer call){
 
   XtVaGetValues(w,XmNlabelString,&xmlabel,NULL);
   if(XmStringGetLtoR(xmlabel,XmFONTLIST_DEFAULT_TAG,&strlabel)){
-    if(strcmp(strlabel,"connect")==0){
+    if(strcmp(strlabel,"Connect")==0){
       XtManageChild(appdata.session);
     } else if(strcmp(strlabel,"Help")==0){
       show_help(1);
@@ -49,7 +49,7 @@ void activate_cb(Widget w,XtPointer app,XtPointer call){
 	clear_dirlist(appdata.remote.table);
 	clear_dirname(appdata.remote.combo);
 	XmTextFieldSetString(appdata.remote.text,"");
-	l=XmStringCreateLocalized("connect");
+	l=XmStringCreateLocalized("Connect");
 	XtVaSetValues(w,XmNlabelString,l,NULL);
 	XmStringFree(l);
 	busy_cursor(False);
