@@ -15,7 +15,7 @@ XMAXY_LIB = ../xmaxy/XmAxy/libXmAxy.a
 DT_INCLUDE = -I/usr/dt
 
 #DT_LIB = ../dtwidget/Dt/libDtWidget.a
-DT_LIB = -L/usr/dt/lib -lDtWidget
+#DT_LIB = -L/usr/dt/lib -lDtWidget
 
 #XPM_INCLUDE = -I/usr/X11R6/include
 XPM_INCLUDE = -I/usr/include
@@ -38,9 +38,9 @@ MOTIF_LIB= -lXm
 
 X_INCLUDE=-I/usr/include/X11
 
-X_LIB=-L/usr/lib/x86_64-linux-gnu -lXt -lX11
+X_LIB=-L/usr/lib/x86_64-linux-gnu -lXt -lX11 -lXmu
 
-DEFINES = -DLINUX -DMOTIF -D_GNU_SOURCE
+DEFINES = -DLINUX -DMOTIF -D_GNU_SOURCE -DUSE_JEMALLOC
 
 
 CFLAGS = -O2 -g -fcommon $(DEFINES) $(XMAXY_INCLUDE) $(DT_INCLUDE) \

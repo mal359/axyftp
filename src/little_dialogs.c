@@ -39,6 +39,11 @@ static void reconnect_cb(Widget w,XtPointer app,XtPointer call){
  
   act=(int)app;
   XtDestroyWidget(XtParent(w));
+      
+  struct sigaction sa;
+  sa.sa_handler = time_to_retry;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
 
   if(act){
     appdata.job=1;
@@ -57,6 +62,9 @@ static void reconnect_cb(Widget w,XtPointer app,XtPointer call){
     delay=atoi(appdata.odata->delay);
     if(delay<0)delay=0;
     count=0;
+    
+    sigaction(SIGALRM, &sa, NULL);
+
     while(1){
       start_session(appdata.sdata,mask);
       if(appdata.connected){
@@ -64,17 +72,14 @@ static void reconnect_cb(Widget w,XtPointer app,XtPointer call){
 	l=XmStringCreateLocalized("Disconnect");
 	XtVaSetValues(appdata.conbutton,XmNlabelString,l,NULL);
 	XmStringFree(l);
-	signal(SIGALRM,SIG_IGN);
 	break;
       } else {
 	sprintf(t,"Attempt %d failed\n",count++);
 	append_status(t);
 	if(count>total){
-	  signal(SIGALRM,SIG_IGN);
 	  break;
 	}
 	if(delay>0){
-	  signal(SIGALRM,time_to_retry);
 	  alarm(delay);
 	  if(!(ret=sigsetjmp(jmp_down_env,1))){
 	    appdata.jump_on_cancel=1;
@@ -83,7 +88,6 @@ static void reconnect_cb(Widget w,XtPointer app,XtPointer call){
 	  appdata.jump_on_cancel=0;
 	}
 	if(appdata.interrupt){
-	  signal(SIGALRM,SIG_IGN);
 	  appdata.interrupt=0;
 	  break;
 	}

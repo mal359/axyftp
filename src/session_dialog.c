@@ -43,6 +43,11 @@ static void request_connection(){
   volatile int count,ret,total,delay;
   char t[40];
   
+  struct sigaction sa;
+  sa.sa_handler = time_to_retry;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  
   fetch_session_data(appdata.session,appdata.sdata);
   XmTextFieldSetString(appdata.remote.text,appdata.sdata->remmask);
   XmTextFieldSetString(appdata.local.text,appdata.sdata->locmask);
@@ -53,6 +58,9 @@ static void request_connection(){
   delay=atoi(appdata.odata->delay);
   if(delay<0)delay=0;
   count=0;
+  
+  sigaction(SIGALRM, &sa, NULL);
+    
   while(1){
     start_session(appdata.sdata,mask);
     if(appdata.connected){
@@ -60,17 +68,14 @@ static void request_connection(){
       l=XmStringCreateLocalized("Disconnect");
       XtVaSetValues(appdata.conbutton,XmNlabelString,l,NULL);
       XmStringFree(l);
-      signal(SIGALRM,SIG_IGN);
       break;
     } else {
       sprintf(t,"Attempt %d failed\n",count++);
       append_status(t);
       if(count>total){
-	signal(SIGALRM,SIG_IGN);
 	break;
       }
       if(delay>0){
-	signal(SIGALRM,time_to_retry);
 	alarm(delay);
 	if(!(ret=sigsetjmp(jmp_down_env,1))){
 	  appdata.jump_on_cancel=1;
@@ -79,7 +84,6 @@ static void request_connection(){
 	appdata.jump_on_cancel=0;
       }
       if(appdata.interrupt){
-	signal(SIGALRM,SIG_IGN);
 	appdata.interrupt=0;
 	break;
       }

@@ -1,4 +1,10 @@
 /* Copyright (c) 1998   Alexander Yukhimets. All rights reserved. */
+#include <stdlib.h>
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
+
+
 #include "axyftp.h"
 #include "utils.h"
 #include "functions.h"
@@ -6,11 +12,6 @@
 #include "dirname.h"
 
 #define MAX_VISIBLE_ITEMS 10
-
-#include <stdlib.h>
-#ifdef USE_JEMALLOC
-#include <jemalloc/jemalloc.h>
-#endif
 
 #include <Xm/Xm.h>
 #include <Xm/RowColumn.h>

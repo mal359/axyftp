@@ -26,18 +26,17 @@
 
 extern int h_errno;
 
-#include"ftp.h"
+#include "ftp.h"
 
 #define FTP_MIN_BUF 256
-static int interrupt;
+
+static volatile sig_atomic_t interrupt = 0;
 
 pthread_mutex_t ftp_mutex = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t data_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void handler(int sig){
-  interrupt=sig;
-  /*printf("\n\n\n\nGOT SIGNAL!\n\n\n");*/
-  return;
+  interrupt = 1;
 }
 
 int ftp_size(long* size,char type,char* name,connect_data* cd,FILE* log,
@@ -206,19 +205,40 @@ int ftp_delete(char* name,connect_data* cd,FILE* log,ftp_check_proc proc){
 
 int ftp_disconnect(connect_data* cd,FILE* log,ftp_check_proc proc){
   int ret;
-  signal(SIGALRM,handler);
+  
+  struct sigaction sa;
+  sa.sa_handler = handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  
+  sigaction(SIGALRM, &sa, NULL);
+  
   alarm(10);
+  
   ret=ftp_command("QUIT\r\n",cd,log,proc);
+  
   interrupt=0;
   alarm(5);
+  
   close(cd->ctrl);
   shutdown(cd->ctrl,2);
-  signal(SIGALRM,SIG_IGN);
+  
+  sigaction(SIGALRM, &(struct sigaction){SIG_IGN}, NULL);
   return ret;
 }
 
 int ftp_command(char* cmd,connect_data* cd,FILE* log,ftp_check_proc proc){
-  signal(SIGPIPE,handler);
+  struct sigaction sa;
+  sa.sa_handler = handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGPIPE, &sa, NULL);
+    
+  sigset_t mask;
+  sigemptyset(&mask);
+  sigaddset(&mask, SIGPIPE);
+  
+  pthread_sigmask(SIG_BLOCK, &mask, NULL);
   pthread_mutex_lock(&ftp_mutex);
   
   if(log)fputs(cmd,log);
@@ -226,17 +246,16 @@ int ftp_command(char* cmd,connect_data* cd,FILE* log,ftp_check_proc proc){
   int ret = 0;
   if(write(cd->ctrl,cmd,strlen(cmd))<=0 || interrupt){
     ret = 10;
-    signal(SIGPIPE, SIG_IGN);
     interrupt = 0;
   }
   else if(proc && (*proc)()){
     ret = -1;
-    signal(SIGPIPE, SIG_IGN);
     interrupt = 0;
   }
   else ret = ftp_read_response(cd, log, proc);
   
   pthread_mutex_unlock(&ftp_mutex);
+  pthread_sigmask(SIG_UNBLOCK, &mask, NULL);
   
   return ret;
 }
@@ -253,8 +272,11 @@ int ftp_read_line(char** retbuf,connect_data* cd,ftp_check_proc proc){
   
   buf = (char*)malloc(allocated * sizeof(char));
   
-  signal(SIGPIPE,handler);
-  interrupt=0;
+  struct sigaction sa;
+  sa.sa_handler = SIG_IGN;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGPIPE, &sa, NULL);
   
   *retbuf=buf;
   total=0;
@@ -274,7 +296,6 @@ int ftp_read_line(char** retbuf,connect_data* cd,ftp_check_proc proc){
       if((proc && (*proc)()) || interrupt){
 INT_EXIT:
 	buf[total]='\0';
-	signal(SIGPIPE,SIG_IGN);
 	if(interrupt){
 	  interrupt=0;
 	  return 10;
@@ -283,7 +304,6 @@ INT_EXIT:
     } else if(retval<0){
       (void)(proc && (*proc)());
       buf[total]='\0';
-      signal(SIGPIPE,SIG_IGN);
       interrupt=0;
       return 10;
     } else {
@@ -292,7 +312,6 @@ INT_EXIT:
 	/* EOF */
         (void)(proc && (*proc)());
 	buf[total]='\0';
-	signal(SIGPIPE,SIG_IGN);
 	interrupt=0;
 	/*printf("\n\n\nEOF EOF EOF!!!!!!!!!!!!\n\n\n");*/
 	return 10;
@@ -300,7 +319,6 @@ INT_EXIT:
       if(retval<0){
         (void)(proc && (*proc)());
 	buf[total]='\0';
-	signal(SIGPIPE,SIG_IGN);
 	interrupt=0;
 	return 10;
       }
@@ -328,7 +346,6 @@ NORMAL_CHAR:
 	    break;
 	  case '\n':
 	    (void)(proc && (*proc)());
-	    signal(SIGPIPE,SIG_IGN);
 	    interrupt=0;
 	    buf[++total]='\0';
 	    return 0;
@@ -392,8 +409,13 @@ struct in_addr* ftp_gethosts(char* host,ftp_check_proc proc){
   int child;
 
   if(pipe(fd)<0)return NULL;
-  signal(SIGPIPE,handler);
-  interrupt=0;
+  
+  struct sigaction sa;
+  sa.sa_handler = handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGPIPE, &sa, NULL);
+  
   if((child=fork())==0){
     /* child */
     char** p;
@@ -440,7 +462,6 @@ struct in_addr* ftp_gethosts(char* host,ftp_check_proc proc){
       tv.tv_usec=100000;
       if(select(fd[0]+1,&fdset,NULL,NULL,&tv)<=0){
         if((proc && (*proc)()) || interrupt){
-	  signal(SIGPIPE,SIG_IGN);
 	  kill(child,SIGKILL);
 	  interrupt=0;
 	  return NULL;
@@ -448,7 +469,6 @@ struct in_addr* ftp_gethosts(char* host,ftp_check_proc proc){
       } else {
         if(read(fd[0],&num,sizeof(int))<=0 || num<=0 || interrupt){
 	  close(fd[0]);
-	  signal(SIGPIPE,SIG_IGN);
 	  kill(child,SIGKILL);
 	  interrupt=0;
 	  return NULL;
@@ -458,7 +478,6 @@ struct in_addr* ftp_gethosts(char* host,ftp_check_proc proc){
 	  if(read(fd[0],pt,sizeof(struct in_addr))<=0 || interrupt){
 	    free(buf);
 	    close(fd[0]);
-	    signal(SIGPIPE,SIG_IGN);
 	    kill(child,SIGKILL);
 	    interrupt=0;
 	    return NULL;
@@ -468,7 +487,6 @@ struct in_addr* ftp_gethosts(char* host,ftp_check_proc proc){
 
 	memset(pt,0,sizeof(struct in_addr));
         close(fd[0]);
-	signal(SIGPIPE,SIG_IGN);
 	kill(child,SIGKILL);
 	interrupt=0;
 	return buf;
@@ -482,13 +500,20 @@ struct in_addr* ftp_gethosts(char* host,ftp_check_proc proc){
 
 static int myconnect(int sock,struct sockaddr *serv_addr,int addrlen,
     ftp_check_proc proc){
+  
   int p[2];
   int child;
 #ifdef NOFORK
   return connect(sock,serv_addr,addrlen)<0;
 #else
-  signal(SIGPIPE,handler);
+  struct sigaction sa;
+  sa.sa_handler = handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGPIPE, &sa, NULL);
+  
   interrupt=0;
+  
   if(pipe(p)==-1)return 1;
   if((child=fork())==-1)return 1;
   if(child==0){
@@ -512,7 +537,6 @@ static int myconnect(int sock,struct sockaddr *serv_addr,int addrlen,
       tv.tv_usec=100000;
       if(select(p[0]+1,&fdset,NULL,NULL,&tv)<=0){
         if((proc && (*proc)()) || interrupt){
-	  signal(SIGPIPE,SIG_IGN);
 	  kill(child,SIGKILL);
 	  close(sock);
 	  interrupt=0;
@@ -521,7 +545,6 @@ static int myconnect(int sock,struct sockaddr *serv_addr,int addrlen,
       } else {
         if(read(p[0],&num,sizeof(int))<=0 || num<0 || interrupt){
 	  close(p[0]);
-	  signal(SIGPIPE,SIG_IGN);
 	  kill(child,SIGKILL);
 	  close(sock);
 	  interrupt=0;
@@ -539,6 +562,7 @@ static int myconnect(int sock,struct sockaddr *serv_addr,int addrlen,
 
 int ftp_connect(char* host,int port,connect_data* cd,
     FILE* log,ftp_check_proc proc){
+  
   struct in_addr *ht,*pt;
   int on;
   struct linger lin;
@@ -553,7 +577,14 @@ int ftp_connect(char* host,int port,connect_data* cd,
   }
 
   pt=ht=NULL;
-  /*if(!inet_aton(host,&cd->saddr.sin_addr)){*/
+  
+  struct sigaction sa;
+  sa.sa_handler = SIG_IGN;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  
+  sigaction(SIGALRM, &sa, NULL);
+  
   if((cd->saddr.sin_addr.s_addr=inet_addr(host))==-1){
     pt=ht=ftp_gethosts(host,proc);
     if(ht==NULL){
@@ -629,7 +660,6 @@ CONNECTED:
   do {
     on=ftp_read_response(cd,log,proc);
     if(on!=0 || (proc && (*proc)())){
-      signal(SIGALRM,SIG_IGN);
       interrupt=0;
       return -1;  /*EOF*/
     }
@@ -1062,15 +1092,20 @@ int ftp_resume(char type,long size,char* remote,connect_data* cd,FILE* log,
 int ftp_abort_data(connect_data* cd,FILE* log,ftp_check_proc proc){
   char buf[3];
   int ret;
-
-  signal(SIGPIPE,handler);
-  signal(SIGALRM,handler);
+  
+  struct sigaction sa_ignore;
+  sa_ignore.sa_handler = SIG_IGN;
+  sigemptyset(&sa_ignore.sa_mask);
+  sa_ignore.sa_flags = 0;
+  
+  sigaction(SIGPIPE, &sa_ignore, NULL);
+  sigaction(SIGALRM, &sa_ignore, NULL);
 
   sprintf(buf,"%c%c",IAC,IP);
   if(write(cd->ctrl,buf,2)<=0 || interrupt){
     shutdown(cd->data,2);
-    signal(SIGPIPE,SIG_IGN);
-    signal(SIGALRM,SIG_IGN);
+    sigaction(SIGPIPE, &sa_ignore, NULL);
+    sigaction(SIGALRM, &sa_ignore, NULL);
     interrupt=0;
     return 10;
   }
@@ -1078,8 +1113,8 @@ int ftp_abort_data(connect_data* cd,FILE* log,ftp_check_proc proc){
   sprintf(buf,"%c%c",IAC,DM);
   if(send(cd->ctrl,buf,2,MSG_OOB)<=0 || interrupt){
     shutdown(cd->data,2);
-    signal(SIGPIPE,SIG_IGN);
-    signal(SIGALRM,SIG_IGN);
+    sigaction(SIGPIPE, &sa_ignore, NULL);
+    sigaction(SIGALRM, &sa_ignore, NULL);
     interrupt=0;
     return 10;
   }
@@ -1087,8 +1122,8 @@ int ftp_abort_data(connect_data* cd,FILE* log,ftp_check_proc proc){
   ret=ftp_command("ABOR\r\n",cd,log,proc);
   shutdown(cd->data,2);
   close(cd->data);
-  signal(SIGPIPE,SIG_IGN);
-  signal(SIGALRM,SIG_IGN);
+  sigaction(SIGPIPE, &sa_ignore, NULL);
+  sigaction(SIGALRM, &sa_ignore, NULL);
   interrupt=0;
   return ftp_read_response(cd,log,proc);
 }

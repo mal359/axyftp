@@ -13,10 +13,10 @@
 
 #include "ftp_xfer.h"
 
+static volatile sig_atomic_t interrupt = 0;
 
-static int interrupt;
 static void handler(int sig){
-  (void)sig;
+  interrupt = 1;
 }
 
 static int remove_cr(char* buf,int len){
@@ -45,8 +45,13 @@ int ftp_xfer_get(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
   struct timeval seltime;
   int retval;
 
-  signal(SIGPIPE,handler);
-  interrupt=0;
+  struct sigaction sa;
+  sa.sa_handler = handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGPIPE, &sa, NULL);
+  
+  interrupt = 0;
 
   for(;;){
     FD_ZERO(&selset);
@@ -55,24 +60,20 @@ int ftp_xfer_get(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
     seltime.tv_usec=100000;
     retval=select(remote+1,&selset,NULL,NULL,&seltime);
     if(retval<0){
-      signal(SIGPIPE,SIG_IGN);
       interrupt=0;
       return 1;
     }
     if(retval==0){
       if(proc && (*proc)(0,arg)){
-	signal(SIGPIPE,SIG_IGN);
 	interrupt=0;
 	return -1;
       }
     } else {
       if((retval=read(remote,buf,1024))<0){
-	signal(SIGPIPE,SIG_IGN);
 	interrupt=0;
 	return -1;
       }
       if(retval==0){
-	signal(SIGPIPE,SIG_IGN);
 	interrupt=0;
 	return 0;
       }
@@ -80,17 +81,14 @@ int ftp_xfer_get(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
 	retval=remove_cr(buf,retval);
       }
       if(write(local,buf,retval)<0){
-	signal(SIGPIPE,SIG_IGN);
 	interrupt=0;
 	return 2;
       }
       if(proc && (*proc)(retval,arg)){
-	signal(SIGPIPE,SIG_IGN);
 	interrupt=0;
 	return -1;
       }
       if(interrupt){
-	signal(SIGPIPE,SIG_IGN);
 	interrupt=0;
 	return 1;
       }
@@ -104,18 +102,21 @@ int ftp_xfer_put(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
   struct timeval seltime;
   int retval,len;
 
-  signal(SIGPIPE,handler);
+  struct sigaction sa;
+  sa.sa_handler = handler;
+  sigemptyset(&sa.sa_mask);
+  sa.sa_flags = 0;
+  sigaction(SIGPIPE, &sa, NULL);
+    
   interrupt=0;
 
   for(;;){
     if((len=read(local,buf,
 	(mode=='A' || mode=='a' || mode=='T' || mode=='t')?512:1024))<0){
-      signal(SIGPIPE,SIG_IGN);
       interrupt=0;
       return 2;
     }
     if(len==0){
-      signal(SIGPIPE,SIG_IGN);
       interrupt=0;
       return 0;
     }
@@ -130,29 +131,24 @@ int ftp_xfer_put(char mode,int remote,int local,ftp_xfer_proc proc,void* arg){
       seltime.tv_usec=100000;
       retval=select(remote+1,NULL,&selset,NULL,&seltime);
       if(retval<0){
-	signal(SIGPIPE,SIG_IGN);
 	interrupt=0;
 	return 1;
       }
       if(retval==0){
 	if(proc && (*proc)(0,arg)){
-	  signal(SIGPIPE,SIG_IGN);
 	  interrupt=0;
 	  return -1;
 	}
       } else {
 	if(write(remote,buf,len)<0){
-	  signal(SIGPIPE,SIG_IGN);
 	  interrupt=0;
 	  return 1;
 	}
 	if(proc && (*proc)(len,arg)){
-	  signal(SIGPIPE,SIG_IGN);
 	  interrupt=0;
 	  return -1;
 	}
 	if(interrupt){
-	  signal(SIGPIPE,SIG_IGN);
 	  interrupt=0;
 	  return 1;
 	}
