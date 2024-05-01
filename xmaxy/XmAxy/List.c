@@ -1752,8 +1752,7 @@ Widget XmAxyCreateScrolledList(Widget parent, char *name,
     Arg *args;
 
     sn = XtMalloc(strlen(name) + 3);
-    strcpy(sn, name);
-    strcat(sn, "SW");
+    snprintf(sn, strlen(name) + 3, "%sSW", name);
 
     args = (Arg *)XtCalloc(argCount + 4, sizeof(Arg));
     for(n = 0;n<argCount;n++){
