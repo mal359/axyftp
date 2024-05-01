@@ -621,7 +621,7 @@ int ftp_connect(char* host,int port,connect_data* cd,
     }
   } else {
     while(((char*)pt)[0]){
-      memcpy(&cd->saddr.sin_addr,pt,sizeof(struct in_addr));
+      memmove(&cd->saddr.sin_addr,pt,sizeof(struct in_addr));
       if(myconnect(cd->ctrl,(struct sockaddr*)&cd->saddr,sizeof(cd->saddr),
 	  proc)>=0){
          goto CONNECTED;
@@ -847,8 +847,8 @@ int ftp_passive_init(connect_data* cd,FILE* log,ftp_check_proc proc){
 
   memset(&cd->daddr,(char)0,sizeof(cd->daddr));
 
-  memcpy(&cd->daddr.sin_addr,&ad[0],4);
-  memcpy(&cd->daddr.sin_port,&ad[4],2);
+  memmove(&cd->daddr.sin_addr,&ad[0],4);
+  memmove(&cd->daddr.sin_port,&ad[4],2);
 
   cd->daddr.sin_family=AF_INET;
 

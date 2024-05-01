@@ -207,7 +207,7 @@ dirinfo* create_local_dirinfo(char* mask){
   } else {
     buf=malloc(strlen(mask)+strlen(command)+1);
     memmove(buf, command, strlen(command) + 1);
-    memcpy(buf + strlen(command), mask, strlen(mask) + 1);
+    memmove(buf + strlen(command), mask, strlen(mask) + 1);
   }
   if((ls=popen(buf,"r"))==NULL){
     perror("create_local_dirinfo");
@@ -256,9 +256,10 @@ void set_fields(fileinfo** retval,int total){
   int i,month;
   time_t bigseconds;
   struct tm *t;
+  struct tm result;
 
   bigseconds=time(NULL);
-  t=localtime(&bigseconds);
+  t=localtime_r(&bigseconds, &result);
   snprintf(year, sizeof(year), "%.4d",1900+t->tm_year);
 
   for(i=1;i<=total;i++){
