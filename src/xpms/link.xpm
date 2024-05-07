@@ -1,35 +1,32 @@
 /* XPM */
 static char *link_p[] = {
-/* width height num_colors chars_per_pixel */
-"    16    14       7            2",
-/* colors */
-"  	c	None",
-"##	c	#000000",
-"--	c	#ffffff",
-"**	c	gray50",
-"hh	c	gray85", /*#c3c3c3",*/
-"jj	c	yellow",
-"@@	c	red",
+/* columns rows colors chars-per-pixel */
+"20 18 8 1 ",
+"  c #333366",
+". c #6666CC",
+"X c #C0C0C0",
+"o c None",
+"O c white",
+"+ c black",
+"@ c black",
+"# c black",
 /* pixels */
-"              ########          ",
-"      ******  ----##--##        ",
-"    **jjhhjj******##----##      ",
-"  **jjhhjjhhjj----##------##    ",
-"**------------##@@@@########**  ",
-"**hhjjhhjjhhjj----@@@@----##**  ",
-"**jj@@@@@@@@@@@@@@@@@@@@--##**  ",
-"**hh@@@@@@@@@@@@@@@@@@@@@@##**  ",
-"**jj@@@@@@@@@@@@@@@@@@@@--##**  ",
-"**hhjjhhjjhhjj----@@@@----##**  ",
-"**jjhhjjhhjjhh**@@@@******##**  ",
-"**************------------##**  ",
-"############################**  ",
-"                **************  "
+"oooooooooooooooooooo",
+"oooooooooooooooooooo",
+"oooooooooooooo  oooo",
+"ooooooooooooo XO ooo",
+"ooooooooo    XO. ooo",
+"oooooooo XO XO. oooo",
+"ooooooo XO XO. ooooo",
+"oooooo XO  ..  ooooo",
+"ooooo XO oo  X ooooo",
+"oooo XO ooO XO ooooo",
+"oooo O  oO XO oooooo",
+"oooo  XX  XO ooooooo",
+"oooo XO. XO oooooooo",
+"ooo XO. XO ooooooooo",
+"ooo O.    oooooooooo",
+"ooo   oooooooooooooo",
+"oooooooooooooooooooo",
+"oooooooooooooooooooo"
 };
-
-
-
-
-
-
-

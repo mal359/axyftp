@@ -20,7 +20,7 @@ int get_pixmap(char** data,Pixmap *pix,Pixmap *mas){
 
   attr.valuemask=XpmExactColors|XpmCloseness;
   attr.exactColors=FALSE;
-  attr.closeness=10000;
+  attr.closeness=1000;
   result=XpmCreatePixmapFromData(XtDisplay(appdata.status),
                           DefaultRootWindow(XtDisplay(appdata.status)),
 			  data,pix,mas,&attr);
