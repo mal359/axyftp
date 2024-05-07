@@ -48,7 +48,7 @@ Widget create_about_dialog(Widget parent){
   XtSetArg(args[n],XmNrightAttachment,XmATTACH_FORM);n++;
   XtSetArg(args[n],XmNalignment,XmALIGNMENT_CENTER);n++;
   snprintf(version_str, sizeof(version_str), 
-   "AxY FTP, Motif %d.%d version %d.%d.%d",
+   "AxY FTP, Motif %d.%d.%d version %d.%d.%d",
    XmVERSION,XmREVISION,XmUPDATE_LEVEL,AXYFTP_MAJOR,AXYFTP_MINOR,AXYFTP_MICRO);
   version=XmCreateLabel(about,version_str,args,n);n++;
   XtManageChild(version);
