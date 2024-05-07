@@ -375,7 +375,7 @@ NORMAL_CHAR:
 int ftp_read_response(connect_data* cd,FILE* log,ftp_check_proc proc){
   int r,len;
   int first;
-  char code[4];
+  char code[5];
   char* p;
 
   first=1;
