@@ -1,7 +1,5 @@
 /* Copyright (c) 1999   Alexander Yukhimets. All rights reserved. */
 
-#define XM_NOTEBOOK 0
-
 #include<stdio.h>
 #include<signal.h>
 #include<stdlib.h>
@@ -16,9 +14,7 @@
 #include<Xm/Form.h>
 #include<Xm/Frame.h>
 #include<Xm/PushBG.h>
-#if XM_NOTEBOOK
 #include<Xm/Notebook.h>
-#endif
 #include<XmAxy/Notebook.h>
 #include<XmAxy/List.h>
 
@@ -44,21 +40,6 @@ static void button_cb(Widget w,XtPointer app,XtPointer call){
   printf("%s: w=%d h=%d b=%d x=%d y=%d managed=%s\n",axy->core.name,
       axy->core.width,axy->core.height, axy->core.border_width,axy->core.x,
       axy->core.y, XtIsManaged((Widget)axy)?"yes":"no");
-
-
-
-  /*
-  if(XmAxyNotebookGetCurrentPage((Widget)app)==1){
-    XmAxyNotebookSetCurrentPage((Widget)app,2,FALSE);
-  } else {
-    XmAxyNotebookSetCurrentPage((Widget)app,1,FALSE);
-  }
-
-  XtVaGetValues(XtNameToWidget((Widget)app,"*Xm"),
-	XmNvisibleItemCount,&count,NULL);
-  XtVaSetValues(XtNameToWidget((Widget)app,"*Xm"),
-	XmNvisibleItemCount,count+1,NULL);
-	*/
 
 }
 
@@ -130,34 +111,6 @@ int main(int argc, char* argv[]){
   XtSetArg(args[n],XmNbottomAttachment,XmATTACH_FORM);n++;
   XtSetArg(args[n],XmNleftAttachment,XmATTACH_FORM);n++;
   XtSetArg(args[n],XmNrightAttachment,XmATTACH_FORM);n++;
-  /*
-  XtSetArg(args[n],XmNshadowThickness,0);n++;
-  XtSetArg(args[n],XmNmarginWidth,0);n++;
-  XtSetArg(args[n],XmNmarginHeight,0);n++;
-  XtSetArg(args[n],XmNinnerMarginWidth,0);n++;
-  XtSetArg(args[n],XmNinnerMarginHeight,0);n++;
-  */
-#if !XM_NOTEBOOK
-  /*XtSetArg(args[n],XmNbackground,WhitePixelOfScreen(XtScreen(form)));n++;*/
-  /*XtSetArg(args[n],XmNhideTabs,TRUE);n++;*/
-  /*
-  XtSetArg(args[n],XmNtabRaise,2);n++;
-  XtSetArg(args[n],XmNtabSpacing,0);n++;
-  XtSetArg(args[n],XmNshadowThickness,2);n++;
-  XtSetArg(args[n],XmNhighlightThickness,1);n++;
-  */
-  /*
-  XtSetArg(args[n],XmNlabelMarginHeight,5);n++;
-  XtSetArg(args[n],XmNlabelMarginWidth,5);n++;
-  XtSetArg(args[n],XmNtextMarginHeight,0);n++;
-  XtSetArg(args[n],XmNtextMarginWidth,0);n++;
-  */
-  /*XtSetArg(args[n],XmNbackground,WhitePixelOfScreen(XtScreen(form)));n++;*/
-  /*XtSetArg(args[n],XmNbackgroundPixmap,trans);n++;*/
-  frame=XmAxyCreateNotebook(form,"Card",args,n);
-  XtManageChild(frame);
-  XtAddCallback(button,XmNactivateCallback,button_cb,frame);
-#else
   XtSetArg(args[n],XmNbackPagePlacement,XmTOP_RIGHT);n++;
   XtSetArg(args[n],XmNmajorTabSpacing,0);n++;
   XtSetArg(args[n],XmNorientation,XmVERTICAL);n++;
@@ -170,20 +123,12 @@ int main(int argc, char* argv[]){
   XtSetArg(args[n],XmNnotebookChildType,XmPAGE_SCROLLER);n++;
   XtManageChild(XmCreateLabel(frame,"",args,n));
   XtAddCallback(button,XmNactivateCallback,button_cb,frame);
-#endif
-  /*
-  frame=XmCreateFrame(form,"Card",args,n);
-  XtManageChild(frame);
-  XtAddCallback(button,XmNactivateCallback,button_cb,frame);
-  */
 
   n=0;
   XtManageChild(XmCreatePushButton(frame,"Bgutton",args,n));
 
   n=0;
-#if XM_NOTEBOOK
   XtSetArg(args[n],XmNnotebookChildType,XmPAGE);n++;
-#endif
   XtSetArg(args[n],XmNshadowThickness,2);n++;
   XtSetArg(args[n],XmNborderWidth,0);n++;
   XtSetArg(args[n],XmNlistMarginWidth,15);n++;
@@ -205,20 +150,16 @@ int main(int argc, char* argv[]){
   XmListAddItem(xmlist, XmStringCreateLocalized("ITEM 8"),8);
   XmListAddItem(xmlist, XmStringCreateLocalized("ITEM 9"),9);
   XtManageChild(xmlist);
-  /*XtUnmanageChild(XtParent(xmlist));*/
-#if XM_NOTEBOOK
+
   n=0;
   XtSetArg(args[n],XmNnotebookChildType,XmMAJOR_TAB);n++;
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtManageChild(XmCreatePushButton(frame,"XmP",args,n));
-#endif
 
 
   n=0;
 
-#if XM_NOTEBOOK
   XtSetArg(args[n],XmNnotebookChildType,XmPAGE);n++;
-#endif
   XtSetArg(args[n],XmNshowLabels,TRUE);n++;
   XtSetArg(args[n],XmNborderWidth,20);n++;
   XtSetArg(args[n],XmNshadowThickness,4);n++;
@@ -232,8 +173,7 @@ int main(int argc, char* argv[]){
   XtSetArg(args[n],XmNcolumnWidths,widths);n++;
   XtSetArg(args[n],XmNcolumnLabels,labels);n++;
   XtSetArg(args[n],XmNcolumnCount,4);n++;
-  /*XtSetArg(args[n],XmNcellBackground,WhitePixelOfScreen(XtScreen(form)));n++;*/
-  /*XtSetArg(args[n],XmNlabelBackground,WhitePixelOfScreen(XtScreen(form)));n++;*/
+
   XtSetArg(args[n],XmNrowCount,5);n++;
   XtSetArg(args[n],XmNrowSpacing,15);n++;
   XtSetArg(args[n],XmNlistSizePolicy,XmRESIZE_IF_POSSIBLE);n++;
@@ -243,19 +183,11 @@ int main(int argc, char* argv[]){
   XtAddCallback(axylist,XmNdrawCellCallback,draw_cell_cb,(XtPointer)NULL);
   XtAddCallback(axylist,XmNdefaultActionCallback,default_cb,(XtPointer)NULL);
   XtManageChild(axylist);
-#if XM_NOTEBOOK
+
   n=0;
   XtSetArg(args[n],XmNnotebookChildType,XmMAJOR_TAB);n++;
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   XtManageChild(XmCreatePushButton(frame,"AxyP",args,n));
-#endif
-
-#if !XM_NOTEBOOK
-  n=0;
-  XtManageChild(XmCreatePushButtonGadget(frame,"Gadget",args,n));
-
-  XmAxyNotebookSetCurrentPage(frame,3,FALSE);
-#endif
 
   XtRealizeWidget(toplevel);
 
