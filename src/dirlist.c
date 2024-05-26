@@ -265,9 +265,9 @@ Widget create_dirlist(Widget parent,int which){
   XtSetArg(args[n],XmNcolumnLabels,labels);n++;
   XtSetArg(args[n],XmNcolumnLabelAlignments,la);n++;
   XtSetArg(args[n],XmNcolumnAlignments,ca);n++;
-  XtSetArg(args[n],XmNrowSpacing,2);n++;
-  XtSetArg(args[n],XmNcellMarginHeight,5);n++;
-  XtSetArg(args[n],XmNlabelMarginHeight,4);n++;
+  XtSetArg(args[n],XmNrowSpacing,1);n++;
+  XtSetArg(args[n],XmNcellMarginHeight,4);n++;
+  XtSetArg(args[n],XmNlabelMarginHeight,3);n++;
   XtSetArg(args[n],XmNhighlightThickness,0);n++;
   /*XtSetArg(args[n],XmNfill,True);n++;*/
   /*XtSetArg(args[n],XmNspace,0);n++;*/
